@@ -12,10 +12,10 @@ import pydot
 
 inFile = sys.argv[1]
 from ply import yacc
-from . import c_ast
+#  from . import c_ast
 from c_lexer import CLexer
 from plyparser import PLYParser, Coord, ParseError
-from ast_transforms import fix_switch_cases
+#  from ast_transforms import fix_switch_cases
 from parse_tree import *
 
 class CParser(PLYParser):
@@ -249,44 +249,46 @@ class CParser(PLYParser):
     # useful for pointers, that can come as a chain from the rule
     # p_pointer. In this case, the whole modifier list is spliced
     # into the new location.
-    def _type_modify_decl(self, decl, modifier):
-        """ Tacks a type modifier on a declarator, and returns
-            the modified declarator.
 
-            Note: the declarator and modifier may be modified
-        """
-        #~ print '****'
-        #~ decl.show(offset=3)
-        #~ modifier.show(offset=3)
-        #~ print '****'
 
-        modifier_head = modifier
-        modifier_tail = modifier
-
-        # The modifier may be a nested list. Reach its tail.
-        #
-        while modifier_tail.type:
-            modifier_tail = modifier_tail.type
-
-        # If the decl is a basic type, just tack the modifier onto
-        # it
-        #
-        if isinstance(decl, c_ast.TypeDecl):
-            modifier_tail.type = decl
-            return modifier
-        else:
-            # Otherwise, the decl is a list of modifiers. Reach
-            # its tail and splice the modifier onto the tail,
-            # pointing to the underlying basic type.
-            #
-            decl_tail = decl
-
-            while not isinstance(decl_tail.type, c_ast.TypeDecl):
-                decl_tail = decl_tail.type
-
-            modifier_tail.type = decl_tail.type
-            decl_tail.type = modifier_head
-            return decl
+    #  def _type_modify_decl(self, decl, modifier):
+    #      """ Tacks a type modifier on a declarator, and returns
+    #          the modified declarator.
+    #
+    #          Note: the declarator and modifier may be modified
+    #      """
+    #      #~ print '****'
+    #      #~ decl.show(offset=3)
+    #      #~ modifier.show(offset=3)
+    #      #~ print '****'
+    #
+    #      modifier_head = modifier
+    #      modifier_tail = modifier
+    #
+    #      # The modifier may be a nested list. Reach its tail.
+    #      #
+    #      while modifier_tail.type:
+    #          modifier_tail = modifier_tail.type
+    #
+    #      # If the decl is a basic type, just tack the modifier onto
+    #      # it
+    #      #
+    #      if isinstance(decl, c_ast.TypeDecl):
+    #          modifier_tail.type = decl
+    #          return modifier
+    #      else:
+    #          # Otherwise, the decl is a list of modifiers. Reach
+    #          # its tail and splice the modifier onto the tail,
+    #          # pointing to the underlying basic type.
+    #          #
+    #          decl_tail = decl
+    #
+    #          while not isinstance(decl_tail.type, c_ast.TypeDecl):
+    #              decl_tail = decl_tail.type
+    #
+    #          modifier_tail.type = decl_tail.type
+    #          decl_tail.type = modifier_head
+    #          return decl
 
     # Due to the order in which declarators are constructed,
     # they have to be fixed in order to look like a normal AST.
@@ -304,50 +306,50 @@ class CParser(PLYParser):
     #
     # This method fixes these problems.
     #
-    def _fix_decl_name_type(self, decl, typename):
-        """ Fixes a declaration. Modifies decl.
-        """
-        # Reach the underlying basic type
-        #
-        type = decl
-        while not isinstance(type, c_ast.TypeDecl):
-            type = type.type
-
-        decl.name = type.declname
-        type.quals = decl.quals
-
-        # The typename is a list of types. If any type in this
-        # list isn't an IdentifierType, it must be the only
-        # type in the list (it's illegal to declare "int enum ..")
-        # If all the types are basic, they're collected in the
-        # IdentifierType holder.
-        #
-        for tn in typename:
-            if not isinstance(tn, c_ast.IdentifierType):
-                if len(typename) > 1:
-                    self._parse_error(
-                        "Invalid multiple types specified", tn.coord)
-                else:
-                    type.type = tn
-                    return decl
-
-        if not typename:
-            # Functions default to returning int
-            #
-            if not isinstance(decl.type, c_ast.FuncDecl):
-                self._parse_error(
-                        "Missing type in declaration", decl.coord)
-            type.type = c_ast.IdentifierType(
-                    ['int'],
-                    coord=decl.coord)
-        else:
-            # At this point, we know that typename is a list of IdentifierType
-            # nodes. Concatenate all the names into a single list.
-            #
-            type.type = c_ast.IdentifierType(
-                [name for id in typename for name in id.names],
-                coord=typename[0].coord)
-        return decl
+    #  def _fix_decl_name_type(self, decl, typename):
+    #      """ Fixes a declaration. Modifies decl.
+    #      """
+    #      # Reach the underlying basic type
+    #      #
+    #      type = decl
+    #      while not isinstance(type, c_ast.TypeDecl):
+    #          type = type.type
+    #
+    #      decl.name = type.declname
+    #      type.quals = decl.quals
+    #
+    #      # The typename is a list of types. If any type in this
+    #      # list isn't an IdentifierType, it must be the only
+    #      # type in the list (it's illegal to declare "int enum ..")
+    #      # If all the types are basic, they're collected in the
+    #      # IdentifierType holder.
+    #      #
+    #      for tn in typename:
+    #          if not isinstance(tn, c_ast.IdentifierType):
+    #              if len(typename) > 1:
+    #                  self._parse_error(
+    #                      "Invalid multiple types specified", tn.coord)
+    #              else:
+    #                  type.type = tn
+    #                  return decl
+    #
+    #      if not typename:
+    #          # Functions default to returning int
+    #          #
+    #          if not isinstance(decl.type, c_ast.FuncDecl):
+    #              self._parse_error(
+    #                      "Missing type in declaration", decl.coord)
+    #          type.type = c_ast.IdentifierType(
+    #                  ['int'],
+    #                  coord=decl.coord)
+    #      else:
+    #          # At this point, we know that typename is a list of IdentifierType
+    #          # nodes. Concatenate all the names into a single list.
+    #          #
+    #          type.type = c_ast.IdentifierType(
+    #              [name for id in typename for name in id.names],
+    #              coord=typename[0].coord)
+    #      return decl
 
     def _add_declaration_specifier(self, declspec, newspec, kind):
         """ Declaration specifiers are represented by a dictionary
@@ -366,119 +368,119 @@ class CParser(PLYParser):
         spec[kind].insert(0, newspec)
         return spec
 
-    def _build_declarations(self, spec, decls, typedef_namespace=False):
-        """ Builds a list of declarations all sharing the given specifiers.
-            If typedef_namespace is true, each declared name is added
-            to the "typedef namespace", which also includes objects,
-            functions, and enum constants.
-        """
-        is_typedef = 'typedef' in spec['storage']
-        declarations = []
+    #  def _build_declarations(self, spec, decls, typedef_namespace=False):
+    #      """ Builds a list of declarations all sharing the given specifiers.
+    #          If typedef_namespace is true, each declared name is added
+    #          to the "typedef namespace", which also includes objects,
+    #          functions, and enum constants.
+    #      """
+    #      is_typedef = 'typedef' in spec['storage']
+    #      declarations = []
+    #
+    #      # Bit-fields are allowed to be unnamed.
+    #      #
+    #      if decls[0].get('bitsize') is not None:
+    #          pass
+    #
+    #      # When redeclaring typedef names as identifiers in inner scopes, a
+    #      # problem can occur where the identifier gets grouped into
+    #      # spec['type'], leaving decl as None.  This can only occur for the
+    #      # first declarator.
+    #      #
+    #      elif decls[0]['decl'] is None:
+    #          if len(spec['type']) < 2 or len(spec['type'][-1].names) != 1 or \
+    #                  not self._is_type_in_scope(spec['type'][-1].names[0]):
+    #              coord = '?'
+    #              for t in spec['type']:
+    #                  if hasattr(t, 'coord'):
+    #                      coord = t.coord
+    #                      break
+    #              self._parse_error('Invalid declaration', coord)
+    #
+    #          # Make this look as if it came from "direct_declarator:ID"
+    #          decls[0]['decl'] = c_ast.TypeDecl(
+    #              declname=spec['type'][-1].names[0],
+    #              type=None,
+    #              quals=None,
+    #              coord=spec['type'][-1].coord)
+    #          # Remove the "new" type's name from the end of spec['type']
+    #          del spec['type'][-1]
+    #
+    #      # A similar problem can occur where the declaration ends up looking
+    #      # like an abstract declarator.  Give it a name if this is the case.
+    #      #
+    #      elif not isinstance(decls[0]['decl'],
+    #              (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+    #          decls_0_tail = decls[0]['decl']
+    #          while not isinstance(decls_0_tail, c_ast.TypeDecl):
+    #              decls_0_tail = decls_0_tail.type
+    #          if decls_0_tail.declname is None:
+    #              decls_0_tail.declname = spec['type'][-1].names[0]
+    #              del spec['type'][-1]
+    #
+    #      for decl in decls:
+    #          assert decl['decl'] is not None
+    #          if is_typedef:
+    #              declaration = c_ast.Typedef(
+    #                  name=None,
+    #                  quals=spec['qual'],
+    #                  storage=spec['storage'],
+    #                  type=decl['decl'],
+    #                  coord=decl['decl'].coord)
+    #          else:
+    #              declaration = c_ast.Decl(
+    #                  name=None,
+    #                  quals=spec['qual'],
+    #                  storage=spec['storage'],
+    #                  funcspec=spec['function'],
+    #                  type=decl['decl'],
+    #                  init=decl.get('init'),
+    #                  bitsize=decl.get('bitsize'),
+    #                  coord=decl['decl'].coord)
+    #
+    #          if isinstance(declaration.type,
+    #                  (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+    #              fixed_decl = declaration
+    #          else:
+    #              fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
+    #
+    #          # Add the type name defined by typedef to a
+    #          # symbol table (for usage in the lexer)
+    #          #
+    #          if typedef_namespace:
+    #              if is_typedef:
+    #                  self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
+    #              else:
+    #                  self._add_identifier(fixed_decl.name, fixed_decl.coord)
+    #
+    #          declarations.append(fixed_decl)
+    #
+    #      return declarations
 
-        # Bit-fields are allowed to be unnamed.
-        #
-        if decls[0].get('bitsize') is not None:
-            pass
+    #  def _build_function_definition(self, spec, decl, param_decls, body):
+    #      """ Builds a function definition.
+    #      """
+    #      assert 'typedef' not in spec['storage']
+    #
+    #      declaration = self._build_declarations(
+    #          spec=spec,
+    #          decls=[dict(decl=decl, init=None)],
+    #          typedef_namespace=True)[0]
+    #
+    #      return c_ast.FuncDef(
+    #          decl=declaration,
+    #          param_decls=param_decls,
+    #          body=body,
+    #          coord=decl.coord)
 
-        # When redeclaring typedef names as identifiers in inner scopes, a
-        # problem can occur where the identifier gets grouped into
-        # spec['type'], leaving decl as None.  This can only occur for the
-        # first declarator.
-        #
-        elif decls[0]['decl'] is None:
-            if len(spec['type']) < 2 or len(spec['type'][-1].names) != 1 or \
-                    not self._is_type_in_scope(spec['type'][-1].names[0]):
-                coord = '?'
-                for t in spec['type']:
-                    if hasattr(t, 'coord'):
-                        coord = t.coord
-                        break
-                self._parse_error('Invalid declaration', coord)
-
-            # Make this look as if it came from "direct_declarator:ID"
-            decls[0]['decl'] = c_ast.TypeDecl(
-                declname=spec['type'][-1].names[0],
-                type=None,
-                quals=None,
-                coord=spec['type'][-1].coord)
-            # Remove the "new" type's name from the end of spec['type']
-            del spec['type'][-1]
-
-        # A similar problem can occur where the declaration ends up looking
-        # like an abstract declarator.  Give it a name if this is the case.
-        #
-        elif not isinstance(decls[0]['decl'],
-                (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-            decls_0_tail = decls[0]['decl']
-            while not isinstance(decls_0_tail, c_ast.TypeDecl):
-                decls_0_tail = decls_0_tail.type
-            if decls_0_tail.declname is None:
-                decls_0_tail.declname = spec['type'][-1].names[0]
-                del spec['type'][-1]
-
-        for decl in decls:
-            assert decl['decl'] is not None
-            if is_typedef:
-                declaration = c_ast.Typedef(
-                    name=None,
-                    quals=spec['qual'],
-                    storage=spec['storage'],
-                    type=decl['decl'],
-                    coord=decl['decl'].coord)
-            else:
-                declaration = c_ast.Decl(
-                    name=None,
-                    quals=spec['qual'],
-                    storage=spec['storage'],
-                    funcspec=spec['function'],
-                    type=decl['decl'],
-                    init=decl.get('init'),
-                    bitsize=decl.get('bitsize'),
-                    coord=decl['decl'].coord)
-
-            if isinstance(declaration.type,
-                    (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-                fixed_decl = declaration
-            else:
-                fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
-
-            # Add the type name defined by typedef to a
-            # symbol table (for usage in the lexer)
-            #
-            if typedef_namespace:
-                if is_typedef:
-                    self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
-                else:
-                    self._add_identifier(fixed_decl.name, fixed_decl.coord)
-
-            declarations.append(fixed_decl)
-
-        return declarations
-
-    def _build_function_definition(self, spec, decl, param_decls, body):
-        """ Builds a function definition.
-        """
-        assert 'typedef' not in spec['storage']
-
-        declaration = self._build_declarations(
-            spec=spec,
-            decls=[dict(decl=decl, init=None)],
-            typedef_namespace=True)[0]
-
-        return c_ast.FuncDef(
-            decl=declaration,
-            param_decls=param_decls,
-            body=body,
-            coord=decl.coord)
-
-    def _select_struct_union_class(self, token):
-        """ Given a token (either STRUCT or UNION), selects the
-            appropriate AST class.
-        """
-        if token == 'struct':
-            return c_ast.Struct
-        else:
-            return c_ast.Union
+    #  def _select_struct_union_class(self, token):
+    #      """ Given a token (either STRUCT or UNION), selects the
+    #          appropriate AST class.
+    #      """
+    #      if token == 'struct':
+    #          return c_ast.Struct
+    #      else:
+    #          return c_ast.Union
 
     ##
     ## Precedence and associativity of operators
@@ -570,15 +572,17 @@ class CParser(PLYParser):
         """
         self._parse_error('Directives not supported yet',
                           self._coord(p.lineno(1)))
-# This funciton is to be ignored
-    # def p_pppragma_directive(self, p):
-    #     """ pppragma_directive      : PPPRAGMA
-    #                                 | PPPRAGMA PPPRAGMASTR
-    #     """
-    #     if len(p) == 3:
-    #         p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
-    #     else:
-    #         p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
+    
+    def p_pppragma_directive(self, p):
+       """ pppragma_directive      : PPPRAGMA
+                                   | PPPRAGMA PPPRAGMASTR
+       """
+       if len(p) == 3:
+           #  p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
+           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA"), (None, "PPPRAGMASTR")])
+       else:
+           #  p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
+           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA")])
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
@@ -642,46 +646,47 @@ class CParser(PLYParser):
     def p_decl_body(self, p):
         """ decl_body : declaration_specifiers init_declarator_list_opt
         """
-        spec = p[1]
-
-        # p[2] (init_declarator_list_opt) is either a list or None
+        #  spec = p[1]
         #
-        if p[2] is None:
-            # By the standard, you must have at least one declarator unless
-            # declaring a structure tag, a union tag, or the members of an
-            # enumeration.
-            #
-            ty = spec['type']
-            s_u_or_e = (c_ast.Struct, c_ast.Union, c_ast.Enum)
-            if len(ty) == 1 and isinstance(ty[0], s_u_or_e):
-                decls = [c_ast.Decl(
-                    name=None,
-                    quals=spec['qual'],
-                    storage=spec['storage'],
-                    funcspec=spec['function'],
-                    type=ty[0],
-                    init=None,
-                    bitsize=None,
-                    coord=ty[0].coord)]
-
-            # However, this case can also occur on redeclared identifiers in
-            # an inner scope.  The trouble is that the redeclared type's name
-            # gets grouped into declaration_specifiers; _build_declarations
-            # compensates for this.
-            #
-            else:
-                decls = self._build_declarations(
-                    spec=spec,
-                    decls=[dict(decl=None, init=None)],
-                    typedef_namespace=True)
-
-        else:
-            decls = self._build_declarations(
-                spec=spec,
-                decls=p[2],
-                typedef_namespace=True)
-
-        p[0] = decls
+        #  # p[2] (init_declarator_list_opt) is either a list or None
+        #  #
+        #  if p[2] is None:
+        #      # By the standard, you must have at least one declarator unless
+        #      # declaring a structure tag, a union tag, or the members of an
+        #      # enumeration.
+        #      #
+        #      ty = spec['type']
+        #      s_u_or_e = (c_ast.Struct, c_ast.Union, c_ast.Enum)
+        #      if len(ty) == 1 and isinstance(ty[0], s_u_or_e):
+        #          decls = [c_ast.Decl(
+        #              name=None,
+        #              quals=spec['qual'],
+        #              storage=spec['storage'],
+        #              funcspec=spec['function'],
+        #              type=ty[0],
+        #              init=None,
+        #              bitsize=None,
+        #              coord=ty[0].coord)]
+        #
+        #      # However, this case can also occur on redeclared identifiers in
+        #      # an inner scope.  The trouble is that the redeclared type's name
+        #      # gets grouped into declaration_specifiers; _build_declarations
+        #      # compensates for this.
+        #      #
+        #      else:
+        #          decls = self._build_declarations(
+        #              spec=spec,
+        #              decls=[dict(decl=None, init=None)],
+        #              typedef_namespace=True)
+        #
+        #  else:
+        #      decls = self._build_declarations(
+        #          spec=spec,
+        #          decls=p[2],
+        #          typedef_namespace=True)
+        #
+        #  p[0] = decls
+        p[0] = addNodes("decl_body", [(p[1], None), (p[2], None)])
 
     # The declaration has been split to a decl_body sub-rule and
     # SEMI, because having them in a single rule created a problem
@@ -919,38 +924,38 @@ class CParser(PLYParser):
     def p_struct_declaration_1(self, p):
         """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt SEMI
         """
-        spec = p[1]
-        assert 'typedef' not in spec['storage']
-
-        if p[2] is not None:
-            decls = self._build_declarations(
-                spec=spec,
-                decls=p[2])
-
-        elif len(spec['type']) == 1:
-            # Anonymous struct/union, gcc extension, C1x feature.
-            # Although the standard only allows structs/unions here, I see no
-            # reason to disallow other types since some compilers have typedefs
-            # here, and pycparser isn't about rejecting all invalid code.
-            #
-            node = spec['type'][0]
-            if isinstance(node, c_ast.Node):
-                decl_type = node
-            else:
-                decl_type = c_ast.IdentifierType(node)
-
-            decls = self._build_declarations(
-                spec=spec,
-                decls=[dict(decl=decl_type)])
-
-        else:
-            # Structure/union members can have the same names as typedefs.
-            # The trouble is that the member's name gets grouped into
-            # specifier_qualifier_list; _build_declarations compensates.
-            #
-            decls = self._build_declarations(
-                spec=spec,
-                decls=[dict(decl=None, init=None)])
+        #  spec = p[1]
+        #  assert 'typedef' not in spec['storage']
+        #
+        #  if p[2] is not None:
+        #      decls = self._build_declarations(
+        #          spec=spec,
+        #          decls=p[2])
+        #
+        #  elif len(spec['type']) == 1:
+        #      # Anonymous struct/union, gcc extension, C1x feature.
+        #      # Although the standard only allows structs/unions here, I see no
+        #      # reason to disallow other types since some compilers have typedefs
+        #      # here, and pycparser isn't about rejecting all invalid code.
+        #      #
+        #      node = spec['type'][0]
+        #      if isinstance(node, c_ast.Node):
+        #          decl_type = node
+        #      else:
+        #          decl_type = c_ast.IdentifierType(node)
+        #
+        #      decls = self._build_declarations(
+        #          spec=spec,
+        #          decls=[dict(decl=decl_type)])
+        #
+        #  else:
+        #      # Structure/union members can have the same names as typedefs.
+        #      # The trouble is that the member's name gets grouped into
+        #      # specifier_qualifier_list; _build_declarations compensates.
+        #      #
+        #      decls = self._build_declarations(
+        #          spec=spec,
+        #          decls=[dict(decl=None, init=None)])
 
         # p[0] = decls
         p[0] = addNodes("struct_declaration",[(p[1], None)])
@@ -1594,12 +1599,12 @@ class CParser(PLYParser):
     def p_iteration_statement_2(self, p):
         """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
         #  p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None , "DO"), (p[1], None), (None, "WHILE"), (None, "LPAREN"), (p[5], None), (None, "RPAREN"), (None, "SEMI")])
+        p[0] = addNodes("iteration_statement", [(None , "DO"), (p[2], None), (None, "WHILE"), (None, "LPAREN"), (p[5], None), (None, "RPAREN"), (None, "SEMI")])
 
     def p_iteration_statement_3(self, p):
         """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
         #  p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None , "FOR"), (None, "LPAREN"), (p[3], None), (None, "SEMI"), (p[6], None), (None, "SEMI"), (p[8], None), (None, "RPAREN"), (p[9], None)])
+        p[0] = addNodes("iteration_statement", [(None , "FOR"), (None, "LPAREN"), (p[3], None), (None, "SEMI"), (p[5], None), (None, "SEMI"), (p[7], None), (None, "RPAREN"), (p[9], None)])
 
     def p_iteration_statement_4(self, p):
         """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
@@ -1896,7 +1901,7 @@ class CParser(PLYParser):
         else:
             #  p[1].exprs.append(p[3])
             #  p[0] = p[1]
-            p[0] = addNodes("argument_expression_list", [(p[1], None),(None, "COMMA"), (p[3], assignment_expression)])
+            p[0] = addNodes("argument_expression_list", [(p[1], None),(None, "COMMA"), (p[3], None)])
 
     def p_identifier(self, p):
         """ identifier  : ID """
@@ -1996,12 +2001,13 @@ class CParser(PLYParser):
 if __name__ == "__main__":
     import pprint
     import time, sys
-    # with open(inFile, 'r') as i:
-        # text = i.read()
-        # parser.parse(text)
+    with open(inFile, 'r') as i:
+        parser = CParser(lex_optimize=False, yacc_debug=False, yacc_optimize=False)
+        text = i.read()
+        parser.parse(text)
+        saveGraph()
 
     #t1 = time.time()
-    #parser = CParser(lex_optimize=True, yacc_debug=True, yacc_optimize=False)
     #sys.write(time.time() - t1)
 
     #buf = '''

@@ -37,4 +37,4 @@ def createTypeNode(type):
     return decl_spec_node
     
 def saveGraph():
-    graph.write_png("ParseTree.png")
+    graph.write_ps("ParseTree.ps")
