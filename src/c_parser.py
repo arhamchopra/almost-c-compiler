@@ -583,7 +583,6 @@ class CParser(PLYParser):
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
     #
-# ---->
     def p_function_definition_1(self, p):
         """ function_definition : declarator declaration_list_opt compound_statement
         """
@@ -703,7 +702,7 @@ class CParser(PLYParser):
         """ declaration : decl_body SEMI
         """
         # p[0] = p[1]
-        p[0] = addNodes("declaration", [(p[1], None)])
+        p[0] = addNodes("declaration", [(p[1], None), (None, "SEMI")])
 
 
     # Since each declaration is a list of declarations, this
@@ -845,40 +844,47 @@ class CParser(PLYParser):
     # TYPEID is allowed here (and in other struct/enum related tag names), because
     # struct/enum tags reside in their own namespace and can be named the same as types
     #
+# ---->
     def p_struct_or_union_specifier_1(self, p):
         """ struct_or_union_specifier   : struct_or_union ID
                                         | struct_or_union TYPEID
         """
-        klass = self._select_struct_union_class(p[1])
-        p[0] = klass(
-            name=p[2],
-            decls=None,
-            coord=self._coord(p.lineno(2)))
+        # klass = self._select_struct_union_class(p[1])
+        # p[0] = klass(
+        #     name=p[2],
+        #     decls=None,
+        #     coord=self._coord(p.lineno(2)))
+        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), ( None, p[2])])
 
     def p_struct_or_union_specifier_2(self, p):
         """ struct_or_union_specifier : struct_or_union brace_open struct_declaration_list brace_close
         """
-        klass = self._select_struct_union_class(p[1])
-        p[0] = klass(
-            name=None,
-            decls=p[3],
-            coord=self._coord(p.lineno(2)))
+        # klass = self._select_struct_union_class(p[1])
+        # p[0] = klass(
+        #     name=None,
+        #     decls=p[3],
+        #     coord=self._coord(p.lineno(2)))
+        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (p[2], None), (p[3], None), (p[4], None)])
 
     def p_struct_or_union_specifier_3(self, p):
         """ struct_or_union_specifier   : struct_or_union ID brace_open struct_declaration_list brace_close
                                         | struct_or_union TYPEID brace_open struct_declaration_list brace_close
         """
-        klass = self._select_struct_union_class(p[1])
-        p[0] = klass(
-            name=p[2],
-            decls=p[4],
-            coord=self._coord(p.lineno(2)))
+        # klass = self._select_struct_union_class(p[1])
+        # p[0] = klass(
+        #     name=p[2],
+        #     decls=p[4],
+        #     coord=self._coord(p.lineno(2)))
+        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), ( None, p[2]), (p[3], None), (p[4], None)])
+
 
     def p_struct_or_union(self, p):
         """ struct_or_union : STRUCT
                             | UNION
         """
-        p[0] = p[1]
+        # p[0] = p[1]
+        p[0] = addNodes("struct_or_union",[(p[1], None)])
+
 
     # Combine all declarations into a single list
     #
@@ -887,9 +893,19 @@ class CParser(PLYParser):
                                         | struct_declaration_list struct_declaration
         """
         if len(p) == 2:
-            p[0] = p[1] or []
+            # p[0] = p[1] or []
+            if p[1] is not None :
+                p[0] = addNodes("struct_declaration_list",[(p[1], None)])
+            else :
+                p[0] = addNodes("struct_declaration_list",[(None, None)]) #[TODO]
+
+
         else:
             p[0] = p[1] + (p[2] or [])
+            if p[2] is not None :
+                p[0] = addNodes("struct_declaration_list",[(p[1], None), (p2, None)])
+            else :
+                p[0] = addNodes("struct_declaration_list",[(p[1], None)]) #[TODO]
 
     def p_struct_declaration_1(self, p):
         """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt SEMI
@@ -927,7 +943,9 @@ class CParser(PLYParser):
                 spec=spec,
                 decls=[dict(decl=None, init=None)])
 
-        p[0] = decls
+        # p[0] = decls
+        p[0] = addNodes("struct_declaration",[(p[1], None)])
+
 
     def p_struct_declaration_2(self, p):
         """ struct_declaration : specifier_qualifier_list abstract_declarator SEMI
@@ -939,20 +957,29 @@ class CParser(PLYParser):
         #   typedef int Foo;
         #   struct { Foo Foo[3]; };
         #
-        p[0] = self._build_declarations(
-                spec=p[1],
-                decls=[dict(decl=p[2], init=None)])
+        # p[0] = self._build_declarations(
+        #         spec=p[1],
+        #         decls=[dict(decl=p[2], init=None)])
+        p[0] = addNodes("struct_declaration",[(p[1], None), (p[2], None), (None), SEMI])
 
     def p_struct_declaration_3(self, p):
         """ struct_declaration : SEMI
         """
-        p[0] = None
+        # p[0] = None
+        p[0] = addNodes((None, "SEMI"))
+
 
     def p_struct_declarator_list(self, p):
         """ struct_declarator_list  : struct_declarator
                                     | struct_declarator_list COMMA struct_declarator
         """
-        p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
+        # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
+        if len(p) == 4 :
+            p[0] = addNodes("struct_declaration_list",[(p[1], None), (None, "COMMA"), (p[3], None)])
+        else :
+            p[0] = addNodes("struct_declaration_list",[(p[1], None)])
+
+
 
     # struct_declarator passes up a dict with the keys: decl (for
     # the underlying declarator) and bitsize (for the bitsize)
@@ -960,33 +987,42 @@ class CParser(PLYParser):
     def p_struct_declarator_1(self, p):
         """ struct_declarator : declarator
         """
-        p[0] = {'decl': p[1], 'bitsize': None}
+        # p[0] = {'decl': p[1], 'bitsize': None} [TODO]
+        p[0] = addNodes("struct_declaration",[(p[1], None)])
+
 
     def p_struct_declarator_2(self, p):
         """ struct_declarator   : declarator COLON constant_expression
                                 | COLON constant_expression
         """
         if len(p) > 3:
-            p[0] = {'decl': p[1], 'bitsize': p[3]}
+            # p[0] = {'decl': p[1], 'bitsize': p[3]}
+        p[0] = addNodes("struct_declaration",[(p[1], None), (None, "COLON"), (p[3], constant_expression)])
         else:
-            p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+            # p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+        p[0] = addNodes("struct_declaration",[(None, "COLON"), (p[2], constant_expression)])
 
     def p_enum_specifier_1(self, p):
         """ enum_specifier  : ENUM ID
                             | ENUM TYPEID
         """
-        p[0] = c_ast.Enum(p[2], None, self._coord(p.lineno(1)))
+        # p[0] = c_ast.Enum(p[2], None, self._coord(p.lineno(1)))
+        p[0] = addNodes("enum_specifier", [(p[1], None), (None, p[2])])
 
     def p_enum_specifier_2(self, p):
         """ enum_specifier  : ENUM brace_open enumerator_list brace_close
         """
-        p[0] = c_ast.Enum(None, p[3], self._coord(p.lineno(1)))
+        # p[0] = c_ast.Enum(None, p[3], self._coord(p.lineno(1)))
+        p[0] = addNodes("enum_specifier", [ (None, "ENUM"), (p[2], None), (p[3], None), (p[4], None)])
+
 
     def p_enum_specifier_3(self, p):
         """ enum_specifier  : ENUM ID brace_open enumerator_list brace_close
                             | ENUM TYPEID brace_open enumerator_list brace_close
         """
-        p[0] = c_ast.Enum(p[2], p[4], self._coord(p.lineno(1)))
+        # p[0] = c_ast.Enum(p[2], p[4], self._coord(p.lineno(1)))
+        p[0] = addNodes("enum_specifier", [(None, "ENUM"), (None, p[2]), (p[3], None), (p[4], None), (p[5], None)])
+
 
     def p_enumerator_list(self, p):
         """ enumerator_list : enumerator
@@ -994,33 +1030,42 @@ class CParser(PLYParser):
                             | enumerator_list COMMA enumerator
         """
         if len(p) == 2:
-            p[0] = c_ast.EnumeratorList([p[1]], p[1].coord)
+            # p[0] = c_ast.EnumeratorList([p[1]], p[1].coord)
+            p[0] = addNodes("enumerator_list", [(p[1], None)])
         elif len(p) == 3:
-            p[0] = p[1]
+            # p[0] = p[1]
+            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA")])
+
         else:
-            p[1].enumerators.append(p[3])
-            p[0] = p[1]
+            # p[1].enumerators.append(p[3])
+            # p[0] = p[1]
+            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA"),(p[3], None)])
+
 
     def p_enumerator(self, p):
         """ enumerator  : ID
                         | ID EQUALS constant_expression
         """
-        if len(p) == 2:
-            enumerator = c_ast.Enumerator(
-                        p[1], None,
-                        self._coord(p.lineno(1)))
-        else:
-            enumerator = c_ast.Enumerator(
-                        p[1], p[3],
-                        self._coord(p.lineno(1)))
-        self._add_identifier(enumerator.name, enumerator.coord)
+        # if len(p) == 2:
+        #     enumerator = c_ast.Enumerator(
+        #                 p[1], None,
+        #                 self._coord(p.lineno(1)))
+        # else:
+        #     enumerator = c_ast.Enumerator(
+        #                 p[1], p[3],
+        #                 self._coord(p.lineno(1)))
+        # self._add_identifier(enumerator.name, enumerator.coord)
 
-        p[0] = enumerator
+        # p[0] = enumerator
+        if len(p) == 2:
+
 
     def p_declarator_1(self, p):
         """ declarator  : direct_declarator
         """
-        p[0] = p[1]
+        # p[0] = p[1]
+        p[0] = addNodes("struct_declaration_list",[(p[1], None)])
+
 
     def p_declarator_2(self, p):
         """ declarator  : pointer direct_declarator
@@ -1054,7 +1099,9 @@ class CParser(PLYParser):
     def p_direct_declarator_2(self, p):
         """ direct_declarator   : LPAREN declarator RPAREN
         """
-        p[0] = p[2]
+        # p[0] = p[2]
+            p[0] = addNodes("struct_declaration_list",[(None,"LPAREN"), (p[2], None), (None, "COMMA")])
+
 
     def p_direct_declarator_3(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt assignment_expression_opt RBRACKET
