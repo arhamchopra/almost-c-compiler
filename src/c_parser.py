@@ -812,7 +812,8 @@ class CParser(PLYParser):
     def p_init_declarator_list_2(self, p):
         """ init_declarator_list    : EQUALS initializer
         """
-        p[0] = [dict(decl=None, init=p[2])]
+        # p[0] = [dict(decl=None, init=p[2])]
+        p[0] = addNodes("init_declarator_list",[(None, "EQUALS")(p[2], None)])
 
     # Similarly, if the code contains duplicate typedefs of, for example,
     # array types, the array portion will appear as an abstract declarator.
@@ -820,7 +821,9 @@ class CParser(PLYParser):
     def p_init_declarator_list_3(self, p):
         """ init_declarator_list    : abstract_declarator
         """
-        p[0] = [dict(decl=p[1], init=None)]
+        # p[0] = [dict(decl=p[1], init=None)]
+        p[0] = addNodes("init_declarator_list",[(p[1], None)])
+
 
     # Returns a {decl=<declarator> : init=<initializer>} dictionary
     # If there's no initializer, uses None
@@ -829,17 +832,23 @@ class CParser(PLYParser):
         """ init_declarator : declarator
                             | declarator EQUALS initializer
         """
-        p[0] = dict(decl=p[1], init=(p[3] if len(p) > 2 else None))
+        # p[0] = dict(decl=p[1], init=(p[3] if len(p) > 2 else None))
+        if(len(p) == 2):
+            p[0] = addNodes("init_declarator",[(p[1], None)])
+        else:
+            p[0] = addNodes("init_declarator",[(p[1], None),(None,"EQUALS"),(p[3], None)])
 
     def p_specifier_qualifier_list_1(self, p):
         """ specifier_qualifier_list    : type_qualifier specifier_qualifier_list_opt
         """
-        p[0] = self._add_declaration_specifier(p[2], p[1], 'qual')
+        # p[0] = self._add_declaration_specifier(p[2], p[1], 'qual')
+        p[0] = addNodes("init_declarator",[(p[1], None),(p[2], None)])
 
     def p_specifier_qualifier_list_2(self, p):
         """ specifier_qualifier_list    : type_specifier specifier_qualifier_list_opt
         """
-        p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
+        # p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
+        p[0] = addNodes("init_declarator",[(p[1], None),(p[2], None)])
 
     # TYPEID is allowed here (and in other struct/enum related tag names), because
     # struct/enum tags reside in their own namespace and can be named the same as types
@@ -1067,13 +1076,15 @@ class CParser(PLYParser):
         """ declarator  : direct_declarator
         """
         # p[0] = p[1]
-        p[0] = addNodes("struct_declaration_list",[(p[1], None)])
+        p[0] = addNodes("declarator",[(p[1], None)])
 
 
     def p_declarator_2(self, p):
         """ declarator  : pointer direct_declarator
         """
-        p[0] = self._type_modify_decl(p[2], p[1])
+        # p[0] = self._type_modify_decl(p[2], p[1])
+        p[0] = addNodes("declarator",[(p[1], None), (p[2], None)])
+
 
     # Since it's impossible for a type to be specified after a pointer, assume
     # it's intended to be the name for this declaration.  _add_identifier will
@@ -1082,84 +1093,112 @@ class CParser(PLYParser):
     def p_declarator_3(self, p):
         """ declarator  : pointer TYPEID
         """
-        decl = c_ast.TypeDecl(
-            declname=p[2],
-            type=None,
-            quals=None,
-            coord=self._coord(p.lineno(2)))
+        # decl = c_ast.TypeDecl(
+        #     declname=p[2],
+        #     type=None,
+        #     quals=None,
+        #     coord=self._coord(p.lineno(2)))
 
-        p[0] = self._type_modify_decl(decl, p[1])
+        # p[0] = self._type_modify_decl(decl, p[1])
+        p[0] = addNodes("declarator",[(p[1], None), (None, "TYPEID")])
 
     def p_direct_declarator_1(self, p):
         """ direct_declarator   : ID
         """
-        p[0] = c_ast.TypeDecl(
-            declname=p[1],
-            type=None,
-            quals=None,
-            coord=self._coord(p.lineno(1)))
+        # p[0] = c_ast.TypeDecl(
+        #     declname=p[1],
+        #     type=None,
+        #     quals=None,
+        #     coord=self._coord(p.lineno(1)))
+        p[0] = addNodes("direct_declarator",[(None, "ID")])
+
 
     def p_direct_declarator_2(self, p):
         """ direct_declarator   : LPAREN declarator RPAREN
         """
         # p[0] = p[2]
-        p[0] = addNodes("struct_declaration_list",[(None,"LPAREN"), (p[2], None), (None, "COMMA")])
+
+        p[0] = addNodes("direct_declarator",[(None,"LPAREN"), (p[2], None), (None, "RPAREN")])
 
 
     def p_direct_declarator_3(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt assignment_expression_opt RBRACKET
         """
-        quals = (p[3] if len(p) > 5 else []) or []
-        # Accept dimension qualifiers
-        # Per C99 6.7.5.3 p7
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=p[4] if len(p) > 5 else p[3],
-            dim_quals=quals,
-            coord=p[1].coord)
+        # quals = (p[3] if len(p) > 5 else []) or []
+        # # Accept dimension qualifiers
+        # # Per C99 6.7.5.3 p7
+        # arr = c_ast.ArrayDecl(
+        #     type=None,
+        #     dim=p[4] if len(p) > 5 else p[3],
+        #     dim_quals=quals,
+        #     coord=p[1].coord)
 
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_declarator",[(p[1], None),(None,"LBRACKET"), (p[3], None),(p[4], None), (None, "RBRACKET")])
 
-    def p_direct_declarator_4(self, p):
+
+    def p_direct_declarator_4_1(self, p):
         """ direct_declarator   : direct_declarator LBRACKET STATIC type_qualifier_list_opt assignment_expression RBRACKET
-                                | direct_declarator LBRACKET type_qualifier_list STATIC assignment_expression RBRACKET
         """
         # Using slice notation for PLY objects doesn't work in Python 3 for the
         # version of PLY embedded with pycparser; see PLY Google Code issue 30.
         # Work around that here by listing the two elements separately.
-        listed_quals = [item if isinstance(item, list) else [item]
-            for item in [p[3],p[4]]]
-        dim_quals = [qual for sublist in listed_quals for qual in sublist
-            if qual is not None]
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=p[5],
-            dim_quals=dim_quals,
-            coord=p[1].coord)
+        # listed_quals = [item if isinstance(item, list) else [item]
+        #     for item in [p[3],p[4]]]
+        # dim_quals = [qual for sublist in listed_quals for qual in sublist
+        #     if qual is not None]
+        # arr = c_ast.ArrayDecl(
+        #     type=None,
+        #     dim=p[5],
+        #     dim_quals=dim_quals,
+        #     coord=p[1].coord)
 
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_declarator",[(p[1], None),(None,"LBRACKET"),(None, "STATIC"), (p[4], None),(p[5], None) (None, "RBRACKET")])
+
+    def p_direct_declarator_4_2(self, p):
+        """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list STATIC assignment_expression RBRACKET
+        """
+        # Using slice notation for PLY objects doesn't work in Python 3 for the
+        # version of PLY embedded with pycparser; see PLY Google Code issue 30.
+        # Work around that here by listing the two elements separately.
+        # listed_quals = [item if isinstance(item, list) else [item]
+        #     for item in [p[3],p[4]]]
+        # dim_quals = [qual for sublist in listed_quals for qual in sublist
+        #     if qual is not None]
+        # arr = c_ast.ArrayDecl(
+        #     type=None,
+        #     dim=p[5],
+        #     dim_quals=dim_quals,
+        #     coord=p[1].coord)
+
+        # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_declarator",[(p[1], None),(None,"LBRACKET"),(p[3], None),(None, "STATIC"), (p[5], None) (None, "RBRACKET")])
+
 
     # Special for VLAs
     #
     def p_direct_declarator_5(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt TIMES RBRACKET
         """
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=c_ast.ID(p[4], self._coord(p.lineno(4))),
-            dim_quals=p[3] if p[3] != None else [],
-            coord=p[1].coord)
+        # arr = c_ast.ArrayDecl(
+        #     type=None,
+        #     dim=c_ast.ID(p[4], self._coord(p.lineno(4))),
+        #     dim_quals=p[3] if p[3] != None else [],
+        #     coord=p[1].coord)
 
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_declarator",[(p[1], None),(None,"LBRACKET"),(p[3], None),(None, "TIMES"), (None, "RBRACKET")])
+
 
     def p_direct_declarator_6(self, p):
         """ direct_declarator   : direct_declarator LPAREN parameter_type_list RPAREN
                                 | direct_declarator LPAREN identifier_list_opt RPAREN
         """
-        func = c_ast.FuncDecl(
-            args=p[3],
-            type=None,
-            coord=p[1].coord)
+        # func = c_ast.FuncDecl(
+        #     args=p[3],
+        #     type=None,
+        #     coord=p[1].coord)
 
         # To see why _get_yacc_lookahead_token is needed, consider:
         #   typedef char TT;
@@ -1172,13 +1211,14 @@ class CParser(PLYParser):
         # and incorrectly interpreted as TYPEID.  We need to add the
         # parameters to the scope the moment the lexer sees LBRACE.
         #
-        if self._get_yacc_lookahead_token().type == "LBRACE":
-            if func.args is not None:
-                for param in func.args.params:
-                    if isinstance(param, c_ast.EllipsisParam): break
-                    self._add_identifier(param.name, param.coord)
+        # if self._get_yacc_lookahead_token().type == "LBRACE":
+        #     if func.args is not None:
+        #         for param in func.args.params:
+        #             if isinstance(param, c_ast.EllipsisParam): break
+        #             self._add_identifier(param.name, param.coord)
 
-        p[0] = self._type_modify_decl(decl=p[1], modifier=func)
+        # p[0] = self._type_modify_decl(decl=p[1], modifier=func)
+        p[0] = addNodes("direct_declarator",[(p[1], None),(None,"LPAREN"),(p[3], None), (None, "RPAREN")])
 
     def p_pointer(self, p):
         """ pointer : TIMES type_qualifier_list_opt
@@ -1200,119 +1240,153 @@ class CParser(PLYParser):
         #
         # So when we construct PtrDecl nestings, the leftmost pointer goes in
         # as the most nested type.
-        nested_type = c_ast.PtrDecl(quals=p[2] or [], type=None, coord=coord)
-        if len(p) > 3:
-            tail_type = p[3]
-            while tail_type.type is not None:
-                tail_type = tail_type.type
-            tail_type.type = nested_type
-            p[0] = p[3]
+        # nested_type = c_ast.PtrDecl(quals=p[2] or [], type=None, coord=coord)
+        # if len(p) > 3:
+        #     tail_type = p[3]
+        #     while tail_type.type is not None:
+        #         tail_type = tail_type.type
+        #     tail_type.type = nested_type
+        #     p[0] = p[3]
+        # else:
+        #     p[0] = nested_type
+        if len(p) == 3:
+            p[0] = addNodes("pointer",[ (None, "TIMES"),(p[2],None)])
         else:
-            p[0] = nested_type
+            p[0] = addNodes("pointer",[ (None, "TIMES"),(p[2],None), (p[3], None)])
 
     def p_type_qualifier_list(self, p):
         """ type_qualifier_list : type_qualifier
                                 | type_qualifier_list type_qualifier
         """
-        p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
+        # p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
+        if len(p) == 2:
+            p[0] = addNodes("type_qualifier_list",[ (p[1],None)])
+        else:
+            p[0] = addNodes("type_qualifier_list",[ (p[1],None), (p[2], None)])
 
     def p_parameter_type_list(self, p):
         """ parameter_type_list : parameter_list
                                 | parameter_list COMMA ELLIPSIS
         """
-        if len(p) > 2:
-            p[1].params.append(c_ast.EllipsisParam(self._coord(p.lineno(3))))
+        # if len(p) > 2:
+        #     p[1].params.append(c_ast.EllipsisParam(self._coord(p.lineno(3))))
 
-        p[0] = p[1]
+        # p[0] = p[1]
+        if len(p) == 2:
+            p[0] = addNodes("type_parameter_list",[ (p[1],None)])
+        else:
+            p[0] = addNodes("type_parameter_list",[ (p[1],None), (None, "COMMA"), (None, "ELLIPSIS")])
 
     def p_parameter_list(self, p):
         """ parameter_list  : parameter_declaration
                             | parameter_list COMMA parameter_declaration
         """
-        if len(p) == 2: # single parameter
-            p[0] = c_ast.ParamList([p[1]], p[1].coord)
+        # if len(p) == 2: # single parameter
+        #     p[0] = c_ast.ParamList([p[1]], p[1].coord)
+        # else:
+        #     p[1].params.append(p[3])
+        #     p[0] = p[1]
+
+        if len(p) == 2:
+            p[0] = addNodes("parameter_list",[(p[1],None)])
         else:
-            p[1].params.append(p[3])
-            p[0] = p[1]
+            p[0] = addNodes("parameter_list",[(p[1],None), (None, "COMMA"), (p[3],None)])
 
     def p_parameter_declaration_1(self, p):
         """ parameter_declaration   : declaration_specifiers declarator
         """
-        spec = p[1]
-        if not spec['type']:
-            spec['type'] = [c_ast.IdentifierType(['int'],
-                coord=self._coord(p.lineno(1)))]
-        p[0] = self._build_declarations(
-            spec=spec,
-            decls=[dict(decl=p[2])])[0]
+        # spec = p[1]
+        # if not spec['type']:
+        #     spec['type'] = [c_ast.IdentifierType(['int'],
+        #         coord=self._coord(p.lineno(1)))]
+        # p[0] = self._build_declarations(
+        #     spec=spec,
+        #     decls=[dict(decl=p[2])])[0]
+        p[0] = addNodes("parameter_declaration",[(p[1],None), (p[2], None)])
+
 
     def p_parameter_declaration_2(self, p):
         """ parameter_declaration   : declaration_specifiers abstract_declarator_opt
         """
-        spec = p[1]
-        if not spec['type']:
-            spec['type'] = [c_ast.IdentifierType(['int'],
-                coord=self._coord(p.lineno(1)))]
+        # spec = p[1]
+        # if not spec['type']:
+        #     spec['type'] = [c_ast.IdentifierType(['int'],
+        #         coord=self._coord(p.lineno(1)))]
 
-        # Parameters can have the same names as typedefs.  The trouble is that
-        # the parameter's name gets grouped into declaration_specifiers, making
-        # it look like an old-style declaration; compensate.
-        #
-        if len(spec['type']) > 1 and len(spec['type'][-1].names) == 1 and \
-                self._is_type_in_scope(spec['type'][-1].names[0]):
-            decl = self._build_declarations(
-                    spec=spec,
-                    decls=[dict(decl=p[2], init=None)])[0]
+        # # Parameters can have the same names as typedefs.  The trouble is that
+        # # the parameter's name gets grouped into declaration_specifiers, making
+        # # it look like an old-style declaration; compensate.
+        # #
+        # if len(spec['type']) > 1 and len(spec['type'][-1].names) == 1 and \
+        #         self._is_type_in_scope(spec['type'][-1].names[0]):
+        #     decl = self._build_declarations(
+        #             spec=spec,
+        #             decls=[dict(decl=p[2], init=None)])[0]
 
-        # This truly is an old-style parameter declaration
-        #
-        else:
-            decl = c_ast.Typename(
-                name='',
-                quals=spec['qual'],
-                type=p[2] or c_ast.TypeDecl(None, None, None),
-                coord=self._coord(p.lineno(2)))
-            typename = spec['type']
-            decl = self._fix_decl_name_type(decl, typename)
+        # # This truly is an old-style parameter declaration
+        # #
+        # else:
+        #     decl = c_ast.Typename(
+        #         name='',
+        #         quals=spec['qual'],
+        #         type=p[2] or c_ast.TypeDecl(None, None, None),
+        #         coord=self._coord(p.lineno(2)))
+        #     typename = spec['type']
+        #     decl = self._fix_decl_name_type(decl, typename)
 
-        p[0] = decl
+        # p[0] = decl
+        p[0] = addNodes("parameter_declaration",[(p[1],None), (p[2], None)])
+
 
     def p_identifier_list(self, p):
         """ identifier_list : identifier
                             | identifier_list COMMA identifier
         """
-        if len(p) == 2: # single parameter
-            p[0] = c_ast.ParamList([p[1]], p[1].coord)
+        # if len(p) == 2: # single parameter
+        #     p[0] = c_ast.ParamList([p[1]], p[1].coord)
+        # else:
+        #     p[1].params.append(p[3])
+        #     p[0] = p[1]
+        if len(p) == 2:
+           p[0] = addNodes("identifier_list",[(p[1],None)])
         else:
-            p[1].params.append(p[3])
-            p[0] = p[1]
+           p[0] = addNodes("identifier_list",[(p[1],None),(None, "COMMA"), (p[3], None)])
+
 
     def p_initializer_1(self, p):
         """ initializer : assignment_expression
         """
-        p[0] = p[1]
+        # p[0] = p[1]
+        p[0] = addNodes("initializer",[(p[1],None)])
 
     def p_initializer_2(self, p):
         """ initializer : brace_open initializer_list_opt brace_close
                         | brace_open initializer_list COMMA brace_close
         """
-        if p[2] is None:
-            p[0] = c_ast.InitList([], self._coord(p.lineno(1)))
+        # if p[2] is None:
+        #     p[0] = c_ast.InitList([], self._coord(p.lineno(1)))
+        # else:
+        #     p[0] = p[2]
+        if len(p) == 4:
+            p[0] = addNodes("initializer",[(p[1],None),(p[2],None),(p[3],None)])
         else:
-            p[0] = p[2]
+            p[0] = addNodes("initializer",[(p[1],None),(p[2],None),(None, "COMMMA"),(p[4],None)])
 
     def p_initializer_list(self, p):
         """ initializer_list    : designation_opt initializer
                                 | initializer_list COMMA designation_opt initializer
         """
-        if len(p) == 3: # single initializer
-            init = p[2] if p[1] is None else c_ast.NamedInitializer(p[1], p[2])
-            p[0] = c_ast.InitList([init], p[2].coord)
+        # if len(p) == 3: # single initializer
+        #     init = p[2] if p[1] is None else c_ast.NamedInitializer(p[1], p[2])
+        #     p[0] = c_ast.InitList([init], p[2].coord)
+        # else:
+        #     init = p[4] if p[3] is None else c_ast.NamedInitializer(p[3], p[4])
+        #     p[1].exprs.append(init)
+        #     p[0] = p[1]
+        if len(p) == 3:
+            p[0] = addNodes("initializer_list",[(p[1],None),(p[2],None)])
         else:
-            init = p[4] if p[3] is None else c_ast.NamedInitializer(p[3], p[4])
-            p[1].exprs.append(init)
-            p[0] = p[1]
-
+            p[0] = addNodes("initializer_list",[(p[1],None),(None, "COMMMA"),(p[3],None),(p[4],None)])
     def p_designation(self, p):
         """ designation : designator_list EQUALS
         """
