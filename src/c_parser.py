@@ -997,10 +997,10 @@ class CParser(PLYParser):
         """
         if len(p) > 3:
             # p[0] = {'decl': p[1], 'bitsize': p[3]}
-        p[0] = addNodes("struct_declaration",[(p[1], None), (None, "COLON"), (p[3], constant_expression)])
+            p[0] = addNodes("struct_declaration",[(p[1], None), (None, "COLON"), (p[3], constant_expression)])
         else:
             # p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
-        p[0] = addNodes("struct_declaration",[(None, "COLON"), (p[2], constant_expression)])
+            p[0] = addNodes("struct_declaration",[(None, "COLON"), (p[2], constant_expression)])
 
     def p_enum_specifier_1(self, p):
         """ enum_specifier  : ENUM ID
@@ -1058,6 +1058,9 @@ class CParser(PLYParser):
 
         # p[0] = enumerator
         if len(p) == 2:
+            p[0] =  addNodes("enumerator",[(None, p[1])])
+        else:
+            p[0] = addNodes("enumerator", [(None, p[1]), (None, p[2]), (p[3], constant_expression)])
 
 
     def p_declarator_1(self, p):
@@ -1100,7 +1103,7 @@ class CParser(PLYParser):
         """ direct_declarator   : LPAREN declarator RPAREN
         """
         # p[0] = p[2]
-            p[0] = addNodes("struct_declaration_list",[(None,"LPAREN"), (p[2], None), (None, "COMMA")])
+        p[0] = addNodes("struct_declaration_list",[(None,"LPAREN"), (p[2], None), (None, "COMMA")])
 
 
     def p_direct_declarator_3(self, p):
@@ -1313,7 +1316,8 @@ class CParser(PLYParser):
     def p_designation(self, p):
         """ designation : designator_list EQUALS
         """
-        p[0] = p[1]
+        #  p[0] = p[1]
+        p[0] = addNodes("designation" ,[(p[1], None), (None, "EQUALS")])
 
     # Designators are represented as a list of nodes, in the order in which
     # they're written in the code.
@@ -1322,42 +1326,55 @@ class CParser(PLYParser):
         """ designator_list : designator
                             | designator_list designator
         """
-        p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
+        #  p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
+        if len(p) == 2:
+            p[0] = addNodes("designator_list" ,[(p[1], None)])
+        else:
+            p[0] = addNodes("designator_list" ,[(p[1], None), (p[2], None)])
 
     def p_designator(self, p):
         """ designator  : LBRACKET constant_expression RBRACKET
                         | PERIOD identifier
         """
-        p[0] = p[2]
+        #  p[0] = p[2]
+        if len(p) == 3:
+            p[0] = addNodes("designator" ,[(None, "PERIOD"), (p[2], None)])
+        else:
+            p[0] = addNodes("designator" ,[(None, "LBRACKET"), (p[2], None), (None, "RBRACKET")])
+
 
     def p_type_name(self, p):
         """ type_name   : specifier_qualifier_list abstract_declarator_opt
         """
-        typename = c_ast.Typename(
-            name='',
-            quals=p[1]['qual'],
-            type=p[2] or c_ast.TypeDecl(None, None, None),
-            coord=self._coord(p.lineno(2)))
-
-        p[0] = self._fix_decl_name_type(typename, p[1]['type'])
+        #  typename = c_ast.Typename(
+        #      name='',
+        #      quals=p[1]['qual'],
+        #      type=p[2] or c_ast.TypeDecl(None, None, None),
+        #      coord=self._coord(p.lineno(2)))
+        #
+        #  p[0] = self._fix_decl_name_type(typename, p[1]['type'])
+        p[0] = addNodes("type_name" ,[(p[1], None), (p[2], None)])
 
     def p_abstract_declarator_1(self, p):
         """ abstract_declarator     : pointer
         """
-        dummytype = c_ast.TypeDecl(None, None, None)
-        p[0] = self._type_modify_decl(
-            decl=dummytype,
-            modifier=p[1])
+        #  dummytype = c_ast.TypeDecl(None, None, None)
+        #  p[0] = self._type_modify_decl(
+        #      decl=dummytype,
+        #      modifier=p[1])
+        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])
 
     def p_abstract_declarator_2(self, p):
         """ abstract_declarator     : pointer direct_abstract_declarator
         """
-        p[0] = self._type_modify_decl(p[2], p[1])
+        #  p[0] = self._type_modify_decl(p[2], p[1])
+        p[0] = addNodes("abstract_declarator" ,[(p[1], None), (p[2], None)])
 
     def p_abstract_declarator_3(self, p):
         """ abstract_declarator     : direct_abstract_declarator
         """
-        p[0] = p[1]
+        #  p[0] = p[1]
+        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])
 
     # Creating and using direct_abstract_declarator_opt here
     # instead of listing both direct_abstract_declarator and the
@@ -1366,65 +1383,73 @@ class CParser(PLYParser):
     #
     def p_direct_abstract_declarator_1(self, p):
         """ direct_abstract_declarator  : LPAREN abstract_declarator RPAREN """
-        p[0] = p[2]
+        #  p[0] = p[2]
+        p[0] = addNodes("direct_abstract_declarator" ,[(None, "LPAREN"), (p[2], None), (None, "RPAREN")])
 
     def p_direct_abstract_declarator_2(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LBRACKET assignment_expression_opt RBRACKET
         """
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=p[3],
-            dim_quals=[],
-            coord=p[1].coord)
-
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        #  arr = c_ast.ArrayDecl(
+        #      type=None,
+        #      dim=p[3],
+        #      dim_quals=[],
+        #      coord=p[1].coord)
+        #
+        #  p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, "LBRACKET"), (p[3], None), (None, "RBRACKET")])
 
     def p_direct_abstract_declarator_3(self, p):
         """ direct_abstract_declarator  : LBRACKET assignment_expression_opt RBRACKET
         """
-        p[0] = c_ast.ArrayDecl(
-            type=c_ast.TypeDecl(None, None, None),
-            dim=p[2],
-            dim_quals=[],
-            coord=self._coord(p.lineno(1)))
+        #  p[0] = c_ast.ArrayDecl(
+        #      type=c_ast.TypeDecl(None, None, None),
+        #      dim=p[2],
+        #      dim_quals=[],
+        #      coord=self._coord(p.lineno(1)))
+        p[0] = addNodes("direct_abstract_declarator" ,[(None, "LBRACKET"), (p[2], None), (None, "RBRACKET")])
 
     def p_direct_abstract_declarator_4(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LBRACKET TIMES RBRACKET
         """
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=c_ast.ID(p[3], self._coord(p.lineno(3))),
-            dim_quals=[],
-            coord=p[1].coord)
-
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        #  arr = c_ast.ArrayDecl(
+        #      type=None,
+        #      dim=c_ast.ID(p[3], self._coord(p.lineno(3))),
+        #      dim_quals=[],
+        #      coord=p[1].coord)
+        #
+        #  p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
+        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, "LBRACKET"), (None, "TIMES"), (None, "RBRACKET")])
 
     def p_direct_abstract_declarator_5(self, p):
         """ direct_abstract_declarator  : LBRACKET TIMES RBRACKET
         """
-        p[0] = c_ast.ArrayDecl(
-            type=c_ast.TypeDecl(None, None, None),
-            dim=c_ast.ID(p[3], self._coord(p.lineno(3))),
-            dim_quals=[],
-            coord=self._coord(p.lineno(1)))
+        #  p[0] = c_ast.ArrayDecl(
+        #      type=c_ast.TypeDecl(None, None, None),
+        #      dim=c_ast.ID(p[3], self._coord(p.lineno(3))),
+        #      dim_quals=[],
+        #      coord=self._coord(p.lineno(1)))
+        p[0] = addNodes("direct_abstract_declarator" ,[(None, "LBRACKET"), (None, "TIMES"), (None, "RBRACKET")])
 
     def p_direct_abstract_declarator_6(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LPAREN parameter_type_list_opt RPAREN
         """
-        func = c_ast.FuncDecl(
-            args=p[3],
-            type=None,
-            coord=p[1].coord)
+        #  func = c_ast.FuncDecl(
+        #      args=p[3],
+        #      type=None,
+        #      coord=p[1].coord)
 
-        p[0] = self._type_modify_decl(decl=p[1], modifier=func)
+        #  p[0] = self._type_modify_decl(decl=p[1], modifier=func)
+        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, "LPAREN"), (p[3], None), (None, "RPAREN")])
 
     def p_direct_abstract_declarator_7(self, p):
         """ direct_abstract_declarator  : LPAREN parameter_type_list_opt RPAREN
         """
-        p[0] = c_ast.FuncDecl(
-            args=p[2],
-            type=c_ast.TypeDecl(None, None, None),
-            coord=self._coord(p.lineno(1)))
+        #  p[0] = c_ast.FuncDecl(
+        #      args=p[2],
+        #      type=c_ast.TypeDecl(None, None, None),
+        #      coord=self._coord(p.lineno(1)))
+        p[0] = addNodes("direct_abstract_declarator" ,[(None, "LPAREN"), (p[2], None), (None, "RPAREN")])
+
 
     # declaration is a list, statement isn't. To make it consistent, block_item
     # will always be a list
@@ -1433,7 +1458,8 @@ class CParser(PLYParser):
         """ block_item  : declaration
                         | statement
         """
-        p[0] = p[1] if isinstance(p[1], list) else [p[1]]
+        #  p[0] = p[1] if isinstance(p[1], list) else [p[1]]
+        p[0] = addNodes("block_item", [(p[1], None)])
 
     # Since we made block_item a list, this just combines lists
     #
@@ -1442,73 +1468,96 @@ class CParser(PLYParser):
                             | block_item_list block_item
         """
         # Empty block items (plain ';') produce [None], so ignore them
-        p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
+        #  p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
+        if len(p) == 2 or p[2] == [None]:
+            p[0] = addNodes("block_item_list", [(p[1], None)])
+        else:
+            p[0] = addNodes("block_item_list", [(p[1], None), (p[2], None)])
 
     def p_compound_statement_1(self, p):
         """ compound_statement : brace_open block_item_list_opt brace_close """
-        p[0] = c_ast.Compound(
-            block_items=p[2],
-            coord=self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Compound(
+            #  block_items=p[2],
+            #  coord=self._coord(p.lineno(1)))
+        p[0] = addNodes("compound_statement", [(p[1], None), (p[2], None), (p[3], None)])
 
     def p_labeled_statement_1(self, p):
         """ labeled_statement : ID COLON statement """
-        p[0] = c_ast.Label(p[1], p[3], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Label(p[1], p[3], self._coord(p.lineno(1)))
+        p[0] = addNodes("labeled_statement", [(None, "ID"), (None, "COLON"), (p[3], None)])
 
     def p_labeled_statement_2(self, p):
         """ labeled_statement : CASE constant_expression COLON statement """
-        p[0] = c_ast.Case(p[2], [p[4]], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Case(p[2], [p[4]], self._coord(p.lineno(1)))
+        p[0] = addNodes("labeled_statement", [(None, "CASE"), (p[2], None), (None, "COLON"), (p[4], None)])
 
     def p_labeled_statement_3(self, p):
         """ labeled_statement : DEFAULT COLON statement """
-        p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
+        p[0] = addNodes("labeled_statement", [(None, "DEFAULT"), (None, "COLON"), (p[3], None)])
 
     def p_selection_statement_1(self, p):
         """ selection_statement : IF LPAREN expression RPAREN statement """
-        p[0] = c_ast.If(p[3], p[5], None, self._coord(p.lineno(1)))
+        #  p[0] = c_ast.If(p[3], p[5], None, self._coord(p.lineno(1)))
+        p[0] = addNodes("selection_statement", [(None, "IF"), (None, "LPAREN"), (p[3], None), (None, "RPAREN"), (p[5], None)])
 
     def p_selection_statement_2(self, p):
         """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement """
-        p[0] = c_ast.If(p[3], p[5], p[7], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.If(p[3], p[5], p[7], self._coord(p.lineno(1)))
+        p[0] = addNodes("selection_statement", [(None, "IF"), (None, "LPAREN"), (p[3], None), (None, "RPAREN"), (p[5], None), (None, "ELSE"), (p[7], None)])
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
-        p[0] = fix_switch_cases(
-                c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
+        #  p[0] = fix_switch_cases(
+                #  c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
+        p[0] = addNodes("selection_statement", [(None, "SWITCH"), (None, "LPAREN"), (p[3], None), (None, "RPAREN"), (p[5], None)])
 
     def p_iteration_statement_1(self, p):
         """ iteration_statement : WHILE LPAREN expression RPAREN statement """
-        p[0] = c_ast.While(p[3], p[5], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.While(p[3], p[5], self._coord(p.lineno(1)))
+        p[0] = addNodes("iteration_statement", [(None, "WHILE"), (None, "LPAREN"), (p[3], None), (None, "RPAREN"), (p[5], None)])
 
     def p_iteration_statement_2(self, p):
         """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
-        p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
+        p[0] = addNodes("iteration_statement", [(None , "DO"), (p[1], None), (None, "WHILE"), (None, "LPAREN"), (p[5], None), (None, "RPAREN"), (None, "SEMI")])
 
     def p_iteration_statement_3(self, p):
         """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
-        p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
+        p[0] = addNodes("iteration_statement", [(None , "FOR"), (None, "LPAREN"), (p[3], None), (None, "SEMI"), (p[6], None), (None, "SEMI"), (p[8], None), (None, "RPAREN"), (p[9], None)])
 
     def p_iteration_statement_4(self, p):
         """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
-        p[0] = c_ast.For(c_ast.DeclList(p[3], self._coord(p.lineno(1))),
-                         p[4], p[6], p[8], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.For(c_ast.DeclList(p[3], self._coord(p.lineno(1))),
+                         #  p[4], p[6], p[8], self._coord(p.lineno(1)))
+        p[0] = addNodes("iteration_statement", [(None , "FOR"), (None, "LPAREN"), (p[3], None), (p[4], None), (None, "SEMI"), (p[6], None), (None, "RPAREN"), (p[8], None)])
 
     def p_jump_statement_1(self, p):
         """ jump_statement  : GOTO ID SEMI """
-        p[0] = c_ast.Goto(p[2], self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Goto(p[2], self._coord(p.lineno(1)))
+        p[0] = addNodes("jump_statement", [(None, "GOTO"), (None, p[2]), (None, "SEMI")])
 
     def p_jump_statement_2(self, p):
         """ jump_statement  : BREAK SEMI """
-        p[0] = c_ast.Break(self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Break(self._coord(p.lineno(1)))
+        p[0] = addNodes("jump_statement", [(None, "BREAK"), (None, "SEMI")])
 
     def p_jump_statement_3(self, p):
         """ jump_statement  : CONTINUE SEMI """
-        p[0] = c_ast.Continue(self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Continue(self._coord(p.lineno(1)))
+        p[0] = addNodes("jump_statement", [(None, "CONTINUE"), (None, "SEMI")])
 
     def p_jump_statement_4(self, p):
         """ jump_statement  : RETURN expression SEMI
                             | RETURN SEMI
         """
-        p[0] = c_ast.Return(p[2] if len(p) == 4 else None, self._coord(p.lineno(1)))
+        #  p[0] = c_ast.Return(p[2] if len(p) == 4 else None, self._coord(p.lineno(1)))
+        if len(p) == 3:
+            p[0] = addNodes("jump_statement", [(None, "RETURN"), (None, "SEMI")])
+        else:
+            p[0] = addNodes("jump_statement", [(None, "RETURN"), (p[2], None), (None, "SEMI")])
+            
 
     def p_expression_statement(self, p):
         """ expression_statement : expression_opt SEMI """
