@@ -7,7 +7,7 @@
 # License: BSD
 #------------------------------------------------------------------------------
 import re
-inmport sys
+import sys
 import pydot
 
 inFile = sys.argv[1]
@@ -1742,7 +1742,8 @@ class CParser(PLYParser):
     def p_brace_close(self, p):
         """ brace_close :   RBRACE
         """
-        p[0] = p[1]
+        #  p[0] = p[1]
+        p[0] = addNodes("brace_close", [(None, "RBRACE")])
         p.set_lineno(0, p.lineno(1))
 
     def p_empty(self, p):
