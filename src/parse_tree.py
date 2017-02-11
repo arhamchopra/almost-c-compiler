@@ -32,7 +32,7 @@ def createTypeNode(type):
     global i
     global graph
     t_node = addNodes(type,[])
-    type_node = addNodes("type_specifier", [(tnode, None)])
+    type_node = addNodes("type_specifier", [(t_node, None)])
     decl_spec_node = addNodes("declaration_specifier",[(type_node, None)])
     return decl_spec_node
     

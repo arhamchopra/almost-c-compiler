@@ -11,7 +11,7 @@ import sys
 
 from ply import lex
 from ply.lex import TOKEN
-
+from parse_error import *
 
 class CLexer(object):
     """ A lexer for the C language. After building it, set the
@@ -90,8 +90,9 @@ class CLexer(object):
     ##
     def _error(self, msg, token):
         location = self._make_tok_location(token)
-        self.error_func(msg, location[0], location[1])
+        self.error_func("Lexer: "+msg, location[0], location[1])
         self.lexer.skip(1)
+        # adderror('lexer',msg + "location 0:" +location[0] + "location 1" + location[1])
 
     def _make_tok_location(self, token):
         return (token.lineno, self.find_tok_column(token))
@@ -483,13 +484,14 @@ class CLexer(object):
         return t
 
     def t_error(self, t):
-        #  msg = 'Illegal character %s' % repr(t.value[0])
-        #  self._error(msg, t)
-        t.lexer.skip(1)
-        print('Illegal character {}'.format(repr(t.value[0])))
+        msg = 'Illegal character %s' % repr(t.value[0])
+        self._error(msg, t)
+        # t.lexer.skip(1)
+        # adderror('lexer','Illegal character {}'.format(repr(t.value[0])))
     
-    def t_eof(self, t):
-        print(t)
-        print("BYE BYE")
-        #  sys.exit(0)
+    # def t_eof(self, t):
+    #     msg = ('lexer',t)
+    #     self._error(msg, t)
+    #     print("BYE BYE")
+    #     sys.exit(0)
 

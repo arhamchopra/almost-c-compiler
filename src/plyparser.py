@@ -7,7 +7,7 @@
 # Eli Bendersky [http://eli.thegreenplace.net]
 # License: BSD
 #-----------------------------------------------------------------
-
+from parse_error import adderror
 
 class Coord(object):
     """ Coordinates of a syntactic element. Consists of:
@@ -52,4 +52,4 @@ class PLYParser(object):
 
     def _parse_error(self, msg, coord):
         #  raise ParseError("%s: %s" % (coord, msg))
-        print("%s: %s" % (coord, msg))
+        adderror("%s: %s" % (coord, msg))

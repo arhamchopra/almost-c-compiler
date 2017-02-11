@@ -9,6 +9,7 @@
 import re
 import sys
 import pydot
+from parse_error import *
 
 # inFile = sys.argv[1]
 from ply import yacc
@@ -1998,17 +1999,19 @@ class CParser(PLYParser):
                 'before: %s' % p.value,
                 self._coord(lineno=p.lineno,
                             column=self.clex.find_tok_column(p)))
-            self.cparser.errok()
+            # self.cparser.errok()
         else:
             self._parse_error('At end of input', self.clex.filename)
 
 
     def ParseInput(self, inp, fname):
         self.parse(inp)
-        if(self.cparser.errorok):
+        if(getErrorCount() == 0):
             print("Making the parse tree wait for a minute :)")
             saveGraph(fname)
         else:
+            for msg in getErrorMsg():
+                print(msg)
             print("Could not build the parse tree :(")
 
 

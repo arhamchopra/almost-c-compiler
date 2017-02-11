@@ -2,7 +2,6 @@ import sys
 
 from c_lexer import CLexer
 
-
 def error_func(err_msg, line, col):
     print("Got an error: {} \n line: {} col: {} ".format(err_msg, line, col))
 
@@ -22,7 +21,6 @@ lexer.build()
 
 if (len(sys.argv) > 1):
     for i in range(1,len(sys.argv)):
-        print("HELLO")
         file = open(sys.argv[i])
         inp = file.read();
         lexer.input(inp)
