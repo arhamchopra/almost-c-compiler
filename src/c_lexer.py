@@ -49,7 +49,7 @@ class CLexer(object):
         # Keeps track of the last token returned from self.token()
         self.last_token = None
 
-        # Allow either "# line" or "# <num>" to support GCC's
+        # Allow either "# line" or "# <num>" to support GCCs
         # cpp output
         #
         self.line_pattern = re.compile('([ \t]*line\W)|([ \t]*\d+)')
@@ -107,6 +107,7 @@ class CLexer(object):
         'RESTRICT', 'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
         'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID',
         'VOLATILE', 'WHILE', '__INT128',
+        'COMMENT',
     )
 
     keyword_map = {}
@@ -321,6 +322,8 @@ class CLexer(object):
     ## Rules for the normal state
     ##
     t_ignore = ' \t'
+    t_ignore_COMMENT1 = r'//..*'
+    t_ignore_COMMENT2 = r'/\*[\s\S]*?\*/'
 
     # Newlines
     def t_NEWLINE(self, t):
@@ -382,6 +385,7 @@ class CLexer(object):
     t_SEMI              = r';'
     t_COLON             = r':'
     t_ELLIPSIS          = r'\.\.\.'
+
 
     # Scope delimiters
     # To see why on_lbrace_func is needed, consider:

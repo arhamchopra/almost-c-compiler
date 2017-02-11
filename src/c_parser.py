@@ -565,13 +565,14 @@ class CParser(PLYParser):
         """ external_declaration    : SEMI
         """
         # p[0] = None
-        p[0] = addNodes("external_declaration", [(None, "SEMI")])
+        p[0] = addNodes("external_declaration", [(None, "SEMI( {} )".format(p[1]))])
 
     def p_pp_directive(self, p):
         """ pp_directive  : PPHASH
         """
-        self._parse_error('Directives not supported yet',
-                          self._coord(p.lineno(1)))
+        #  self._parse_error('Directives not supported yet',
+        #                    self._coord(p.lineno(1)))
+        p[0] = addNodes("pp_directive", [(None, "PPHASH( {} )".format(p[1]))])
     
     def p_pppragma_directive(self, p):
        """ pppragma_directive      : PPPRAGMA
@@ -579,10 +580,10 @@ class CParser(PLYParser):
        """
        if len(p) == 3:
            #  p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
-           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA"), (None, "PPPRAGMASTR")])
+           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1])), (None, "PPPRAGMASTR( {} )".format(p[2]))])
        else:
            #  p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
-           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA")])
+           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1]))])
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
@@ -757,13 +758,13 @@ class CParser(PLYParser):
                                     | TYPEDEF
         """
         # p[0] = p[1]
-        p[0] = addNodes("storage_class_specifier", [(None, p[1].upper())])
+        p[0] = addNodes("storage_class_specifier", [(None, p[1].upper()+"( {} )".format(p[1]))])
 
     def p_function_specifier(self, p):
         """ function_specifier  : INLINE
         """
         # p[0] = p[1]
-        p[0] = addNodes("function_specifiers", [(None, p[1].upper())])
+        p[0] = addNodes("function_specifiers", [(None, p[1].upper()+"( {} )".format(p[1]))])
 
     def p_type_specifier_1(self, p):
         """ type_specifier  : VOID
@@ -780,7 +781,7 @@ class CParser(PLYParser):
                             | __INT128
         """
         # p[0] = c_ast.IdentifierType([p[1]], coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("type_specifiers", [(None, p[1].upper())])
+        p[0] = addNodes("type_specifiers", [(None, p[1].upper()+"( {} )".format(p[1]))])
 
     def p_type_specifier_2(self, p):
         """ type_specifier  : typedef_name
@@ -796,7 +797,7 @@ class CParser(PLYParser):
                             | VOLATILE
         """
         # p[0] = p[1]
-        p[0] = addNodes("type_specifiers", [(None, p[1].upper())])
+        p[0] = addNodes("type_specifiers", [(None, p[1].upper()+"( {} )".format(p[1]))])
 
     def p_init_declarator_list_1(self, p):
         """ init_declarator_list    : init_declarator
@@ -804,7 +805,7 @@ class CParser(PLYParser):
         """
         # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
         if len(p) == 4 :
-            p[0] = addNodes("init_declarator_list",[(p[1], None),(None, "COMMA"), (p[3], None)])
+            p[0] = addNodes("init_declarator_list",[(p[1], None),(None, "COMMA( , )"), (p[3], None)])
         else:
             p[0] = addNodes("init_declarator_list",[(p[1], None)])
 
@@ -818,7 +819,7 @@ class CParser(PLYParser):
         """ init_declarator_list    : EQUALS initializer
         """
         # p[0] = [dict(decl=None, init=p[2])]
-        p[0] = addNodes("init_declarator_list",[(None, "EQUALS")(p[2], None)])
+        p[0] = addNodes("init_declarator_list",[(None, "EQUALS( = )"), (p[2], None)])
 
     # Similarly, if the code contains duplicate typedefs of, for example,
     # array types, the array portion will appear as an abstract declarator.
@@ -841,7 +842,7 @@ class CParser(PLYParser):
         if(len(p) == 2):
             p[0] = addNodes("init_declarator",[(p[1], None)])
         else:
-            p[0] = addNodes("init_declarator",[(p[1], None),(None,"EQUALS"),(p[3], None)])
+            p[0] = addNodes("init_declarator",[(p[1], None), (None,"EQUALS( = )"), (p[3], None)])
 
     def p_specifier_qualifier_list_1(self, p):
         """ specifier_qualifier_list    : type_qualifier specifier_qualifier_list_opt
@@ -1074,7 +1075,7 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] =  addNodes("enumerator",[(None, p[1])])
         else:
-            p[0] = addNodes("enumerator", [(None, p[1]), (None, p[2]), (p[3], constant_expression)])
+            p[0] = addNodes("enumerator", [(None, "ID( {} )".format(p[1])), (None, "EQUALS( = )"), (p[3], constant_expression)])
 
 
     def p_declarator_1(self, p):
@@ -1396,7 +1397,7 @@ class CParser(PLYParser):
         """ designation : designator_list EQUALS
         """
         #  p[0] = p[1]
-        p[0] = addNodes("designation" ,[(p[1], None), (None, "EQUALS")])
+        p[0] = addNodes("designation" ,[(p[1], None), (None, "EQUALS( =  )")])
 
     # Designators are represented as a list of nodes, in the order in which
     # they're written in the code.
@@ -1946,11 +1947,11 @@ class CParser(PLYParser):
         if len(p) == 2: # single literal
             #  p[0] = c_ast.Constant(
             #      'string', p[1], self._coord(p.lineno(1)))
-            p[0] = addNodes("unified_string_literal", [(None, "STRING_LITERAL")])
+            p[0] = addNodes("unified_string_literal", [(None, p[1])])
         else:
             #  p[1].value = p[1].value[:-1] + p[2][1:]
             #  p[0] = p[1]
-            p[0] = addNodes("unified_string_literal", [(p[1], None), (None, "STRING_LITERAL")])
+            p[0] = addNodes("unified_string_literal", [(p[1], None), (None, p[2])])
 
     def p_unified_wstring_literal(self, p):
         """ unified_wstring_literal : WSTRING_LITERAL
