@@ -214,6 +214,10 @@ class CParser(PLYParser):
             ask the lexer.
         """
         return self.clex.last_token
+    
+    #  def getType(tok):
+        #  if re.compile(tok
+
 
     # To understand what's going on here, read sections A.8.5 and
     # A.8.6 of K&R2 very carefully.
