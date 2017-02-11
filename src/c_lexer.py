@@ -483,7 +483,13 @@ class CLexer(object):
         return t
 
     def t_error(self, t):
-        msg = 'Illegal character %s' % repr(t.value[0])
-        self._error(msg, t)
-
+        #  msg = 'Illegal character %s' % repr(t.value[0])
+        #  self._error(msg, t)
+        t.lexer.skip(1)
+        print('Illegal character {}'.format(repr(t.value[0])))
+    
+    def t_eof(self, t):
+        print(t)
+        print("BYE BYE")
+        #  sys.exit(0)
 

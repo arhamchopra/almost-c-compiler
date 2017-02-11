@@ -22,6 +22,7 @@ lexer.build()
 
 if (len(sys.argv) > 1):
     for i in range(1,len(sys.argv)):
+        print("HELLO")
         file = open(sys.argv[i])
         inp = file.read();
         lexer.input(inp)

@@ -1998,8 +1998,19 @@ class CParser(PLYParser):
                 'before: %s' % p.value,
                 self._coord(lineno=p.lineno,
                             column=self.clex.find_tok_column(p)))
+            self.cparser.errok()
         else:
             self._parse_error('At end of input', self.clex.filename)
+
+
+    def ParseInput(self, inp, fname):
+        self.parse(inp)
+        if(self.cparser.errorok):
+            print("Making the parse tree wait for a minute :)")
+            saveGraph(fname)
+        else:
+            print("Could not build the parse tree :(")
+
 
 
 #------------------------------------------------------------------------------

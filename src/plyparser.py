@@ -29,7 +29,6 @@ class Coord(object):
 
 class ParseError(Exception): pass
 
-
 class PLYParser(object):
     def _create_opt_rule(self, rulename):
         """ Given a rule name, creates an optional ply.yacc rule
@@ -52,4 +51,5 @@ class PLYParser(object):
                 column=column)
 
     def _parse_error(self, msg, coord):
-        raise ParseError("%s: %s" % (coord, msg))
+        #  raise ParseError("%s: %s" % (coord, msg))
+        print("%s: %s" % (coord, msg))
