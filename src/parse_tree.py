@@ -36,5 +36,7 @@ def createTypeNode(type):
     decl_spec_node = addNodes("declaration_specifier",[(type_node, None)])
     return decl_spec_node
     
-def saveGraph():
-    graph.write_ps("ParseTree.ps")
+def saveGraph(fname = "ParseTree.ps"):
+    graph.write_ps(fname)
+    
+

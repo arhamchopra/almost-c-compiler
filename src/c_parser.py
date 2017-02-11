@@ -10,7 +10,7 @@ import re
 import sys
 import pydot
 
-inFile = sys.argv[1]
+# inFile = sys.argv[1]
 from ply import yacc
 #  from . import c_ast
 from c_lexer import CLexer
@@ -2002,11 +2002,11 @@ class CParser(PLYParser):
 if __name__ == "__main__":
     import pprint
     import time, sys
-    with open(inFile, 'r') as i:
-        parser = CParser(lex_optimize=False, yacc_debug=False, yacc_optimize=False)
-        text = i.read()
-        parser.parse(text)
-        saveGraph()
+    # with open(inFile, 'r') as i:
+    #     parser = CParser(lex_optimize=False, yacc_debug=False, yacc_optimize=False)
+    #     text = i.read()
+    #     parser.parse(text)
+    #     saveGraph()
 
     #t1 = time.time()
     #sys.write(time.time() - t1)
