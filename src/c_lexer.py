@@ -172,9 +172,9 @@ class CLexer(object):
         'ELLIPSIS',
 
         # pre-processor
-        'PPHASH',       # '#'
-        'PPPRAGMA',     # 'pragma'
-        'PPPRAGMASTR',
+        #  'PPHASH',       # '#'
+        #  'PPPRAGMA',     # 'pragma'
+        #  'PPPRAGMASTR',
     )
 
     ##
@@ -245,16 +245,16 @@ class CLexer(object):
         ('pppragma', 'exclusive'),
     )
 
-    def t_PPHASH(self, t):
-        r'[ \t]*\#'
-        if self.line_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
-            t.lexer.begin('ppline')
-            self.pp_line = self.pp_filename = None
-        elif self.pragma_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
-            t.lexer.begin('pppragma')
-        else:
-            t.type = 'PPHASH'
-            return t
+    #  def t_PPHASH(self, t):
+    #      r'[ \t]*\#[^\n]*'
+    #      if self.line_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
+    #          t.lexer.begin('ppline')
+    #          self.pp_line = self.pp_filename = None
+    #      elif self.pragma_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
+    #          t.lexer.begin('pppragma')
+    #      else:
+    #          t.type = 'PPHASH'
+    #          return t
 
     ##
     ## Rules for the ppline state
@@ -324,7 +324,7 @@ class CLexer(object):
     t_ignore = ' \t'
     t_ignore_COMMENT1 = r'//..*'
     t_ignore_COMMENT2 = r'/\*[\s\S]*?\*/'
-
+    t_ignore_PPHASH   = r'[ \t]*\#[^\n]*'
     # Newlines
     def t_NEWLINE(self, t):
         r'\n+'

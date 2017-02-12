@@ -559,12 +559,12 @@ class CParser(PLYParser):
         # p[0] = p[1]
         p[0] = addNodes("external_declaration", [(p[1], None)])
 
-    def p_external_declaration_3(self, p):
-        """ external_declaration    : pp_directive
-                                    | pppragma_directive
-        """
-        # p[0] = [p[1]]
-        p[0] = addNodes("external_declaration", [(p[1], None)])
+    #  def p_external_declaration_3(self, p):
+    #      """ external_declaration    : pp_directive
+    #                                  | pppragma_directive
+    #      """
+    #      # p[0] = [p[1]]
+    #      p[0] = addNodes("external_declaration", [(p[1], None)])
 
     def p_external_declaration_4(self, p):
         """ external_declaration    : SEMI
@@ -572,23 +572,25 @@ class CParser(PLYParser):
         # p[0] = None
         p[0] = addNodes("external_declaration", [(None, "SEMI( {} )".format(p[1]))])
 
-    def p_pp_directive(self, p):
-        """ pp_directive  : PPHASH
-        """
-        #  self._parse_error('Directives not supported yet',
-        #                    self._coord(p.lineno(1)))
-        p[0] = addNodes("pp_directive", [(None, "PPHASH( {} )".format(p[1]))])
-    
-    def p_pppragma_directive(self, p):
-       """ pppragma_directive      : PPPRAGMA
-                                   | PPPRAGMA PPPRAGMASTR
-       """
-       if len(p) == 3:
-           #  p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
-           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1])), (None, "PPPRAGMASTR( {} )".format(p[2]))])
-       else:
-           #  p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
-           p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1]))])
+    #  def p_pp_directive(self, p):
+    #      """ pp_directive  : PPHASH
+    #      """
+    #      self._parse_error('Directives not supported , Use cpp first',
+    #                        self._coord(p.lineno(1)))
+    #      p[0] = addNodes("pp_directive", [(None, "PPHASH( {} )".format(p[1]))])
+    #
+    #  def p_pppragma_directive(self, p):
+    #     """ pppragma_directive      : PPPRAGMA
+    #                                 | PPPRAGMA PPPRAGMASTR
+    #     """
+    #     self._parse_error('Directives not supported, Use cpp first',
+    #                        self._coord(p.lineno(1)))
+    #     if len(p) == 3:
+    #         p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
+    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1])), (None, "PPPRAGMASTR( {} )".format(p[2]))])
+    #     else:
+    #         p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
+    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1]))])
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
@@ -632,8 +634,8 @@ class CParser(PLYParser):
                         | selection_statement
                         | iteration_statement
                         | jump_statement
-                        | pppragma_directive
         """
+        #  | pppragma_directive
         # p[0] = p[1]
         p[0] = addNodes("statement", [(p[1], None)])
 
@@ -921,9 +923,9 @@ class CParser(PLYParser):
 
 
         else:
-            p[0] = p[1] + (p[2] or [])
+            #  p[0] = p[1] + (p[2] or [])
             if p[2] is not None :
-                p[0] = addNodes("struct_declaration_list",[(p[1], None), (p2, None)])
+                p[0] = addNodes("struct_declaration_list",[(p[1], None), (p[2], None)])
             else :
                 p[0] = addNodes("struct_declaration_list",[(p[1], None)]) #[TODO]
 
