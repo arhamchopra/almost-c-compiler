@@ -812,7 +812,7 @@ class CParser(PLYParser):
         """
         # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
         if len(p) == 4 :
-            p[0] = addNodes("init_declarator_list",[(p[1], None),(None, ","), (p[3], None)])
+            p[0] = addNodes("init_declarator_list",[(p[1], None),(None, "COMMA"), (p[3], None)])
         else:
             p[0] = addNodes("init_declarator_list",[(p[1], None)])
 
@@ -997,7 +997,7 @@ class CParser(PLYParser):
         """
         # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
         if len(p) == 4 :
-            p[0] = addNodes("struct_declaration_list",[(p[1], None), (None, ","), (p[3], None)])
+            p[0] = addNodes("struct_declaration_list",[(p[1], None), (None, "COMMA"), (p[3], None)])
         else :
             p[0] = addNodes("struct_declaration_list",[(p[1], None)])
 
@@ -1056,12 +1056,12 @@ class CParser(PLYParser):
             p[0] = addNodes("enumerator_list", [(p[1], None)])
         elif len(p) == 3:
             # p[0] = p[1]
-            p[0] = addNodes("enumerator_list", [(p[1], None), (None, ",")])
+            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA")])
 
         else:
             # p[1].enumerators.append(p[3])
             # p[0] = p[1]
-            p[0] = addNodes("enumerator_list", [(p[1], None), (None, ","),(p[3], None)])
+            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA"),(p[3], None)])
 
 
     def p_enumerator(self, p):
@@ -1288,7 +1288,7 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = addNodes("type_parameter_list",[(p[1],None)])
         else:
-            p[0] = addNodes("type_parameter_list",[(p[1],None), (None, ","), (None, p[3])])
+            p[0] = addNodes("type_parameter_list",[(p[1],None), (None, "COMMA"), (None, p[3])])
 
     def p_parameter_list(self, p):
         """ parameter_list  : parameter_declaration
@@ -1303,7 +1303,7 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = addNodes("parameter_list",[(p[1], None)])
         else:
-            p[0] = addNodes("parameter_list",[(p[1], None), (None, ","), (p[3], None)])
+            p[0] = addNodes("parameter_list",[(p[1], None), (None, "COMMA"), (p[3], None)])
 
     def p_parameter_declaration_1(self, p):
         """ parameter_declaration   : declaration_specifiers declarator
@@ -1363,7 +1363,7 @@ class CParser(PLYParser):
         if len(p) == 2:
            p[0] = addNodes("identifier_list",[(p[1],None)])
         else:
-           p[0] = addNodes("identifier_list",[(p[1],None), (None, ","), (p[3], None)])
+           p[0] = addNodes("identifier_list",[(p[1],None), (None, "COMMA"), (p[3], None)])
 
 
     def p_initializer_1(self, p):
@@ -1383,7 +1383,7 @@ class CParser(PLYParser):
         if len(p) == 4:
             p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (p[3], None)])
         else:
-            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (None, ","), (p[4],None)])
+            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (None, "COMMA"), (p[4],None)])
 
     def p_initializer_list(self, p):
         """ initializer_list    : designation_opt initializer
@@ -1399,7 +1399,7 @@ class CParser(PLYParser):
         if len(p) == 3:
             p[0] = addNodes("initializer_list",[(p[1], None), (p[2], None)])
         else:
-            p[0] = addNodes("initializer_list",[(p[1], None), (None, ","), (p[3], None), (p[4], None)])
+            p[0] = addNodes("initializer_list",[(p[1], None), (None, "COMMA"), (p[3], None), (p[4], None)])
     def p_designation(self, p):
         """ designation : designator_list EQUALS
         """
@@ -1668,7 +1668,7 @@ class CParser(PLYParser):
 
             #  p[1].exprs.append(p[3])
             #  p[0] = p[1]
-            p[0] = addNodes("expression", [(p[1], None), (None, ","), (p[3], None)])
+            p[0] = addNodes("expression", [(p[1], None), (None, "COMMA"), (p[3], None)])
 
     def p_typedef_name(self, p):
         """ typedef_name : TYPEID """
@@ -1882,7 +1882,7 @@ class CParser(PLYParser):
         #  p[0] = c_ast.FuncCall(c_ast.ID(p[1], coord),
                               #  c_ast.ExprList([p[3], p[5]], coord),
                               #  coord)
-        p[0] = addNodes("primary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, ","), (p[5], None), (None, p[6])])
+        p[0] = addNodes("primary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, "COMMA"), (p[5], None), (None, p[6])])
 
     def p_offsetof_member_designator(self, p):
         """ offsetof_member_designator : identifier
@@ -1912,7 +1912,8 @@ class CParser(PLYParser):
         else:
             #  p[1].exprs.append(p[3])
             #  p[0] = p[1]
-            p[0] = addNodes("argument_expression_list", [(p[1], None), (None, ","), (p[3], None)])
+            print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+            p[0] = addNodes("argument_expression_list", [(p[1], None), (None, "COMMA"), (p[3], None)])
 
     def p_identifier(self, p):
         """ identifier  : ID """
