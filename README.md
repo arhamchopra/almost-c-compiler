@@ -29,9 +29,10 @@ Additional features
 Error reporting
 If there is an error in the source code the parser reports all the errors in the file but does not generate the graph.
 
-References
-lexer and parser: https://github.com/eliben/pycparser
+References Grammar
+lex and yacc files : https://github.com/eliben/pycparser
 
+Test Code References
 Code1.c: https://www.programiz.com/c-programming/examples/prime-number-intervals
 
 Code2.c: https://www.programiz.com/c-programming/examples/quadratic-roots
