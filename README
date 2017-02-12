@@ -1,24 +1,33 @@
 This is the README for our C compiler implemented in Python
 
 The source language as specified is C and the platform for running the file is intel X86.
-We have implemented a standalone lexer and parser for running the codes.
-The instructions for running the standalone lexer in the home directory of the parser is 
+# Usage instructions
+## For running standalone lexer for  
+``` ./src/lexer <input file> ```
 
-./src/lexer
+For running the parser,
+``` ./src/parser <input file name> ```
 
-For running the parser, the command is
+##The output produced will be in the file ParseTree.png. 
 
-./src/parser <input file name>
-
-The output produced will be in the file ParseTree.png. To produce output in user defined file name, the command is
+## To produce output in user defined file name, the command is
 
 ./parser -o <output file name> <input file name
 
-We have also implemented some flags like -o -help -v
+
+##We have also implemented some flags like -o -help -v
+
+## For removing the extra files generated, the command is 
+make clean
 
 Libraries used 
-1. ply
-2. pydot
+python2 or python3
+ply
+pydot
+
+Additional features
+Error reporting
+If there is an error in the source code the parser reports all the errors in the file but does not generate the graph.
 
 References
 lexer and parser: https://github.com/eliben/pycparser
