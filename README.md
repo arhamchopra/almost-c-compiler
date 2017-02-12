@@ -30,8 +30,8 @@
 ```make clean```
 
 ##Libraries used 
-1) python2 or python3\n
-2) Python Lex/Yacc (ply) by David Beazley\n
+1) python2 or python3    
+2) Python Lex/Yacc (ply) by David Beazley     
 3) Pydot Library\n
 
 ##Additional features
