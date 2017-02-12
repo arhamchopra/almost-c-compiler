@@ -1,33 +1,42 @@
-This is the README for our C compiler implemented in Python
+# This is the README for our C compiler implemented in Python
 
-The source language as specified is C and the platform for running the file is intel X86.
+## Source language : C, Platform : Intel X86, Implementation : Python.
+
 # Usage instructions
 ## For running standalone lexer for  
 ``` ./src/lexer <input file> ```
 
-For running the parser,
+## For running the parser,
 ``` ./src/parser <input file name> ```
 
-##The output produced will be in the file ParseTree.png. 
+## The output produced will be in the file ParseTree.png by default. 
 
+# Usage Options
+## Lexer 
+## To start lexer in command line mode, the command is
+```./lexer.py ```
+## To pass the input files to lexer, the command is
+```./lexer.py <filename> <filename> <more files> ```
+
+## Parser
+## To find the usage information, the command is
+```./parser.py -h ```
+## To find the version, the command is
+```./parser.py -v ```
 ## To produce output in user defined file name, the command is
-
-./parser -o <output file name> <input file name
-
-
-##We have also implemented some flags like -o -help -v
+```./parser.py -o <output file name> <input file name>```
 
 ## For removing the extra files generated, the command is 
 make clean
 
-Libraries used 
-python2 or python3
-ply
-pydot
+##Libraries used 
+1) python2 or python3
+2) Python Lex/Yacc (ply) by David Beazley
+3) Pydot Library
 
-Additional features
-Error reporting
-If there is an error in the source code the parser reports all the errors in the file but does not generate the graph.
+##Additional features
+##Error reporting
+###If there is an error in the source code the parser reports most (and more) errors in the file but does not generate the graph.
 
 References Grammar
 lex and yacc files : https://github.com/eliben/pycparser
