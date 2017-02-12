@@ -11,7 +11,7 @@ def addNodes(root, child_list):
     i+=1
     graph.add_node(rnode)
     for child in child_list:
-        #  print(child)
+        print(child)
         if child[0] is None and child[1] is not None:
             cnode = pd.Node("id{}".format(i),label = child[1])
             i+=1
@@ -36,7 +36,7 @@ def createTypeNode(type):
     decl_spec_node = addNodes("declaration_specifier",[(type_node, None)])
     return decl_spec_node
     
-def saveGraph(fname = "ParseTree.ps"):
-    graph.write_ps(fname)
+def saveGraph(fname = "ParseTree.png"):
+    graph.write_png(fname)
     
 

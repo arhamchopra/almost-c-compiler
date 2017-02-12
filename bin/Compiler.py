@@ -2,7 +2,7 @@ from c_parser import *
 from parse_tree import *
 
 last = 1
-fname = "ParseTree.ps"
+fname = "ParseTree.png"
 
 while last<len(sys.argv) and sys.argv[last].startswith("-"):
 	print(sys.argv[last])
