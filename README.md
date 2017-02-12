@@ -32,7 +32,7 @@
 ##Libraries used 
 1) python2 or python3    
 2) Python Lex/Yacc (ply) by David Beazley     
-3) Pydot Library\n
+3) Pydot Library
 
 ##Additional features
 ##Error reporting
