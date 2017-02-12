@@ -1,1 +1,34 @@
 This is the README for our C compiler implemented in Python
+
+The source language as specified is C and the platform for running the file is intel X86.
+We have implemented a standalone lexer and parser for running the codes.
+The instructions for running the standalone lexer in the home directory of the parser is 
+
+./src/lexer
+
+For running the parser, the command is
+
+./src/parser <input file name>
+
+The output produced will be in the file ParseTree.png. To produce output in user defined file name, the command is
+
+./parser -o <output file name> <input file name
+
+We have also implemented some flags like -o -help -v
+
+Libraries used 
+1. ply
+2. pydot
+
+References
+lexer and parser: https://github.com/eliben/pycparser
+
+Code1.c: https://www.programiz.com/c-programming/examples/prime-number-intervals
+
+Code2.c: https://www.programiz.com/c-programming/examples/quadratic-roots
+
+Code3.c:https://www.programiz.com/c-programming/examples/product-numbers
+
+Code4.c https://www.tutorialspoint.com/data_structures_algorithms/merge_sort_program_in_c.htm
+
+Code5.c https://www.programiz.com/c-programming/examples/remainder-quotient
