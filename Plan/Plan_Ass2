@@ -1,0 +1,46 @@
+Building a symbol table
+
+Construction of LST AND GST:
+Symbol Table Specs:
+    Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cur_scope': }
+
+Symbol Table Entry Spec:
+    Types of variables and functions
+    sizes of variables
+    offsets of variables
+
+
+Scope Handling
+    To be done with symbol table
+    Handling each function call as a new symbol table and new scope
+    Handling each { '''some code''' } as a new scope and symbol table
+    
+
+Code for type checking
+    Wrting the code of type checking
+
+AST Construction
+
+Operator Disambiguation:
+    Use attributes
+    Set and priority order among the different types( ie char int float double )
+    Check the type of each child, and assign type of operator to be the highest of the children
+
+Typecasting to be done in 
+    Expressions
+        If the type of any child does not match with the operator type then add a type cast node (operator type) to the child
+    
+    Function Arguments
+        Keep the input arg list, and check the type of each argument with list
+    Return Values
+        
+    Think of more
+
+Errors Handling
+    Make of all possible error
+    Assign type error in code
+    handle the type of error while printing
+
+    Context free errors:
+        Keep the count variable for function calls and arrays
+    Think of other possible ways
