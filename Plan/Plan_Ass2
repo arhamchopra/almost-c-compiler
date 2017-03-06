@@ -1,39 +1,63 @@
 Building a symbol table
 
-Construction of LST AND GST:
 Symbol Table Specs:
-    Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cur_scope': }
+Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cur_scope': }
 
 Symbol Table Entry Spec:
-    Types of variables and functions
-    sizes of variables
-    offsets of variables
+Lexeme of variables and functions
+Types of variables and functions
+sizes of variables
+offsets of variables
 
+Construction of LST AND GST:
+GST to be defined __init__ function
+CST to be defined __init__ function
+Updates in current symbol table:
+    On lbrace: 
+        1) push scope done by lexer
+        2) create new symbol table and link it with CST
+        3) make the new symbol table as CST
+
+    On rbrace:
+        1) pop scope done by lexer
+        2) if empty:
+            delete the current symbol table
+            remove the entry from the parent
+        3) make the parent of CST as CST 
+
+    Function_definition:
+        1) create new symbol table and link it to parent and set it as CST
+
+    Doubt: How to handle L attributed grammar in bottom up parsing
+
+Functionalites of symbol table:
+    addentry:
+    removeetry:
+    lookupentry:
 
 Scope Handling
     To be done with symbol table
     Handling each function call as a new symbol table and new scope
     Handling each { '''some code''' } as a new scope and symbol table
-    
 
+/**********************************************************************************************/
 Code for type checking
     Wrting the code of type checking
+/**********************************************************************************************/
 
 AST Construction
 
 Operator Disambiguation:
     Use attributes
-    Set and priority order among the different types( ie char int float double )
+    Set priority order among the different types( ie char int float double )
     Check the type of each child, and assign type of operator to be the highest of the children
 
 Typecasting to be done in 
     Expressions
         If the type of any child does not match with the operator type then add a type cast node (operator type) to the child
-    
     Function Arguments
         Keep the input arg list, and check the type of each argument with list
     Return Values
-        
     Think of more
 
 Errors Handling
