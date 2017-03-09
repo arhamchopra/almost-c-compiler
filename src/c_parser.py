@@ -18,6 +18,7 @@ from c_lexer import CLexer
 from plyparser import PLYParser, Coord, ParseError
 #  from ast_transforms import fix_switch_cases
 from parse_tree import *
+from symbol_table import SymbolTable as ST
 
 class CParser(PLYParser):
     def __init__(
@@ -130,6 +131,9 @@ class CParser(PLYParser):
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
+        self.CST = ST()
+        self.CST = self.CST.makeNewTable(None)
+        self.GST = self.CST
 
     def parse(self, text, filename='', debuglevel=0):
         """ Parses C code and returns an AST.
@@ -195,9 +199,16 @@ class CParser(PLYParser):
         self._parse_error(msg, self._coord(line, column))
 
     def _lex_on_lbrace_func(self):
+        new_st = ST()
+        new_st = new_st.makeNewTable(self.CST)
+        self.CST = new_st
         self._push_scope()
 
     def _lex_on_rbrace_func(self):
+        PST = self.CST.getPP()
+        if self.CST.getCurOffset() == 0:
+           PST.popEntry()
+        self.CST = PST
         self._pop_scope()
 
     def _lex_type_lookup_func(self, name):
