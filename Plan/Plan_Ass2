@@ -4,26 +4,26 @@ Symbol Table Specs:
 Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cur_scope': }
 
 Symbol Table Entry Spec:
-Lexeme of variables and functions
+Lexeme of variables and functions ---------- Done
 Types of variables and functions
 sizes of variables
-offsets of variables
+offsets of variables ---------- Done
 
 Construction of LST AND GST:
-GST to be defined __init__ function
-CST to be defined __init__ function
+GST to be defined __init__ function ---------- Done
+CST to be defined __init__ function ---------- Done
 Updates in current symbol table:
     On lbrace: 
-        1) push scope done by lexer
-        2) create new symbol table and link it with CST
-        3) make the new symbol table as CST
+        1) push scope done by lexer ---------- Done
+        2) create new symbol table and link it with CST ---------- Done
+        3) make the new symbol table as CST ---------- Done
 
     On rbrace:
-        1) pop scope done by lexer
+        1) pop scope done by lexer ---------- Done
         2) if empty:
-            delete the current symbol table
-            remove the entry from the parent
-        3) make the parent of CST as CST 
+            delete the current symbol table ---------- Done
+            remove the entry from the parent ---------- Done
+        3) make the parent of CST as CST  ---------- Done
 
     Function_definition:
         1) create new symbol table and link it to parent and set it as CST

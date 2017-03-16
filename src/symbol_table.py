@@ -29,9 +29,11 @@ def getSize(type):
         return 8
     if type == "SymbTab":
         return 0
-
+# This class include all the functionality of SymbolTable 
 class SymbolTable(object):
-    GID = 0
+    GID = 0             #SymbolTable Id for indetification purpose
+
+    # Initialize the SymbolTable
     def __init__(self):
         self.id = SymbolTable.GID
         SymbolTable.GID += 1
@@ -55,8 +57,10 @@ class SymbolTable(object):
 
     def popEntry(self):
         print("Popping entry from SymbolTable: {}".format(self.id))
-        self.table['cur_scope'].pop()
-        SymbolTable.GID -= 1
+        e = self.table['cur_scope'].pop()
+        print("{} was popped".format(e))
+        if e[1]=="SymbTab":
+            SymbolTable.GID -= 1
         
     def getCurOffset(self):
         return self.table['cur_offset']
