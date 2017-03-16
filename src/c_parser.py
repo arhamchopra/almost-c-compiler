@@ -607,18 +607,19 @@ class CParser(PLYParser):
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
     #
+    
     def p_function_definition_1(self, p):
         """ function_definition : declarator declaration_list_opt compound_statement
         """
-        # no declaration specifiers - 'int' becomes the default type
-        # spec = dict(
+        #  no declaration specifiers - 'int' becomes the default type
+        #  spec = dict(
         #     qual=[],
         #     storage=[],
         #     type=[c_ast.IdentifierType(['int'],
         #                                coord=self._coord(p.lineno(1)))],
         #     function=[])
-
-        # p[0] = self._build_function_definition(
+        #
+        #  p[0] = self._build_function_definition(
         #     spec=spec,
         #     decl=p[1],
         #     param_decls=p[2],
@@ -637,8 +638,19 @@ class CParser(PLYParser):
         #     decl=p[2],
         #     param_decls=p[3],
         #     body=p[4])
+        PST = self.CST.getPP()
+        if self.CST.getCurOffset() == 0:
+           PST.popEntry()
+        self.CST = PST
         p[0] = addNodes("function_definition",[(p[1], None), (p[2], None), (p[3], None), ((p[4], None))])
 
+    def p_function_start(self, p):
+        """ function_start : empty
+        """
+        new_st = ST("FuncStart")
+        new_st = new_st.makeNewTable(self.CST)
+        self.CST = new_st
+    
     def p_statement(self, p):
         """ statement   : labeled_statement
                         | expression_statement

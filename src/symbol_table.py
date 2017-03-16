@@ -34,18 +34,23 @@ class SymbolTable(object):
     GID = 0             #SymbolTable Id for indetification purpose
 
     # Initialize the SymbolTable
-    def __init__(self):
+    def __init__(self, name=None):
         self.id = SymbolTable.GID
         SymbolTable.GID += 1
+        print("Name = "+str(name))
+        if name is None:
+            self.name = "ID"+str(self.id)
+        else:
+            self.name = name
 
     def makeNewTable(self, PP):
         if PP == None:
             self.table = { 'PP': None, 'cur_offset': 0, 'cur_scope': [], 'nesting': 0 }
             print("Creating Root SymbolTable:{}".format(self.id))
         else:
-            PP.addEntry("ID"+str(self.id), "SymbTab")
+            PP.addEntry(self.name, "SymbTab")
             self.table = { 'PP': PP, 'cur_offset': 0, 'cur_scope': [], 'nesting': PP.getNesting()+1 }
-            print("Creating a new SymbolTable:{}".format(self.id))
+            print("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
         return self
 
     def addEntry(self, lexeme, type):
@@ -59,8 +64,13 @@ class SymbolTable(object):
         print("Popping entry from SymbolTable: {}".format(self.id))
         e = self.table['cur_scope'].pop()
         print("{} was popped".format(e))
-        if e[1]=="SymbTab":
-            SymbolTable.GID -= 1
+
+    def setLastLexeme(self, lexeme):
+        print("Setting last lexeme: {} to {}".format(e, lexeme))
+        e = self.table["cur_scope"].pop()
+        e[0] = lexeme
+        self.table["cur_scope"].append(e)
+
         
     def getCurOffset(self):
         return self.table['cur_offset']

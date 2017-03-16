@@ -1,7 +1,7 @@
 #include <stdio.h>
 typedef char TT;
-
-char func(TT a){
+int a = 5;
+char func(int a, int a){
     return a;
 }
 

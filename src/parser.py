@@ -29,7 +29,7 @@ if last<len(sys.argv):
     inFile = sys.argv[last]
     print(inFile)
     with open(inFile, 'r') as inp:
-            parser = CParser(lex_optimize=False, yacc_debug=False, yacc_optimize=False)
+            parser = CParser(lex_optimize=False, yacc_debug=True, yacc_optimize=False)
             text = inp.read()
             print(text)
             parser.ParseInput(text, fname)
