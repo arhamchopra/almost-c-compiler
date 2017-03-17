@@ -2,4 +2,5 @@ SymbolTable.py Line 59 function addEntry
 	
 	Ques: Shouldn't the offset be incremented by 1 rather than size of type. The offset means the postion in the symbol table and should not depend on size of the type.
 	
-	Ans: 
+	Ans: We could also do that. It is not a big problem.
+

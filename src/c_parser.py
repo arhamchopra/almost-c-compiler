@@ -529,10 +529,12 @@ class CParser(PLYParser):
         """
         if p[1] is None:
             # p[0] = c_ast.FileAST([])
-            p[0] = addNodes("translation_unit_or_empty", [])
+#            p[0] = addNodes("translation_unit_or_empty", [])1
+            p[0] = None
         else:
             # p[0] = c_ast.FileAST(p[1])
-            p[0] = addNodes("translation_unit_or_empty", [(p[1], None)])
+#            p[0] = addNodes("translation_unit_or_empty", [(p[1], None)])1
+            p[0] = None
 
 
     def p_translation_unit_1(self, p):
@@ -541,7 +543,7 @@ class CParser(PLYParser):
         # Note: external_declaration is already a list
         #
         # p[0] = p[1]
-        p[0] = addNodes("translation_unit", [(p[1], None)])
+#        p[0] = addNodes("translation_unit", [(p[1], None)])1
 
 
     def p_translation_unit_2(self, p):
@@ -550,7 +552,7 @@ class CParser(PLYParser):
         # if p[2] is not None:
             # p[1].extend(p[2])
         # p[0] = p[1]
-        p[0] = addNodes("translation_unit", [(p[1], None), (p[2],None)])
+#        p[0] = addNodes("translation_unit", [(p[1], None), (p[2],None)])1
 
 
     # Declarations always come as lists (because they can be
@@ -562,34 +564,34 @@ class CParser(PLYParser):
         """ external_declaration    : function_definition
         """
         # p[0] = [p[1]]
-        p[0] = addNodes("external_declaration", [(p[1], None)])
+#        p[0] = addNodes("external_declaration", [(p[1], None)])1
 
 
     def p_external_declaration_2(self, p):
         """ external_declaration    : declaration
         """
         # p[0] = p[1]
-        p[0] = addNodes("external_declaration", [(p[1], None)])
+#        p[0] = addNodes("external_declaration", [(p[1], None)])1
 
     #  def p_external_declaration_3(self, p):
     #      """ external_declaration    : pp_directive
     #                                  | pppragma_directive
     #      """
     #      # p[0] = [p[1]]
-    #      p[0] = addNodes("external_declaration", [(p[1], None)])
+#    #      p[0] = addNodes("external_declaration", [(p[1], None)])1
 
     def p_external_declaration_4(self, p):
         """ external_declaration    : SEMI
         """
         # p[0] = None
-        p[0] = addNodes("external_declaration", [(None, ";")])
+#        p[0] = addNodes("external_declaration", [(None, ";")])1
 
     #  def p_pp_directive(self, p):
     #      """ pp_directive  : PPHASH
     #      """
     #      self._parse_error('Directives not supported , Use cpp first',
     #                        self._coord(p.lineno(1)))
-    #      p[0] = addNodes("pp_directive", [(None, "PPHASH( {} )".format(p[1]))])
+#    #      p[0] = addNodes("pp_directive", [(None, "PPHASH( {} )".format(p[1]))])1
     #
     #  def p_pppragma_directive(self, p):
     #     """ pppragma_directive      : PPPRAGMA
@@ -599,10 +601,10 @@ class CParser(PLYParser):
     #                        self._coord(p.lineno(1)))
     #     if len(p) == 3:
     #         p[0] = c_ast.Pragma(p[2], self._coord(p.lineno(2)))
-    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1])), (None, "PPPRAGMASTR( {} )".format(p[2]))])
+#    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1])), (None, "PPPRAGMASTR( {} )".format(p[2]))])1
     #     else:
     #         p[0] = c_ast.Pragma("", self._coord(p.lineno(1)))
-    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1]))])
+#    #         p[0] = addNodes("pppragma_directive", [(None, "PPPRAGMA( {} )".format(p[1]))])1
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
@@ -626,7 +628,7 @@ class CParser(PLYParser):
         #     body=p[3])
 
         intnode = createTypeNode("INT")
-        p[0] = addNodes("function_definition",[(intnode, None), (p[1], None), (p[2], None), (p[3], None)])
+#        p[0] = addNodes("function_definition",[(intnode, None), (p[1], None), (p[2], None), (p[3], None)])1
 
     def p_function_definition_2(self, p):
         """ function_definition : declaration_specifiers declarator declaration_list_opt compound_statement
@@ -638,11 +640,11 @@ class CParser(PLYParser):
         #     decl=p[2],
         #     param_decls=p[3],
         #     body=p[4])
-        PST = self.CST.getPP()
-        if self.CST.getCurOffset() == 0:
-           PST.popEntry()
-        self.CST = PST
-        p[0] = addNodes("function_definition",[(p[1], None), (p[2], None), (p[3], None), ((p[4], None))])
+        #  PST = self.CST.getPP()
+        #  if self.CST.getCurOffset() == 0:
+        #     PST.popEntry()
+        #  self.CST = PST
+#        p[0] = addNodes("function_definition",[(p[1], None), (p[2], None), (p[3], None), ((p[4], None))])1
 
     def p_function_start(self, p):
         """ function_start : empty
@@ -661,7 +663,7 @@ class CParser(PLYParser):
         """
         #  | pppragma_directive
         # p[0] = p[1]
-        p[0] = addNodes("statement", [(p[1], None)])
+#        p[0] = addNodes("statement", [(p[1], None)])1
 
 
     # In C, declarations can come several in a line:
@@ -718,7 +720,7 @@ class CParser(PLYParser):
         #          typedef_namespace=True)
         #
         #  p[0] = decls
-        p[0] = addNodes("decl_body", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("decl_body", [(p[1], None), (p[2], None)])1
 
     # The declaration has been split to a decl_body sub-rule and
     # SEMI, because having them in a single rule created a problem
@@ -739,7 +741,7 @@ class CParser(PLYParser):
         """ declaration : decl_body SEMI
         """
         # p[0] = p[1]
-        p[0] = addNodes("declaration", [(p[1], None), (None, ";")])
+#        p[0] = addNodes("declaration", [(p[1], None), (None, ";")])1
 
 
     # Since each declaration is a list of declarations, this
@@ -752,34 +754,36 @@ class CParser(PLYParser):
         """
         # p[0] = p[1] if len(p) == 2 else p[1] + p[2]
         if len(p) == 2:
-            p[0] = addNodes("declaration_list", [(p[1], None)])
+#            p[0] = addNodes("declaration_list", [(p[1], None)])1
+            p[0] = p[1]+p[2]
         else :
-            p[0] = addNodes("declaration_list", [(p[1], None), (p[2], None)])
+#            p[0] = addNodes("declaration_list", [(p[1], None), (p[2], None)])1
+            p[0] = p[1]
 
 
     def p_declaration_specifiers_1(self, p):
         """ declaration_specifiers  : type_qualifier declaration_specifiers_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'qual')
-        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])1
 
     def p_declaration_specifiers_2(self, p):
         """ declaration_specifiers  : type_specifier declaration_specifiers_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
-        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])1
 
     def p_declaration_specifiers_3(self, p):
         """ declaration_specifiers  : storage_class_specifier declaration_specifiers_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'storage')
-        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])1
 
     def p_declaration_specifiers_4(self, p):
         """ declaration_specifiers  : function_specifier declaration_specifiers_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'function')
-        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("declaration_specifiers", [(p[1], None), (p[2], None)])1
 
     def p_storage_class_specifier(self, p):
         """ storage_class_specifier : AUTO
@@ -789,13 +793,13 @@ class CParser(PLYParser):
                                     | TYPEDEF
         """
         # p[0] = p[1]
-        p[0] = addNodes("storage_class_specifier", [(None, p[1])])
+#        p[0] = addNodes("storage_class_specifier", [(None, p[1])])1
 
     def p_function_specifier(self, p):
         """ function_specifier  : INLINE
         """
         # p[0] = p[1]
-        p[0] = addNodes("function_specifier", [(None, p[1])])
+#        p[0] = addNodes("function_specifier", [(None, p[1])])1
 
     def p_type_specifier_1(self, p):
         """ type_specifier  : VOID
@@ -812,7 +816,7 @@ class CParser(PLYParser):
                             | __INT128
         """
         # p[0] = c_ast.IdentifierType([p[1]], coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("type_specifier", [(None, p[1])])
+#        p[0] = addNodes("type_specifier", [(None, p[1])])1
 
     def p_type_specifier_2(self, p):
         """ type_specifier  : typedef_name
@@ -820,7 +824,7 @@ class CParser(PLYParser):
                             | struct_or_union_specifier
         """
         # p[0] = p[1]
-        p[0] = addNodes("type_specifier", [(p[1], None)])
+#        p[0] = addNodes("type_specifier", [(p[1], None)])1
 
     def p_type_qualifier(self, p):
         """ type_qualifier  : CONST
@@ -828,17 +832,17 @@ class CParser(PLYParser):
                             | VOLATILE
         """
         # p[0] = p[1]
-        p[0] = addNodes("type_qualifier", [(None, p[1])])
+#        p[0] = addNodes("type_qualifier", [(None, p[1])])1
 
     def p_init_declarator_list_1(self, p):
         """ init_declarator_list    : init_declarator
                                     | init_declarator_list COMMA init_declarator
         """
-        # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
-        if len(p) == 4 :
-            p[0] = addNodes("init_declarator_list",[(p[1], None),(None, "COMMA"), (p[3], None)])
-        else:
-            p[0] = addNodes("init_declarator_list",[(p[1], None)])
+        p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
+        #  if len(p) == 4 :
+        #    p[0] = addNodes("init_declarator_list",[(p[1], None),(None, "COMMA"), (p[3], None)])1
+        #  else:
+        #    p[0] = addNodes("init_declarator_list",[(p[1], None)])1
 
 
     # If the code is declaring a variable that was declared a typedef in an
@@ -850,7 +854,7 @@ class CParser(PLYParser):
         """ init_declarator_list    : EQUALS initializer
         """
         # p[0] = [dict(decl=None, init=p[2])]
-        p[0] = addNodes("init_declarator_list",[(None, "="), (p[2], None)])
+#        p[0] = addNodes("init_declarator_list",[(None, "="), (p[2], None)])1
 
     # Similarly, if the code contains duplicate typedefs of, for example,
     # array types, the array portion will appear as an abstract declarator.
@@ -859,7 +863,7 @@ class CParser(PLYParser):
         """ init_declarator_list    : abstract_declarator
         """
         # p[0] = [dict(decl=p[1], init=None)]
-        p[0] = addNodes("init_declarator_list",[(p[1], None)])
+#        p[0] = addNodes("init_declarator_list",[(p[1], None)])1
 
 
     # Returns a {decl=<declarator> : init=<initializer>} dictionary
@@ -869,23 +873,23 @@ class CParser(PLYParser):
         """ init_declarator : declarator
                             | declarator EQUALS initializer
         """
-        # p[0] = dict(decl=p[1], init=(p[3] if len(p) > 2 else None))
-        if(len(p) == 2):
-            p[0] = addNodes("init_declarator",[(p[1], None)])
-        else:
-            p[0] = addNodes("init_declarator",[(p[1], None), (None,"="), (p[3], None)])
+        p[0] = dict(decl=p[1], init=(p[3] if len(p) > 2 else None))
+        #  if(len(p) == 2):
+        #    p[0] = addNodes("init_declarator",[(p[1], None)])1
+        #  else:
+        #    p[0] = addNodes("init_declarator",[(p[1], None), (None,"="), (p[3], None)])1
 
     def p_specifier_qualifier_list_1(self, p):
         """ specifier_qualifier_list    : type_qualifier specifier_qualifier_list_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'qual')
-        p[0] = addNodes("specifier_qualifier_list",[(p[1], None),(p[2], None)])
+#        p[0] = addNodes("specifier_qualifier_list",[(p[1], None),(p[2], None)])1
 
     def p_specifier_qualifier_list_2(self, p):
         """ specifier_qualifier_list    : type_specifier specifier_qualifier_list_opt
         """
         # p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
-        p[0] = addNodes("specifier_qualifier_list",[(p[1], None),(p[2], None)])
+#        p[0] = addNodes("specifier_qualifier_list",[(p[1], None),(p[2], None)])1
 
     # TYPEID is allowed here (and in other struct/enum related tag names), because
     # struct/enum tags reside in their own namespace and can be named the same as types
@@ -901,7 +905,7 @@ class CParser(PLYParser):
         #     decls=None,
         #     coord=self._coord(p.lineno(2)))
         print("in struct_or_union_specifier1");
-        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (None, p[2])])
+#        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (None, p[2])])1
 
     def p_struct_or_union_specifier_2(self, p):
         """ struct_or_union_specifier : struct_or_union brace_open struct_declaration_list brace_close
@@ -912,7 +916,7 @@ class CParser(PLYParser):
         #     decls=p[3],
         #     coord=self._coord(p.lineno(2)))
         print("in struct_or_union_specifier2");
-        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (p[2], None), (p[3], None), (p[4], None)])
+#        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (p[2], None), (p[3], None), (p[4], None)])1
 
     def p_struct_or_union_specifier_3(self, p):
         """ struct_or_union_specifier   : struct_or_union ID brace_open struct_declaration_list brace_close
@@ -924,7 +928,7 @@ class CParser(PLYParser):
         #     decls=p[4],
         #     coord=self._coord(p.lineno(2)))
         print("in struct_or_union_specifier3");
-        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (None, p[2]), (p[3], None), (p[4], None), (p[5], None)])
+#        p[0] = addNodes("struct_or_union_specifier",[(p[1], None), (None, p[2]), (p[3], None), (p[4], None), (p[5], None)])1
 
 
     def p_struct_or_union(self, p):
@@ -932,7 +936,7 @@ class CParser(PLYParser):
                             | UNION
         """
         # p[0] = p[1]
-        p[0] = addNodes("struct_or_union",[(None, p[1])])
+#        p[0] = addNodes("struct_or_union",[(None, p[1])])1
 
 
     # Combine all declarations into a single list
@@ -942,19 +946,19 @@ class CParser(PLYParser):
                                         | struct_declaration_list struct_declaration
         """
         if len(p) == 2:
-            # p[0] = p[1] or []
-            # if p[1] is not None :
-            p[0] = addNodes("struct_declaration_list",[(p[1], None)])
-            # else :
-            #     p[0] = addNodes("struct_declaration_list",[(None, None)]) #[TODO]
+            p[0] = p[1] or []
+          #    if p[1] is not None :
+          #  p[0] = addNodes("struct_declaration_list",[(p[1], None)])1
+          #    else :
+          #        p[0] = addNodes("struct_declaration_list",[(None, None)]) #[TODO]1
 
 
         else:
-            #  p[0] = p[1] + (p[2] or [])
+            p[0] = p[1] + (p[2] or [])
             # if p[2] is not None :
-            p[0] = addNodes("struct_declaration_list",[(p[1], None), (p[2], None)])
+#            p[0] = addNodes("struct_declaration_list",[(p[1], None), (p[2], None)])1
             # else :
-            #     p[0] = addNodes("struct_declaration_list",[(p[1], None)]) #[TODO]
+#                 p[0] = addNodes("struct_declaration_list",[(p[1], None)]) #[TODO]1
 
     def p_struct_declaration_1(self, p):
         """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt SEMI
@@ -993,7 +997,7 @@ class CParser(PLYParser):
         #          decls=[dict(decl=None, init=None)])
 
         # p[0] = decls
-        p[0] = addNodes("struct_declaration",[(p[1], None), (p[2], None), (None, ";")])
+#        p[0] = addNodes("struct_declaration",[(p[1], None), (p[2], None), (None, ";")])1
 
 
     def p_struct_declaration_2(self, p):
@@ -1009,24 +1013,24 @@ class CParser(PLYParser):
         # p[0] = self._build_declarations(
         #         spec=p[1],
         #         decls=[dict(decl=p[2], init=None)])
-        p[0] = addNodes("struct_declaration",[(p[1], None), (p[2], None), (None, ";")])
+#        p[0] = addNodes("struct_declaration",[(p[1], None), (p[2], None), (None, ";")])1
 
     def p_struct_declaration_3(self, p):
         """ struct_declaration : SEMI
         """
         # p[0] = None
-        p[0] = addNodes("struct_declaration", [(None, ";")])
+#        p[0] = addNodes("struct_declaration", [(None, ";")])1
 
 
     def p_struct_declarator_list(self, p):
         """ struct_declarator_list  : struct_declarator
                                     | struct_declarator_list COMMA struct_declarator
         """
-        # p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
-        if len(p) == 4 :
-            p[0] = addNodes("struct_declarator_list",[(p[1], None), (None, "COMMA"), (p[3], None)])
-        else :
-            p[0] = addNodes("struct_declarator_list",[(p[1], None)])
+        p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
+        #  if len(p) == 4 :
+#            p[0] = addNodes("struct_declarator_list",[(p[1], None), (None, "COMMA"), (p[3], None)])1
+        #  else :
+#            p[0] = addNodes("struct_declarator_list",[(p[1], None)])1
 
 
 
@@ -1037,7 +1041,7 @@ class CParser(PLYParser):
         """ struct_declarator : declarator
         """
         # p[0] = {'decl': p[1], 'bitsize': None} 
-        p[0] = addNodes("struct_declarator",[(p[1], None)])
+#        p[0] = addNodes("struct_declarator",[(p[1], None)])1
 
 
     def p_struct_declarator_2(self, p):
@@ -1045,24 +1049,24 @@ class CParser(PLYParser):
                                 | COLON constant_expression
         """
         if len(p) > 3:
-            # p[0] = {'decl': p[1], 'bitsize': p[3]}
-            p[0] = addNodes("struct_declarator",[(p[1], None), (None, ":"), (p[3],None)])
+            p[0] = {'decl': p[1], 'bitsize': p[3]}
+#            p[0] = addNodes("struct_declarator",[(p[1], None), (None, ":"), (p[3],None)])1
         else:
-            # p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
-            p[0] = addNodes("struct_declarator",[(None, ":"), (p[2], None)])
+            p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+#            p[0] = addNodes("struct_declarator",[(None, ":"), (p[2], None)])1
 
     def p_enum_specifier_1(self, p):
         """ enum_specifier  : ENUM ID
                             | ENUM TYPEID
         """
         # p[0] = c_ast.Enum(p[2], None, self._coord(p.lineno(1)))
-        p[0] = addNodes("enum_specifier", [(None, p[1]), (None, p[2])])
+#        p[0] = addNodes("enum_specifier", [(None, p[1]), (None, p[2])])1
 
     def p_enum_specifier_2(self, p):
         """ enum_specifier  : ENUM brace_open enumerator_list brace_close
         """
         # p[0] = c_ast.Enum(None, p[3], self._coord(p.lineno(1)))
-        p[0] = addNodes("enum_specifier", [ (None,  p[1]), (p[2], None), (p[3], None), (p[4], None)])
+#        p[0] = addNodes("enum_specifier", [ (None,  p[1]), (p[2], None), (p[3], None), (p[4], None)])1
 
 
     def p_enum_specifier_3(self, p):
@@ -1070,7 +1074,7 @@ class CParser(PLYParser):
                             | ENUM TYPEID brace_open enumerator_list brace_close
         """
         # p[0] = c_ast.Enum(p[2], p[4], self._coord(p.lineno(1)))
-        p[0] = addNodes("enum_specifier", [(None, p[1]), (None, p[2]), (p[3], None), (p[4], None), (p[5], None)])
+#        p[0] = addNodes("enum_specifier", [(None, p[1]), (None, p[2]), (p[3], None), (p[4], None), (p[5], None)])1
 
 
     def p_enumerator_list(self, p):
@@ -1079,16 +1083,19 @@ class CParser(PLYParser):
                             | enumerator_list COMMA enumerator
         """
         if len(p) == 2:
+            p[0]=None
             # p[0] = c_ast.EnumeratorList([p[1]], p[1].coord)
-            p[0] = addNodes("enumerator_list", [(p[1], None)])
+#            p[0] = addNodes("enumerator_list", [(p[1], None)])1
         elif len(p) == 3:
+            p[0]=None
             # p[0] = p[1]
-            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA")])
+#            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA")])1
 
         else:
+            p[0]=None
             # p[1].enumerators.append(p[3])
             # p[0] = p[1]
-            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA"),(p[3], None)])
+#            p[0] = addNodes("enumerator_list", [(p[1], None), (None, "COMMA"),(p[3], None)])1
 
 
     def p_enumerator(self, p):
@@ -1107,23 +1114,27 @@ class CParser(PLYParser):
 
         # p[0] = enumerator
         if len(p) == 2:
-            p[0] =  addNodes("enumerator",[(None, p[1])])
+            p[0]=None
+#            p[0] =  addNodes("enumerator",[(None, p[1])])1
         else:
-            p[0] = addNodes("enumerator", [(None, p[1]), (None, "="), (p[3], None)])
+            p[0]=None
+#            p[0] = addNodes("enumerator", [(None, p[1]), (None, "="), (p[3], None)])1
 
 
     def p_declarator_1(self, p):
         """ declarator  : direct_declarator
         """
         # p[0] = p[1]
-        p[0] = addNodes("declarator",[(p[1], None)])
+#        p[0] = addNodes("declarator",[(p[1], None)])1
+        p[0] = p[1]
 
 
     def p_declarator_2(self, p):
         """ declarator  : pointer direct_declarator
         """
         # p[0] = self._type_modify_decl(p[2], p[1])
-        p[0] = addNodes("declarator",[(p[1], None), (p[2], None)])
+#        p[0] = addNodes("declarator",[(p[1], None), (p[2], None)])1
+        p[0] = p[1]["type"].append("pointer")
 
 
     # Since it's impossible for a type to be specified after a pointer, assume
@@ -1140,7 +1151,7 @@ class CParser(PLYParser):
         #     coord=self._coord(p.lineno(2)))
 
         # p[0] = self._type_modify_decl(decl, p[1])
-        p[0] = addNodes("declarator",[(p[1], None), (None, p[2])])
+#        p[0] = addNodes("declarator",[(p[1], None), (None, p[2])])1
 
     def p_direct_declarator_1(self, p):
         """ direct_declarator   : ID
@@ -1150,7 +1161,11 @@ class CParser(PLYParser):
         #     type=None,
         #     quals=None,
         #     coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("direct_declarator",[(None, p[1])])
+#        p[0] = addNodes("direct_declarator",[(None, p[1])])1
+        p[0] = { 
+                'lexeme':p[1],
+                'type':[] 
+                }
 
 
     def p_direct_declarator_2(self, p):
@@ -1158,7 +1173,7 @@ class CParser(PLYParser):
         """
         # p[0] = p[2]
 
-        p[0] = addNodes("direct_declarator",[(None, p[1]), (p[2], None), (None, p[3])])
+#        p[0] = addNodes("direct_declarator",[(None, p[1]), (p[2], None), (None, p[3])])1
 
 
     def p_direct_declarator_3(self, p):
@@ -1174,7 +1189,7 @@ class CParser(PLYParser):
         #     coord=p[1].coord)
 
         # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_declarator",[(p[1], None),(None, p[2]), (p[3], None),(p[4], None), (None, p[5])])
+#        p[0] = addNodes("direct_declarator",[(p[1], None),(None, p[2]), (p[3], None),(p[4], None), (None, p[5])])1
 
 
     def p_direct_declarator_4_1(self, p):
@@ -1194,7 +1209,7 @@ class CParser(PLYParser):
         #     coord=p[1].coord)
 
         # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (None, p[3]), (p[4], None), (p[5], None) (None, p[6])])
+#        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (None, p[3]), (p[4], None), (p[5], None) (None, p[6])])1
 
     def p_direct_declarator_4_2(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list STATIC assignment_expression RBRACKET
@@ -1213,7 +1228,7 @@ class CParser(PLYParser):
         #     coord=p[1].coord)
 
         # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None), (None, p[6])])
+#        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None), (None, p[6])])1
 
 
     # Special for VLAs
@@ -1228,7 +1243,7 @@ class CParser(PLYParser):
         #     coord=p[1].coord)
 
         # p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (None, p[5])])
+#        p[0] = addNodes("direct_declarator",[(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (None, p[5])])1
 
 
     def p_direct_declarator_6(self, p):
@@ -1258,7 +1273,7 @@ class CParser(PLYParser):
         #             self._add_identifier(param.name, param.coord)
 
         # p[0] = self._type_modify_decl(decl=p[1], modifier=func)
-        p[0] = addNodes("direct_declarator", [(p[1], None), (None,p[2]), (p[3], None), (None, p[4])])
+#        p[0] = addNodes("direct_declarator", [(p[1], None), (None,p[2]), (p[3], None), (None, p[4])])1
 
     def p_pointer(self, p):
         """ pointer : TIMES type_qualifier_list_opt
@@ -1290,9 +1305,11 @@ class CParser(PLYParser):
         # else:
         #     p[0] = nested_type
         if len(p) == 3:
-            p[0] = addNodes("pointer",[(None, p[1]), (p[2],None)])
+            p[0]=None
+#            p[0] = addNodes("pointer",[(None, p[1]), (p[2],None)])1
         else:
-            p[0] = addNodes("pointer",[(None, p[1]), (p[2],None), (p[3], None)])
+            p[0]=None
+#            p[0] = addNodes("pointer",[(None, p[1]), (p[2],None), (p[3], None)])1
 
     def p_type_qualifier_list(self, p):
         """ type_qualifier_list : type_qualifier
@@ -1300,9 +1317,11 @@ class CParser(PLYParser):
         """
         # p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
         if len(p) == 2:
-            p[0] = addNodes("type_qualifier_list",[(p[1],None)])
+            p[0]=None
+#            p[0] = addNodes("type_qualifier_list",[(p[1],None)])1
         else:
-            p[0] = addNodes("type_qualifier_list",[(p[1],None), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("type_qualifier_list",[(p[1],None), (p[2], None)])1
 
     def p_parameter_type_list(self, p):
         """ parameter_type_list : parameter_list
@@ -1313,9 +1332,11 @@ class CParser(PLYParser):
 
         # p[0] = p[1]
         if len(p) == 2:
-            p[0] = addNodes("parameter_type_list",[(p[1],None)])
+            p[0]=None
+#            p[0] = addNodes("parameter_type_list",[(p[1],None)])1
         else:
-            p[0] = addNodes("parameter_type_list",[(p[1],None), (None, "COMMA"), (None, p[3])])
+            p[0]=None
+#            p[0] = addNodes("parameter_type_list",[(p[1],None), (None, "COMMA"), (None, p[3])])1
 
     def p_parameter_list(self, p):
         """ parameter_list  : parameter_declaration
@@ -1328,9 +1349,11 @@ class CParser(PLYParser):
         #     p[0] = p[1]
 
         if len(p) == 2:
-            p[0] = addNodes("parameter_list",[(p[1], None)])
+            p[0]=None
+#            p[0] = addNodes("parameter_list",[(p[1], None)])1
         else:
-            p[0] = addNodes("parameter_list",[(p[1], None), (None, "COMMA"), (p[3], None)])
+            p[0]=None
+#            p[0] = addNodes("parameter_list",[(p[1], None), (None, "COMMA"), (p[3], None)])1
 
     def p_parameter_declaration_1(self, p):
         """ parameter_declaration   : declaration_specifiers declarator
@@ -1342,7 +1365,7 @@ class CParser(PLYParser):
         # p[0] = self._build_declarations(
         #     spec=spec,
         #     decls=[dict(decl=p[2])])[0]
-        p[0] = addNodes("parameter_declaration",[(p[1], None), (p[2], None)])
+#        p[0] = addNodes("parameter_declaration",[(p[1], None), (p[2], None)])1
 
 
     def p_parameter_declaration_2(self, p):
@@ -1375,7 +1398,7 @@ class CParser(PLYParser):
         #     decl = self._fix_decl_name_type(decl, typename)
 
         # p[0] = decl
-        p[0] = addNodes("parameter_declaration",[(p[1], None), (p[2], None)])
+#        p[0] = addNodes("parameter_declaration",[(p[1], None), (p[2], None)])1
 
 
     def p_identifier_list(self, p):
@@ -1388,16 +1411,18 @@ class CParser(PLYParser):
         #     p[1].params.append(p[3])
         #     p[0] = p[1]
         if len(p) == 2:
-           p[0] = addNodes("identifier_list",[(p[1],None)])
+            p[0]=None
+#           p[0] = addNodes("identifier_list",[(p[1],None)])1
         else:
-           p[0] = addNodes("identifier_list",[(p[1],None), (None, "COMMA"), (p[3], None)])
+            p[0]=None
+#           p[0] = addNodes("identifier_list",[(p[1],None), (None, "COMMA"), (p[3], None)])1
 
 
     def p_initializer_1(self, p):
         """ initializer : assignment_expression
         """
         # p[0] = p[1]
-        p[0] = addNodes("initializer",[(p[1], None)])
+#        p[0] = addNodes("initializer",[(p[1], None)])1
 
     def p_initializer_2(self, p):
         """ initializer : brace_open initializer_list_opt brace_close
@@ -1408,9 +1433,11 @@ class CParser(PLYParser):
         # else:
         #     p[0] = p[2]
         if len(p) == 4:
-            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (p[3], None)])
+            p[0]=None
+#            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (p[3], None)])1
         else:
-            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (None, "COMMA"), (p[4],None)])
+            p[0]=None
+#            p[0] = addNodes("initializer",[(p[1], None), (p[2], None), (None, "COMMA"), (p[4],None)])1
 
     def p_initializer_list(self, p):
         """ initializer_list    : designation_opt initializer
@@ -1424,14 +1451,16 @@ class CParser(PLYParser):
         #     p[1].exprs.append(init)
         #     p[0] = p[1]
         if len(p) == 3:
-            p[0] = addNodes("initializer_list",[(p[1], None), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("initializer_list",[(p[1], None), (p[2], None)])1
         else:
-            p[0] = addNodes("initializer_list",[(p[1], None), (None, "COMMA"), (p[3], None), (p[4], None)])
+            p[0]=None
+#            p[0] = addNodes("initializer_list",[(p[1], None), (None, "COMMA"), (p[3], None), (p[4], None)])1
     def p_designation(self, p):
         """ designation : designator_list EQUALS
         """
         #  p[0] = p[1]
-        p[0] = addNodes("designation" ,[(p[1], None), (None, "=")])
+#        p[0] = addNodes("designation" ,[(p[1], None), (None, "=")])1
 
     # Designators are represented as a list of nodes, in the order in which
     # they're written in the code.
@@ -1442,9 +1471,11 @@ class CParser(PLYParser):
         """
         #  p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
         if len(p) == 2:
-            p[0] = addNodes("designator_list" ,[(p[1], None)])
+            p[0]=None
+#            p[0] = addNodes("designator_list" ,[(p[1], None)])1
         else:
-            p[0] = addNodes("designator_list" ,[(p[1], None), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("designator_list" ,[(p[1], None), (p[2], None)])1
 
     def p_designator(self, p):
         """ designator  : LBRACKET constant_expression RBRACKET
@@ -1452,9 +1483,11 @@ class CParser(PLYParser):
         """
         #  p[0] = p[2]
         if len(p) == 3:
-            p[0] = addNodes("designator" ,[(None, p[1]), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("designator" ,[(None, p[1]), (p[2], None)])1
         else:
-            p[0] = addNodes("designator" ,[(None, p[1]), (p[2], None), (None, p[3])])
+            p[0]=None
+#            p[0] = addNodes("designator" ,[(None, p[1]), (p[2], None), (None, p[3])])1
 
 
     def p_type_name(self, p):
@@ -1467,7 +1500,7 @@ class CParser(PLYParser):
         #      coord=self._coord(p.lineno(2)))
         #
         #  p[0] = self._fix_decl_name_type(typename, p[1]['type'])
-        p[0] = addNodes("type_name" ,[(p[1], None), (p[2], None)])
+#        p[0] = addNodes("type_name" ,[(p[1], None), (p[2], None)])1
 
     def p_abstract_declarator_1(self, p):
         """ abstract_declarator     : pointer
@@ -1476,19 +1509,19 @@ class CParser(PLYParser):
         #  p[0] = self._type_modify_decl(
         #      decl=dummytype,
         #      modifier=p[1])
-        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])
+#        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])1
 
     def p_abstract_declarator_2(self, p):
         """ abstract_declarator     : pointer direct_abstract_declarator
         """
         #  p[0] = self._type_modify_decl(p[2], p[1])
-        p[0] = addNodes("abstract_declarator" ,[(p[1], None), (p[2], None)])
+#        p[0] = addNodes("abstract_declarator" ,[(p[1], None), (p[2], None)])1
 
     def p_abstract_declarator_3(self, p):
         """ abstract_declarator     : direct_abstract_declarator
         """
         #  p[0] = p[1]
-        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])
+#        p[0] = addNodes("abstract_declarator" ,[(p[1], None)])1
 
     # Creating and using direct_abstract_declarator_opt here
     # instead of listing both direct_abstract_declarator and the
@@ -1498,7 +1531,7 @@ class CParser(PLYParser):
     def p_direct_abstract_declarator_1(self, p):
         """ direct_abstract_declarator  : LPAREN abstract_declarator RPAREN """
         #  p[0] = p[2]
-        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])1
 
     def p_direct_abstract_declarator_2(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LBRACKET assignment_expression_opt RBRACKET
@@ -1510,7 +1543,7 @@ class CParser(PLYParser):
         #      coord=p[1].coord)
         #
         #  p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])1
 
     def p_direct_abstract_declarator_3(self, p):
         """ direct_abstract_declarator  : LBRACKET assignment_expression_opt RBRACKET
@@ -1520,7 +1553,7 @@ class CParser(PLYParser):
         #      dim=p[2],
         #      dim_quals=[],
         #      coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])1
 
     def p_direct_abstract_declarator_4(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LBRACKET TIMES RBRACKET
@@ -1532,7 +1565,7 @@ class CParser(PLYParser):
         #      coord=p[1].coord)
         #
         #  p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (None, p[3]), (None, p[4])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (None, p[3]), (None, p[4])])1
 
     def p_direct_abstract_declarator_5(self, p):
         """ direct_abstract_declarator  : LBRACKET TIMES RBRACKET
@@ -1542,7 +1575,7 @@ class CParser(PLYParser):
         #      dim=c_ast.ID(p[3], self._coord(p.lineno(3))),
         #      dim_quals=[],
         #      coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (None, p[2]), (None, p[3])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (None, p[2]), (None, p[3])])1
 
     def p_direct_abstract_declarator_6(self, p):
         """ direct_abstract_declarator  : direct_abstract_declarator LPAREN parameter_type_list_opt RPAREN
@@ -1553,7 +1586,7 @@ class CParser(PLYParser):
         #      coord=p[1].coord)
 
         #  p[0] = self._type_modify_decl(decl=p[1], modifier=func)
-        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])1
 
     def p_direct_abstract_declarator_7(self, p):
         """ direct_abstract_declarator  : LPAREN parameter_type_list_opt RPAREN
@@ -1562,7 +1595,7 @@ class CParser(PLYParser):
         #      args=p[2],
         #      type=c_ast.TypeDecl(None, None, None),
         #      coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])
+#        p[0] = addNodes("direct_abstract_declarator" ,[(None, p[1]), (p[2], None), (None, p[3])])1
 
 
     # declaration is a list, statement isn't. To make it consistent, block_item
@@ -1573,7 +1606,7 @@ class CParser(PLYParser):
                         | statement
         """
         #  p[0] = p[1] if isinstance(p[1], list) else [p[1]]
-        p[0] = addNodes("block_item", [(p[1], None)])
+#        p[0] = addNodes("block_item", [(p[1], None)])1
 
     # Since we made block_item a list, this just combines lists
     #
@@ -1584,83 +1617,85 @@ class CParser(PLYParser):
         # Empty block items (plain ';') produce [None], so ignore them
         #  p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
         if len(p) == 2 or p[2] == [None]:
-            p[0] = addNodes("block_item_list", [(p[1], None)])
+            p[0]=None
+#            p[0] = addNodes("block_item_list", [(p[1], None)])1
         else:
-            p[0] = addNodes("block_item_list", [(p[1], None), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("block_item_list", [(p[1], None), (p[2], None)])1
 
     def p_compound_statement_1(self, p):
         """ compound_statement : brace_open block_item_list_opt brace_close """
         #  p[0] = c_ast.Compound(
             #  block_items=p[2],
             #  coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("compound_statement", [(p[1], None), (p[2], None), (p[3], None)])
+#        p[0] = addNodes("compound_statement", [(p[1], None), (p[2], None), (p[3], None)])1
 
     def p_labeled_statement_1(self, p):
         """ labeled_statement : ID COLON statement """
         #  p[0] = c_ast.Label(p[1], p[3], self._coord(p.lineno(1)))
-        p[0] = addNodes("labeled_statement", [(None, p[1]), (None, p[2]), (p[3], None)])
+#        p[0] = addNodes("labeled_statement", [(None, p[1]), (None, p[2]), (p[3], None)])1
 
     def p_labeled_statement_2(self, p):
         """ labeled_statement : CASE constant_expression COLON statement """
         #  p[0] = c_ast.Case(p[2], [p[4]], self._coord(p.lineno(1)))
-        p[0] = addNodes("labeled_statement", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None)])
+#        p[0] = addNodes("labeled_statement", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None)])1
 
     def p_labeled_statement_3(self, p):
         """ labeled_statement : DEFAULT COLON statement """
         #  p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
-        p[0] = addNodes("labeled_statement", [(None, p[1]), (None, p[2]), (p[3], None)])
+#        p[0] = addNodes("labeled_statement", [(None, p[1]), (None, p[2]), (p[3], None)])1
 
     def p_selection_statement_1(self, p):
         """ selection_statement : IF LPAREN expression RPAREN statement """
         #  p[0] = c_ast.If(p[3], p[5], None, self._coord(p.lineno(1)))
-        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])
+#        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])1
 
     def p_selection_statement_2(self, p):
         """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement """
         #  p[0] = c_ast.If(p[3], p[5], p[7], self._coord(p.lineno(1)))
-        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None), (None, p[6]), (p[7], None)])
+#        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None), (None, p[6]), (p[7], None)])1
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
         #  p[0] = fix_switch_cases(
                 #  c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
-        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])
+#        p[0] = addNodes("selection_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])1
 
     def p_iteration_statement_1(self, p):
         """ iteration_statement : WHILE LPAREN expression RPAREN statement """
         #  p[0] = c_ast.While(p[3], p[5], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])
+#        p[0] = addNodes("iteration_statement", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])1
 
     def p_iteration_statement_2(self, p):
         """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
         #  p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None , p[1]), (p[2], None), (None, p[3]), (None, p[4]), (p[5], None), (None, p[6]), (None, ";")])
+#        p[0] = addNodes("iteration_statement", [(None , p[1]), (p[2], None), (None, p[3]), (None, p[4]), (p[5], None), (None, p[6]), (None, ";")])1
 
     def p_iteration_statement_3(self, p):
         """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
         #  p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None , p[1]), (None, p[2]), (p[3], None), (None, ";"), (p[5], None), (None, ";"), (p[7], None), (None, p[8]), (p[9], None)])
+#        p[0] = addNodes("iteration_statement", [(None , p[1]), (None, p[2]), (p[3], None), (None, ";"), (p[5], None), (None, ";"), (p[7], None), (None, p[8]), (p[9], None)])1
 
     def p_iteration_statement_4(self, p):
         """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
         #  p[0] = c_ast.For(c_ast.DeclList(p[3], self._coord(p.lineno(1))),
                          #  p[4], p[6], p[8], self._coord(p.lineno(1)))
-        p[0] = addNodes("iteration_statement", [(None , p[1]), (None, p[2]), (p[3], None), (p[4], None), (None, ";"), (p[6], None), (None, p[7]), (p[8], None)])
+#        p[0] = addNodes("iteration_statement", [(None , p[1]), (None, p[2]), (p[3], None), (p[4], None), (None, ";"), (p[6], None), (None, p[7]), (p[8], None)])1
 
     def p_jump_statement_1(self, p):
         """ jump_statement  : GOTO ID SEMI """
         #  p[0] = c_ast.Goto(p[2], self._coord(p.lineno(1)))
-        p[0] = addNodes("jump_statement", [(None, p[1]), (None, p[2]), (None, ";")])
+#        p[0] = addNodes("jump_statement", [(None, p[1]), (None, p[2]), (None, ";")])1
 
     def p_jump_statement_2(self, p):
         """ jump_statement  : BREAK SEMI """
         #  p[0] = c_ast.Break(self._coord(p.lineno(1)))
-        p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])
+#        p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])1
 
     def p_jump_statement_3(self, p):
         """ jump_statement  : CONTINUE SEMI """
         #  p[0] = c_ast.Continue(self._coord(p.lineno(1)))
-        p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])
+#        p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])1
 
     def p_jump_statement_4(self, p):
         """ jump_statement  : RETURN expression SEMI
@@ -1668,50 +1703,58 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.Return(p[2] if len(p) == 4 else None, self._coord(p.lineno(1)))
         if len(p) == 3:
-            p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])
+            p[0]=None
+#            p[0] = addNodes("jump_statement", [(None, p[1]), (None, ";")])1
         else:
-            p[0] = addNodes("jump_statement", [(None, p[1]), (p[2], None), (None, ";")])
+            p[0]=None
+#            p[0] = addNodes("jump_statement", [(None, p[1]), (p[2], None), (None, ";")])1
             
 
     def p_expression_statement(self, p):
         """ expression_statement : expression_opt SEMI """
         if p[1] is None:
+            p[0]=None
             #  p[0] = c_ast.EmptyStatement(self._coord(p.lineno(2)))
-            p[0] = addNodes("expression_statement", [(None, ";")])
+#            p[0] = addNodes("expression_statement", [(None, ";")])1
         else:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("expression_statement", [(p[1], None), (None, ";")])
+#            p[0] = addNodes("expression_statement", [(p[1], None), (None, ";")])1
 
     def p_expression(self, p):
         """ expression  : assignment_expression
                         | expression COMMA assignment_expression
         """
         if len(p) == 2:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("expression", [(p[1], None)])
+#            p[0] = addNodes("expression", [(p[1], None)])1
         else:
+            p[0]=None
             #  if not isinstance(p[1], c_ast.ExprList):
                 #  p[1] = c_ast.ExprList([p[1]], p[1].coord)
 
             #  p[1].exprs.append(p[3])
             #  p[0] = p[1]
-            p[0] = addNodes("expression", [(p[1], None), (None, "COMMA"), (p[3], None)])
+#            p[0] = addNodes("expression", [(p[1], None), (None, "COMMA"), (p[3], None)])1
 
     def p_typedef_name(self, p):
         """ typedef_name : TYPEID """
         #  p[0] = c_ast.IdentifierType([p[1]], coord=self._coord(p.lineno(1)))
-        p[0] = addNodes("typedef_name", [(None, p[1])])
+#        p[0] = addNodes("typedef_name", [(None, p[1])])1
 
     def p_assignment_expression(self, p):
         """ assignment_expression   : conditional_expression
                                     | unary_expression assignment_operator assignment_expression
         """
         if len(p) == 2:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("assignment_expression", [(p[1], None)])
+#            p[0] = addNodes("assignment_expression", [(p[1], None)])1
         else:
+            p[0]=None
             #  p[0] = c_ast.Assignment(p[2], p[1], p[3], p[1].coord)
-            p[0] = addNodes("assignment_expression", [(p[1], None), (p[2], None), (p[3], None)])
+#            p[0] = addNodes("assignment_expression", [(p[1], None), (p[2], None), (p[3], None)])1
 
     # K&R2 defines these as many separate rules, to encode
     # precedence and associativity. Why work hard ? I'll just use
@@ -1732,23 +1775,25 @@ class CParser(PLYParser):
                                 | OREQUAL
         """
         #  p[0] = p[1]
-        p[0] = addNodes("assignment_operator", [(None, p[1])])
+#        p[0] = addNodes("assignment_operator", [(None, p[1])])1
 
     def p_constant_expression(self, p):
         """ constant_expression : conditional_expression """
         #  p[0] = p[1]
-        p[0] = addNodes("constant_expression", [(p[1], None)])
+#        p[0] = addNodes("constant_expression", [(p[1], None)])1
 
     def p_conditional_expression(self, p):
         """ conditional_expression  : binary_expression
                                     | binary_expression CONDOP expression COLON conditional_expression
         """
         if len(p) == 2:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("conditional_expression", [(p[1], None)])
+#            p[0] = addNodes("conditional_expression", [(p[1], None)])1
         else:
+            p[0]=None
             #  p[0] = c_ast.TernaryOp(p[1], p[3], p[5], p[1].coord)
-            p[0] = addNodes("conditional_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])
+#            p[0] = addNodes("conditional_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4]), (p[5], None)])1
 
     def p_binary_expression(self, p):
         """ binary_expression   : cast_expression
@@ -1772,40 +1817,42 @@ class CParser(PLYParser):
                                 | binary_expression LOR binary_expression
         """
         if len(p) == 2:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("binary_expression", [(p[1], None)])
+#            p[0] = addNodes("binary_expression", [(p[1], None)])1
 
         else:
+            p[0]=None
             #  p[0] = c_ast.BinaryOp(p[2], p[1], p[3], p[1].coord)
-            p[0] = addNodes("binary_expression", [(p[1], None), (None, p[2]), (p[3], None)])
+#            p[0] = addNodes("binary_expression", [(p[1], None), (None, p[2]), (p[3], None)])1
 
     def p_cast_expression_1(self, p):
         """ cast_expression : unary_expression """
         #  p[0] = p[1]
-        p[0] = addNodes("cast_expression", [(p[1], None)])
+#        p[0] = addNodes("cast_expression", [(p[1], None)])1
 
     def p_cast_expression_2(self, p):
         """ cast_expression : LPAREN type_name RPAREN cast_expression """
         #  p[0] = c_ast.Cast(p[2], p[4], self._coord(p.lineno(1)))
-        p[0] = addNodes("cast_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None)])
+#        p[0] = addNodes("cast_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None)])1
 
     def p_unary_expression_1(self, p):
         """ unary_expression    : postfix_expression """
         #  p[0] = p[1]
-        p[0] = addNodes("unary_expression", [(p[1], None)])
+#        p[0] = addNodes("unary_expression", [(p[1], None)])1
 
     def p_unary_expression_2_1(self, p):
         """ unary_expression    : unary_operator cast_expression
         """
         #  p[0] = c_ast.UnaryOp(p[1], p[2], p[2].coord)
-        p[0] = addNodes("unary_expression", [(p[1], None), (p[2], None)])
+#        p[0] = addNodes("unary_expression", [(p[1], None), (p[2], None)])1
 
     def p_unary_expression_2_2(self, p):
         """ unary_expression    : PLUSPLUS unary_expression
                                 | MINUSMINUS unary_expression
         """
         #  p[0] = c_ast.UnaryOp(p[1], p[2], p[2].coord)
-        p[0] = addNodes("unary_expression", [(None, p[1]), (p[2], None)])
+#        p[0] = addNodes("unary_expression", [(None, p[1]), (p[2], None)])1
 
     def p_unary_expression_3(self, p):
         """ unary_expression    : SIZEOF unary_expression
@@ -1816,9 +1863,11 @@ class CParser(PLYParser):
         #      p[2] if len(p) == 3 else p[3],
         #      self._coord(p.lineno(1)))
         if len(p) == 3:
-            p[0] = addNodes("unary_expression", [(None, p[1]), (p[2], None)])
+            p[0]=None
+#            p[0] = addNodes("unary_expression", [(None, p[1]), (p[2], None)])1
         else:
-            p[0] = addNodes("unary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4])])
+            p[0]=None
+#            p[0] = addNodes("unary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, p[4])])1
 
 
     def p_unary_operator(self, p):
@@ -1830,17 +1879,17 @@ class CParser(PLYParser):
                             | LNOT
         """
         #  p[0] = p[1]
-        p[0] = addNodes("unary_operator", [(None, p[1])])
+#        p[0] = addNodes("unary_operator", [(None, p[1])])1
 
     def p_postfix_expression_1(self, p):
         """ postfix_expression  : primary_expression """
         #  p[0] = p[1]
-        p[0] = addNodes("postfix_expression", [(p[1], None)])
+#        p[0] = addNodes("postfix_expression", [(p[1], None)])1
 
     def p_postfix_expression_2(self, p):
         """ postfix_expression  : postfix_expression LBRACKET expression RBRACKET """
         #  p[0] = c_ast.ArrayRef(p[1], p[3], p[1].coord)
-        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])
+#        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])1
 
     def p_postfix_expression_3(self, p):
         """ postfix_expression  : postfix_expression LPAREN argument_expression_list RPAREN
@@ -1848,9 +1897,11 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, p[1].coord)
         if len(p) == 5:
-            p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])
+            p[0]=None
+#            p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])1
         else:
-            p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (None, p[3])])
+            p[0]=None
+#            p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (None, p[3])])1
             
 
     def p_postfix_expression_4(self, p):
@@ -1861,14 +1912,14 @@ class CParser(PLYParser):
         """
         #  field = c_ast.ID(p[3], self._coord(p.lineno(3)))
         #  p[0] = c_ast.StructRef(p[1], p[2], field, p[1].coord)
-        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (None, p[3])])
+#        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2]), (None, p[3])])1
 
     def p_postfix_expression_5(self, p):
         """ postfix_expression  : postfix_expression PLUSPLUS
                                 | postfix_expression MINUSMINUS
         """
         #  p[0] = c_ast.UnaryOp('p' + p[2], p[1], p[1].coord)
-        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2])])
+#        p[0] = addNodes("postfix_expression", [(p[1], None), (None, p[2])])1
 
     def p_postfix_expression_6(self, p):
         """ postfix_expression  : LPAREN type_name RPAREN brace_open initializer_list brace_close
@@ -1876,31 +1927,33 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.CompoundLiteral(p[2], p[5])
         if len(p) == 6:
-            p[0] = addNodes("postfix_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None), (p[5], None), (p[6], None)])
+            p[0]=None
+#            p[0] = addNodes("postfix_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None), (p[5], None), (p[6], None)])1
         else:
-            p[0] = addNodes("postfix_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None), (p[5], None), (None, p[6]), (p[7], None)])
+            p[0]=None
+#            p[0] = addNodes("postfix_expression", [(None, p[1]), (p[2], None), (None, p[3]), (p[4], None), (p[5], None), (None, p[6]), (p[7], None)])1
 
     def p_primary_expression_1(self, p):
         """ primary_expression  : identifier """
         #  p[0] = p[1]
-        p[0] = addNodes("primary_expression", [(p[1], None)])
+#        p[0] = addNodes("primary_expression", [(p[1], None)])1
 
     def p_primary_expression_2(self, p):
         """ primary_expression  : constant """
         #  p[0] = p[1]
-        p[0] = addNodes("primary_expression", [(p[1], None)])
+#        p[0] = addNodes("primary_expression", [(p[1], None)])1
 
     def p_primary_expression_3(self, p):
         """ primary_expression  : unified_string_literal
                                 | unified_wstring_literal
         """
         #  p[0] = p[1]
-        p[0] = addNodes("primary_expression", [(p[1], None)])
+#        p[0] = addNodes("primary_expression", [(p[1], None)])1
 
     def p_primary_expression_4(self, p):
         """ primary_expression  : LPAREN expression RPAREN """
         #  p[0] = p[2]
-        p[0] = addNodes("primary_expression", [(None, p[1]), (p[2], None), (None, p[3])])
+#        p[0] = addNodes("primary_expression", [(None, p[1]), (p[2], None), (None, p[3])])1
 
     def p_primary_expression_5(self, p):
         """ primary_expression  : OFFSETOF LPAREN type_name COMMA offsetof_member_designator RPAREN
@@ -1909,7 +1962,7 @@ class CParser(PLYParser):
         #  p[0] = c_ast.FuncCall(c_ast.ID(p[1], coord),
                               #  c_ast.ExprList([p[3], p[5]], coord),
                               #  coord)
-        p[0] = addNodes("primary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, "COMMA"), (p[5], None), (None, p[6])])
+#        p[0] = addNodes("primary_expression", [(None, p[1]), (None, p[2]), (p[3], None), (None, "COMMA"), (p[5], None), (None, p[6])])1
 
     def p_offsetof_member_designator(self, p):
         """ offsetof_member_designator : identifier
@@ -1917,15 +1970,18 @@ class CParser(PLYParser):
                                          | offsetof_member_designator LBRACKET expression RBRACKET
         """
         if len(p) == 2:
+            p[0]=None
             #  p[0] = p[1]
-            p[0] = addNodes("offsetof_member_designator", [(p[1], None)])
+#            p[0] = addNodes("offsetof_member_designator", [(p[1], None)])1
         elif len(p) == 4:
+            p[0]=None
             #  field = c_ast.ID(p[3], self._coord(p.lineno(3)))
             #  p[0] = c_ast.StructRef(p[1], p[2], field, p[1].coord)
-            p[0] = addNodes("offsetof_member_designator", [(p[1], None), (None, p[2]), (p[3], None)])
+#            p[0] = addNodes("offsetof_member_designator", [(p[1], None), (None, p[2]), (p[3], None)])1
         elif len(p) == 5:
+            p[0]=None
             #  p[0] = c_ast.ArrayRef(p[1], p[3], p[1].coord)
-            p[0] = addNodes("offsetof_member_designator", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])
+#            p[0] = addNodes("offsetof_member_designator", [(p[1], None), (None, p[2]), (p[3], None), (None, p[4])])1
         else:
             raise NotImplementedError("Unexpected parsing state. len(p): %u" % len(p))
 
@@ -1934,17 +1990,19 @@ class CParser(PLYParser):
                                         | argument_expression_list COMMA assignment_expression
         """
         if len(p) == 2: # single expr
+            p[0]=None
             #  p[0] = c_ast.ExprList([p[1]], p[1].coord)
-            p[0] = addNodes("argument_expression_list", [(p[1], None)])
+#            p[0] = addNodes("argument_expression_list", [(p[1], None)])1
         else:
+            p[0]=None
             #  p[1].exprs.append(p[3])
             #  p[0] = p[1]
-            p[0] = addNodes("argument_expression_list", [(p[1], None), (None, "COMMA"), (p[3], None)])
+#            p[0] = addNodes("argument_expression_list", [(p[1], None), (None, "COMMA"), (p[3], None)])1
 
     def p_identifier(self, p):
         """ identifier  : ID """
         #  p[0] = c_ast.ID(p[1], self._coord(p.lineno(1)))
-        p[0] = addNodes("identifier", [(None, p[1])])
+#        p[0] = addNodes("identifier", [(None, p[1])])1
 
     def p_constant_1(self, p):
         """ constant    : INT_CONST_DEC
@@ -1954,7 +2012,7 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.Constant(
         #      'int', p[1], self._coord(p.lineno(1)))
-        p[0] = addNodes("constant", [(None, p[1])])
+#        p[0] = addNodes("constant", [(None, p[1])])1
 
     def p_constant_2(self, p):
         """ constant    : FLOAT_CONST
@@ -1962,7 +2020,7 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.Constant(
         #      'float', p[1], self._coord(p.lineno(1)))
-        p[0] = addNodes("constant", [(None, p[1])])
+#        p[0] = addNodes("constant", [(None, p[1])])1
 
     def p_constant_3(self, p):
         """ constant    : CHAR_CONST
@@ -1970,7 +2028,7 @@ class CParser(PLYParser):
         """
         #  p[0] = c_ast.Constant(
         #      'char', p[1], self._coord(p.lineno(1)))
-        p[0] = addNodes("constant", [(None, p[1])])
+#        p[0] = addNodes("constant", [(None, p[1])])1
 
     # The "unified" string and wstring literal rules are for supporting
     # concatenation of adjacent string literals.
@@ -1982,41 +2040,45 @@ class CParser(PLYParser):
                                     | unified_string_literal STRING_LITERAL
         """
         if len(p) == 2: # single literal
+            p[0]=None
             #  p[0] = c_ast.Constant(
             #      'string', p[1], self._coord(p.lineno(1)))
-            p[0] = addNodes("unified_string_literal", [(None, p[1])])
+#            p[0] = addNodes("unified_string_literal", [(None, p[1])])1
         else:
+            p[0]=None
             #  p[1].value = p[1].value[:-1] + p[2][1:]
             #  p[0] = p[1]
-            p[0] = addNodes("unified_string_literal", [(p[1], None), (None, p[2])])
+#            p[0] = addNodes("unified_string_literal", [(p[1], None), (None, p[2])])1
 
     def p_unified_wstring_literal(self, p):
         """ unified_wstring_literal : WSTRING_LITERAL
                                     | unified_wstring_literal WSTRING_LITERAL
         """
         if len(p) == 2: # single literal
+            p[0]=None
             #  p[0] = c_ast.Constant(
             #      'string', p[1], self._coord(p.lineno(1)))
             #  p[0] = c_ast.Constant('string',p[1], self._coord(p.lineno(1)))
-            p[0] = addNodes("unified_wstring_literal", [(None, p[1])])
+#            p[0] = addNodes("unified_wstring_literal", [(None, p[1])])1
         else:
+            p[0]=None
             #  p[1].value = p[1].value.rstrip()[:-1] + p[2][2:]
             #  p[0] = p[1]
-            p[0] = addNodes("unified_wstring_literal", [(p[1], None), (None, p[2])])
+#            p[0] = addNodes("unified_wstring_literal", [(p[1], None), (None, p[2])])1
 
     def p_brace_open(self, p):
         """ brace_open  :   LBRACE
         """
         #  p[0] = p[1]
         p.set_lineno(0, p.lineno(1))
-        p[0] = addNodes("brace_open", [(None, p[1])])
+#        p[0] = addNodes("brace_open", [(None, p[1])])1
 
     def p_brace_close(self, p):
         """ brace_close :   RBRACE
         """
         #  p[0] = p[1]
         p.set_lineno(0, p.lineno(1))
-        p[0] = addNodes("brace_close", [(None, p[1])])
+#        p[0] = addNodes("brace_close", [(None, p[1])])1
 
     def p_empty(self, p):
         'empty : '
