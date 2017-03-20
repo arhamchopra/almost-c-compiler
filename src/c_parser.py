@@ -20,7 +20,7 @@ from plyparser import PLYParser, Coord, ParseError
 from ast_transforms import fix_switch_cases
 from parse_tree import *
 from symbol_table import SymbolTable as ST
-
+from type_check import *
 
 
 class CParser(PLYParser):
@@ -1542,6 +1542,10 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = p[1]
         else:
+            p1_type = self.CST.lookupFullScope(p[1].name)[1].type
+            print("######################Obtained Values for "+str((p[2],p1_type,p[3].type)))
+            (bin_type, type_cast1, type_cast2) = bin_operator(p[2],p1_type,p[3])
+            print("######################Obtained Values for "+str((p[2],p[1],p[3]))+" as "+ str((bin_type, type_cast1, type_cast2)))
             p[0] = c_ast.BinaryOp(p[2], p[1], p[3], p[1].coord)
 
     def p_cast_expression_1(self, p):

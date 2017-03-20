@@ -536,7 +536,7 @@ class ID(Node):
     attr_names = ('name', )
 
 class IdentifierType(Node):
-    __slots__ = ('names', 'coord', '__weakref__')
+    __slots__ = ('names', 'type', 'coord', '__weakref__')
     def __init__(self, names, coord=None):
         self.names = names
         self.coord = coord
