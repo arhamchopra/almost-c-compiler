@@ -1,4 +1,4 @@
 int main(){
-    int a[10][20];
+    static int a;
     return 0;
 }

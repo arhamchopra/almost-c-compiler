@@ -29,9 +29,13 @@ def getSize(type):
         return 8
     if type == "SymbTab":
         return 0
+
+
 # This class include all the functionality of SymbolTable 
 class SymbolTable(object):
     GID = 0             #SymbolTable Id for indetification purpose
+    GST=None
+    FT=[]
 
     # Initialize the SymbolTable
     def __init__(self, name=None):
@@ -46,6 +50,7 @@ class SymbolTable(object):
     def makeNewTable(self, PP):
         if PP == None:
             self.table = { 'PP': None, 'cur_offset': 0, 'cur_scope': [], 'nesting': 0 }
+            SymbolTable.GST=self
             print("Creating Root SymbolTable:{}".format(self.id))
         else:
             self.table = { 'PP': PP, 'cur_offset': 0, 'cur_scope': [], 'nesting': PP.getNesting()+1 }
@@ -54,20 +59,21 @@ class SymbolTable(object):
         return self
 
     def addEntry(self, lexeme, type, child=None):
-        size = getSize(type)
+        #  size = getSize(type)
+        size = 1
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
-        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset), self.id))
-        if type == "SymbTab":
-            self.table['cur_scope'].append((lexeme, type, child, offset))
-        else:
-            self.table['cur_scope'].append((lexeme, type, size, offset))
+        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child), self.id))
+        self.table['cur_scope'].append((lexeme, type, size, offset, child))
 
+    def addToFT(self, lexeme, type, child=None):
+        SymbolTable.FT.append((lexeme, type, child))
 
     def popEntry(self):
         print("Popping entry from SymbolTable: {}".format(self.id))
         e = self.table['cur_scope'].pop()
         print("{} was popped".format(e))
+        return e
 
     def setLastLexeme(self, lexeme):
         print("Setting last lexeme: {} to {}".format(e, lexeme))
@@ -91,6 +97,11 @@ class SymbolTable(object):
                 return entry
         return None
 
+    def lookupFT(self, name):
+        for entry in SymbolTable.FT:
+            if entry[0] == name:
+                return entry
+        return None
     def lookupFullScope(self,  name):
         found = self.lookupCurrentScope(name)
         if found:
@@ -106,9 +117,15 @@ class SymbolTable(object):
     def Print(self):
         print("Printing SymbolTable:"+ str(self.id))
         for entry in self.table['cur_scope']:
-            if entry[1] == "SymbTab":
-                entry[2].Print()
+            if entry[4]:
+                print(entry)
+                entry[4].Print()
             else:
                 print(entry)
+                print(entry[1].type.names)
         print("Finished SymbolTable:"+ str(self.id))
                 
+    def PrintFT(self):
+        print("Printing Function Table")
+        for i in SymbolTable.FT:
+            print(i)

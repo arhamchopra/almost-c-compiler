@@ -178,20 +178,20 @@ class CParser(PLYParser):
                 "in this scope" % name, coord)
         self._scope_stack[-1][name] = True
 
-    def _add_identifier(self, name, coord):
+    def _add_identifier(self, name, type, coord):
         """ Add a new object, function, or enum member name (ie an ID) to the
             current scope
         """
-        if self._scope_stack[-1].get(name, False):
+        #  if self._scope_stack[-1].get(name, False):
+        #      self._parse_error(
+        #          "Non-typedef %r previously declared as typedef "
+        #          "in this scope" % name, coord)
+        #  self._scope_stack[-1][name] = False
+        if self.CST.lookupCurrentScope(name) or self.CST.lookupFT(name):
             self._parse_error(
                 "Non-typedef %r previously declared as typedef "
                 "in this scope" % name, coord)
-        self._scope_stack[-1][name] = False
-        if self.CST.lookupCurrentScope(name):
-            self._parse_error(
-                "Non-typedef %r previously declared as typedef "
-                "in this scope" % name, coord)
-        self.CST.addEntry(name, "int")
+        self.CST.addEntry(name, type)
 
     def _is_type_in_scope(self, name):
         """ Is *name* a typedef-name in the current scope?
@@ -215,8 +215,8 @@ class CParser(PLYParser):
     def _lex_on_rbrace_func(self):
         PST = self.CST.getPP()
         assert PST is not None
-        if self.CST.getCurOffset() == 0:
-           PST.popEntry()
+        #  if self.CST.getCurOffset() == 0:
+        #     PST.popEntry()
         self.CST = PST
         self._pop_scope()
 
@@ -472,7 +472,8 @@ class CParser(PLYParser):
                 if is_typedef:
                     self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
                 else:
-                    self._add_identifier(fixed_decl.name, fixed_decl.coord)
+                    print("fixed_decl.type"+str(fixed_decl.type))
+                    self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord)
 
             declarations.append(fixed_decl)
 
@@ -594,33 +595,39 @@ class CParser(PLYParser):
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
     #
-    def p_function_definition_1(self, p):
-        """ function_definition : declarator declaration_list_opt compound_statement
-        """
-        # no declaration specifiers - 'int' becomes the default type
-        spec = dict(
-            qual=[],
-            storage=[],
-            type=[c_ast.IdentifierType(['int'],
-                                       coord=self._coord(p.lineno(1)))],
-            function=[])
-
-        p[0] = self._build_function_definition(
-            spec=spec,
-            decl=p[1],
-            param_decls=p[2],
-            body=p[3])
+    #  def p_function_definition_1(self, p):
+    #      """ function_definition : declarator declaration_list_opt compound_statement
+    #      """
+    #      # no declaration specifiers - 'int' becomes the default type
+    #      spec = dict(
+    #          qual=[],
+    #          storage=[],
+    #          type=[c_ast.IdentifierType(['int'],
+    #                                     coord=self._coord(p.lineno(1)))],
+    #          function=[])
+    #
+    #      p[0] = self._build_function_definition(
+    #          spec=spec,
+    #          decl=p[1],
+    #          param_decls=p[2],
+    #          body=p[3])
 
     def p_function_definition_2(self, p):
         """ function_definition : declaration_specifiers declarator declaration_list_opt compound_statement
         """
         spec = p[1]
+        print("In the start of function_definition")
+        body_scope = self.CST.popEntry()
 
         p[0] = self._build_function_definition(
             spec=spec,
             decl=p[2],
             param_decls=p[3],
             body=p[4])
+        func_def = self.CST.popEntry()
+        self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
+        self.CST.addToFT(func_def[0],func_def[1],body_scope[4])
+        print("In the end of function_definition")
 
     def p_statement(self, p):
         """ statement   : labeled_statement
@@ -719,6 +726,7 @@ class CParser(PLYParser):
         """ declaration_specifiers  : type_qualifier declaration_specifiers_opt
         """
         p[0] = self._add_declaration_specifier(p[2], p[1], 'qual')
+        
 
     def p_declaration_specifiers_2(self, p):
         """ declaration_specifiers  : type_specifier declaration_specifiers_opt
@@ -1106,7 +1114,8 @@ class CParser(PLYParser):
             if func.args is not None:
                 for param in func.args.params:
                     if isinstance(param, c_ast.EllipsisParam): break
-                    self._add_identifier(param.name, param.coord)
+                    print("Param.Type"+str(param.type))
+                    self._add_identifier(param.name, param.type, param.coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=func)
 
@@ -1550,17 +1559,30 @@ class CParser(PLYParser):
     def p_unary_expression_2(self, p):
         """ unary_expression    : PLUSPLUS unary_expression
                                 | MINUSMINUS unary_expression
-                                | unary_operator cast_expression
         """
-        p[0] = c_ast.UnaryOp(p[1], p[2], p[2].coord)
+
+        p[0] = c_ast.UnaryOp(p[1], p[2], p[2].type, p[2].coord)
 
     def p_unary_expression_3(self, p):
+        """ unary_expression    : unary_operator cast_expression
+        """
+        if p[1]=='&':
+            p[0] = c_ast.UnaryOp(p[1], p[2], modify_type(p[2].type, '&'), p[2].coord)
+        elif p[1]=='*':
+            p[0] = c_ast.UnaryOp(p[1], p[2], modify_type(p[2].type,'*'), p[2].coord)
+        else:
+            p[0] = c_ast.UnaryOp(p[1], p[2], p[2].type , p[2].coord)
+
+
+
+    def p_unary_expression_4(self, p):
         """ unary_expression    : SIZEOF unary_expression
                                 | SIZEOF LPAREN type_name RPAREN
         """
         p[0] = c_ast.UnaryOp(
             p[1],
             p[2] if len(p) == 3 else p[3],
+            "unsigned",
             self._coord(p.lineno(1)))
 
     def p_unary_operator(self, p):
@@ -1579,14 +1601,18 @@ class CParser(PLYParser):
 
     def p_postfix_expression_2(self, p):
         """ postfix_expression  : postfix_expression LBRACKET expression RBRACKET """
-        p[0] = c_ast.ArrayRef(p[1], p[3], p[1].coord)
+        p[0] = c_ast.ArrayRef(p[1], p[3], modify_type(p[1].type, '*'), p[1].coord)
 
     def p_postfix_expression_3(self, p):
         """ postfix_expression  : postfix_expression LPAREN argument_expression_list RPAREN
                                 | postfix_expression LPAREN RPAREN
         """
-        p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, p[1].coord)
+        #Check function type with type of argument_expression_list
+        entry = lookup_GST(p[1])
 
+        p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, modify_type(entry['type'], '*'),  p[1].coord)
+
+#[TODO]
     def p_postfix_expression_4(self, p):
         """ postfix_expression  : postfix_expression PERIOD ID
                                 | postfix_expression PERIOD TYPEID
@@ -1600,8 +1626,9 @@ class CParser(PLYParser):
         """ postfix_expression  : postfix_expression PLUSPLUS
                                 | postfix_expression MINUSMINUS
         """
-        p[0] = c_ast.UnaryOp('p' + p[2], p[1], p[1].coord)
+        p[0] = c_ast.UnaryOp('p' + p[2], p[1], p[1].type, p[1].coord)
 
+#[TODO]
     def p_postfix_expression_6(self, p):
         """ postfix_expression  : LPAREN type_name RPAREN brace_open initializer_list brace_close
                                 | LPAREN type_name RPAREN brace_open initializer_list COMMA brace_close
@@ -1626,6 +1653,7 @@ class CParser(PLYParser):
         """ primary_expression  : LPAREN expression RPAREN """
         p[0] = p[2]
 
+#[TODO]
     def p_primary_expression_5(self, p):
         """ primary_expression  : OFFSETOF LPAREN type_name COMMA offsetof_member_designator RPAREN
         """
@@ -1634,6 +1662,7 @@ class CParser(PLYParser):
                               c_ast.ExprList([p[3], p[5]], coord),
                               coord)
 
+#[TODO]
     def p_offsetof_member_designator(self, p):
         """ offsetof_member_designator : identifier
                                          | offsetof_member_designator PERIOD identifier
@@ -1654,14 +1683,15 @@ class CParser(PLYParser):
                                         | argument_expression_list COMMA assignment_expression
         """
         if len(p) == 2: # single expr
-            p[0] = c_ast.ExprList([p[1]], p[1].coord)
+            p[0] = c_ast.ExprList([p[1]], [p[1].type], p[1].coord)
         else:
             p[1].exprs.append(p[3])
+            p[1].type.append(p[3].type)
             p[0] = p[1]
 
     def p_identifier(self, p):
         """ identifier  : ID """
-        p[0] = c_ast.ID(p[1], self._coord(p.lineno(1)))
+        p[0] = c_ast.ID(p[1], None, self._coord(p.lineno(1)))
 
     def p_constant_1(self, p):
         """ constant    : INT_CONST_DEC
@@ -1749,6 +1779,7 @@ class CParser(PLYParser):
             saveGraph(fname)
             print("PRINTING     ............................")
             self.CST.Print()
+            self.CST.PrintFT()
         else:
             for msg in getErrorMsg():
                 print(msg)

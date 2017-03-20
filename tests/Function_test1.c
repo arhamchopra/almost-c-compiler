@@ -3,5 +3,6 @@ int func(int a, int b){
 }
 
 int main(){
+    int func1;
     return 0;
 }

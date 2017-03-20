@@ -147,11 +147,12 @@ class ArrayDecl(Node):
     attr_names = ('dim_quals', )
 
 class ArrayRef(Node):
-    __slots__ = ('name', 'subscript', 'coord', '__weakref__')
-    def __init__(self, name, subscript, coord=None):
+    __slots__ = ('name', 'subscript', 'type', 'coord', '__weakref__')
+    def __init__(self, name, subscript, type="void", coord=None):
         self.name = name
         self.subscript = subscript
         self.coord = coord
+        self.type = type
 
     def children(self):
         nodelist = []
@@ -220,11 +221,12 @@ class Case(Node):
     attr_names = ()
 
 class Cast(Node):
-    __slots__ = ('to_type', 'expr', 'coord', '__weakref__')
-    def __init__(self, to_type, expr, coord=None):
+    __slots__ = ('to_type', 'expr', 'type', 'coord', '__weakref__')
+    def __init__(self, to_type, expr, type="void", coord=None):
         self.to_type = to_type
         self.expr = expr
         self.coord = coord
+        self.type = type 
 
     def children(self):
         nodelist = []
@@ -413,10 +415,11 @@ class EnumeratorList(Node):
     attr_names = ()
 
 class ExprList(Node):
-    __slots__ = ('exprs', 'coord', '__weakref__')
-    def __init__(self, exprs, coord=None):
+    __slots__ = ('exprs', 'type', 'coord', '__weakref__')
+    def __init__(self, exprs, type=[], coord=None):
         self.exprs = exprs
         self.coord = coord
+        self.type = type
 
     def children(self):
         nodelist = []
@@ -520,10 +523,11 @@ class Goto(Node):
     attr_names = ('name', )
 
 class ID(Node):
-    __slots__ = ('name', 'coord', '__weakref__')
-    def __init__(self, name, coord=None):
+    __slots__ = ('name', 'type', 'coord', '__weakref__')
+    def __init__(self, name, type=None, coord=None):
         self.name = name
         self.coord = coord
+        self.type = type 
 
     def children(self):
         nodelist = []
@@ -536,6 +540,7 @@ class IdentifierType(Node):
     def __init__(self, names, coord=None):
         self.names = names
         self.coord = coord
+        self.type = names
 
     def children(self):
         nodelist = []
@@ -755,11 +760,12 @@ class Typename(Node):
     attr_names = ('name', 'quals', )
 
 class UnaryOp(Node):
-    __slots__ = ('op', 'expr', 'coord', '__weakref__')
-    def __init__(self, op, expr, coord=None):
+    __slots__ = ('op', 'expr', 'type', 'coord', '__weakref__')
+    def __init__(self, op, expr, type="void", coord=None):
         self.op = op
         self.expr = expr
         self.coord = coord
+        self.type = type
 
     def children(self):
         nodelist = []
