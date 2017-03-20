@@ -19,7 +19,6 @@
 import sys
 from parse_tree import *
 
-
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
@@ -80,7 +79,7 @@ class Node(object):
                 showcoord=showcoord,
                 _my_node_name=child_name))
 
-        return addNodes(self.__class__.__name__, child_list)
+        return addNodes(self.__class__.__name__, child_list) 
 
 
 class NodeVisitor(object):

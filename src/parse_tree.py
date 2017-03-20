@@ -4,7 +4,7 @@ i=0
 
 graph = pd.Dot(graph_type = "graph", ordering = "out" )
 
-def addNodes(root, child_list):
+def addNodes_Parser(root, child_list):
     global i
     global graph
     rnode = pd.Node( "id{}".format(i) ,label = root)
@@ -27,6 +27,22 @@ def addNodes(root, child_list):
         #  print("RNODE:{} CNODE:{}".format(rnode, cnode))
 
     return rnode
+
+def addNodes(root, child_list):
+    global i
+    global graph
+    rnode = pd.Node( "id{}".format(i) ,label = root)
+    i+=1
+    graph.add_node(rnode)
+    for child in child_list:
+        #  print(child)
+        graph.add_edge(pd.Edge(rnode,child))
+
+        #  print("CHILD IS NOT NONE")
+        #  print("RNODE:{} CNODE:{}".format(rnode, cnode))
+
+    return rnode
+
 
 def createTypeNode(type):
     global i
