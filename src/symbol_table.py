@@ -80,4 +80,21 @@ class SymbolTable(object):
     
     def getNesting(self):
         return self.table["nesting"]
+    
+    def lookupCurrentScope(self, name):
+        for entry in self.table['cur_scope']:
+            if entry[0] == name:
+                return entry
+        return None
 
+    def lookupFullScope(self,  name):
+        found = self.lookupCurrentScope(name)
+        if found:
+            return found
+        else:
+            PP = self.table['PP']
+            if PP:
+                self = PP
+                return self.lookupFullScope(name)
+            else:
+                return None
