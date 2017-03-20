@@ -447,6 +447,7 @@ class CParser(PLYParser):
             else:
                 fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
 
+            
             # Add the type name defined by typedef to a
             # symbol table (for usage in the lexer)
             #
