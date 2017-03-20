@@ -1,5 +1,4 @@
-typedef int C;
 int main(){
-    int C,a;
+    int a[10][20];
     return 0;
 }

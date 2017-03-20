@@ -135,6 +135,9 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
+        self.CST = ST()
+        self.CST = self.CST.makeNewTable(None)
+        self.GST = self.CST
     def parse(self, text, filename='', debuglevel=0):
         """ Parses C code and returns an AST.
 
@@ -184,6 +187,11 @@ class CParser(PLYParser):
                 "Non-typedef %r previously declared as typedef "
                 "in this scope" % name, coord)
         self._scope_stack[-1][name] = False
+        if self.CST.lookupCurrentScope(name):
+            self._parse_error(
+                "Non-typedef %r previously declared as typedef "
+                "in this scope" % name, coord)
+        self.CST.addEntry(name, "int")
 
     def _is_type_in_scope(self, name):
         """ Is *name* a typedef-name in the current scope?
@@ -199,9 +207,17 @@ class CParser(PLYParser):
         self._parse_error(msg, self._coord(line, column))
 
     def _lex_on_lbrace_func(self):
+        new_st = ST()
+        new_st = new_st.makeNewTable(self.CST)
+        self.CST = new_st
         self._push_scope()
 
     def _lex_on_rbrace_func(self):
+        PST = self.CST.getPP()
+        assert PST is not None
+        if self.CST.getCurOffset() == 0:
+           PST.popEntry()
+        self.CST = PST
         self._pop_scope()
 
     def _lex_type_lookup_func(self, name):
@@ -440,6 +456,7 @@ class CParser(PLYParser):
                     init=decl.get('init'),
                     bitsize=decl.get('bitsize'),
                     coord=decl['decl'].coord)
+                
 
             if isinstance(declaration.type,
                     (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
@@ -1730,6 +1747,8 @@ class CParser(PLYParser):
             print("Making the parse tree wait for a minute :)")
             t.show(nodenames = True)
             saveGraph(fname)
+            print("PRINTING     ............................")
+            self.CST.Print()
         else:
             for msg in getErrorMsg():
                 print(msg)

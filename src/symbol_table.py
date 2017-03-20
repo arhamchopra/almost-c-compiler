@@ -48,17 +48,21 @@ class SymbolTable(object):
             self.table = { 'PP': None, 'cur_offset': 0, 'cur_scope': [], 'nesting': 0 }
             print("Creating Root SymbolTable:{}".format(self.id))
         else:
-            PP.addEntry(self.name, "SymbTab")
             self.table = { 'PP': PP, 'cur_offset': 0, 'cur_scope': [], 'nesting': PP.getNesting()+1 }
+            PP.addEntry(self.name, "SymbTab", self)
             print("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
         return self
 
-    def addEntry(self, lexeme, type):
+    def addEntry(self, lexeme, type, child=None):
         size = getSize(type)
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset), self.id))
-        self.table['cur_scope'].append((lexeme, type, size, offset))
+        if type == "SymbTab":
+            self.table['cur_scope'].append((lexeme, type, child, offset))
+        else:
+            self.table['cur_scope'].append((lexeme, type, size, offset))
+
 
     def popEntry(self):
         print("Popping entry from SymbolTable: {}".format(self.id))
@@ -98,3 +102,13 @@ class SymbolTable(object):
                 return self.lookupFullScope(name)
             else:
                 return None
+
+    def Print(self):
+        print("Printing SymbolTable:"+ str(self.id))
+        for entry in self.table['cur_scope']:
+            if entry[1] == "SymbTab":
+                entry[2].Print()
+            else:
+                print(entry)
+        print("Finished SymbolTable:"+ str(self.id))
+                
