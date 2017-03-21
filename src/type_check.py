@@ -1,10 +1,5 @@
-from parse_error import *
-
-# inFile = sys.argv[1]
 import c_ast
-
-
-
+from parse_error import *
 
 priority = {
 	'char' : 1, 
@@ -29,9 +24,9 @@ def group(var):
 		return 'unsigned' 
 	elif var == 'void':
 		return 'void'
-	elif isinstance(var, c_ast.PtrDecl):
+	elif var == 'ptr':
 		return 'ptr'
-	elif isinstance(var, c_ast.ArrayDecl):
+	elif var == 'array':
 		return 'array'
 
 def isPointer_Array(type):
@@ -45,33 +40,36 @@ def isPointer_Array(type):
     	return None
 
 def depth(ptr):
-	if isinstance(type, c_ast.PtrDecl) or isinstance(type,c_ast.ArrayDecl):
+	if isinstance(ptr, c_ast.PtrDecl) or isinstance(ptr, c_ast.ArrayDecl):
 		return depth(ptr.type) + 1
 
 	else:
 		return 0
 
 def get_type(entry):
-	print("Starting get_type")
-	if isinstance(type, c_ast.PtrDecl):
-		return ('ptr', depth(entry))
-		
-	elif isinstance(type,c_ast.ArrayDecl):
-		print("Not Ptr")
-		return ('array', depth(entry))
+    print("Starting get_type")
+    if isinstance(entry, basestring):
+        return (entry, None)
 
-	print("Not Array")
-	
+    elif isinstance(entry, c_ast.PtrDecl):
+        return ('ptr', depth(entry))
+            
+    elif isinstance(entry, c_ast.ArrayDecl):
+        return ('array', depth(entry))
 
-	while not isinstance(entry, c_ast.Constant) and not isinstance(entry, c_ast.IdentifierType):
-		print("ENTRY "+str(entry))
-		entry = entry.type
-	if isinstance(entry, c_ast.IdentifierType):
-		entry = (entry.type)[0]
-	else:
-		entry =entry.type
-	print("return of get_type"+str(entry))
-	return (entry, None)
+    print("Not Array")
+
+    while not isinstance(entry, c_ast.Constant) and not isinstance(entry, c_ast.IdentifierType):
+        print("ENTRY "+str(entry))
+        entry = entry.type
+
+    if isinstance(entry, c_ast.IdentifierType):
+        entry = (entry.type)[0]
+    else:
+        entry =entry.type
+
+    print("return of get_type "+str(entry))
+    return (entry, None)
 
 
 def bin_operator(op,left, right):
@@ -81,7 +79,9 @@ def bin_operator(op,left, right):
 	typer = get_type(right)
 	print("typer " + str(typer))
 	groupl = group(typel[0])
+	print("groupl " + str(groupl))
 	groupr = group(typer[0])
+	print("groupr " + str(groupr))
 
 	# if groupl == :
 	# 	if(priority[typel[0]] == priority[typer[0]]):
@@ -116,6 +116,7 @@ def bin_operator(op,left, right):
 		
 		else:
 			adderror("wrong arguements passed to binary operator +")
+			return('int', None, None)
 
 	elif op == '-':
 		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
@@ -130,6 +131,10 @@ def bin_operator(op,left, right):
 			if typel[1] == typer[1]:
 				t = c_ast.IdentifierType(['int'])
 				return (t, None, None)
+                        else:
+                                adderror("wrong arguements passed to binary operator -")
+                                return('int', None, None)
+
 
 		elif ((groupl == 'ptr' or groupl == 'array') and (groupr == 'uptoInt')):
 			return (left, None, None)
@@ -141,10 +146,13 @@ def bin_operator(op,left, right):
 			return (left, None, None)
 		else:
 			adderror("wrong arguements passed to binary operator -")
+			return('int', None, None)
 
 # club
 	elif op == '*' or op ==  '/':
+		print("arguements passed to binary operator " + op)
 		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
+                        print("Both Ints")
 			if priority[typer[0]] == priority[typel[0]]:
 				return (left, None, None)
 			elif priority[typer[0]] > priority[typel[0]]:
@@ -159,7 +167,9 @@ def bin_operator(op,left, right):
 			return (left, None, None)
 		
 		else:
-			adderror("wrong arguements passed to binary operator " + op)
+			#  print("wrong arguements passed to binary operator " + op)
+                        adderror("wrong arguements passed to binary operator " + op)
+			return('int', None, None)
 
 
 	elif op == '|' or op == '&' or op == '^':
@@ -178,7 +188,9 @@ def bin_operator(op,left, right):
 			return (left, None, None)
 		
 		else:
-			adderror("wrong arguements passed to binary operator " + op)
+			#  print("wrong arguements passed to binary operator " + op)
+                        adderror("wrong arguements passed to binary operator " + op)
+			return('int', None, None)
 
 
 	elif op == '<<' or op == '>>' or op == '%':
@@ -198,7 +210,7 @@ def bin_operator(op,left, right):
 		
 		else:
 			adderror("wrong arguements passed to binary operator " + op)
-		pass
+			return('int', None, None)
 
 	elif op == '||' or op == '&&':
 		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
@@ -226,6 +238,7 @@ def bin_operator(op,left, right):
 			return (t, None, None)
 		else:
 			adderror("wrong arguements passed to binary operator" + op)
+			return('int', None, None)
 
 #end
 
@@ -251,6 +264,7 @@ def bin_operator(op,left, right):
 				return (t, None, None)
 		else:
 			adderror("wrong arguements passed to binary operator +")
+			return('int', None, None)
 
 # End
 	    # Assignment operators

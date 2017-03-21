@@ -122,7 +122,6 @@ class SymbolTable(object):
                 entry[4].Print()
             else:
                 print(entry)
-                print(entry[1].type.names)
         print("Finished SymbolTable:"+ str(self.id))
                 
     def PrintFT(self):

@@ -179,11 +179,12 @@ class Assignment(Node):
     attr_names = ('op', )
 
 class BinaryOp(Node):
-    __slots__ = ('op', 'left', 'right', 'coord', '__weakref__')
-    def __init__(self, op, left, right, coord=None):
+    __slots__ = ('op', 'left', 'right', 'type', 'coord', '__weakref__')
+    def __init__(self, op, left, right, type='void', coord=None):
         self.op = op
         self.left = left
         self.right = right
+        self.type = type 
         self.coord = coord
 
     def children(self):

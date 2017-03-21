@@ -1542,11 +1542,35 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p1_type = self.CST.lookupFullScope(p[1].name)[1].type
-            print("######################Obtained Values for "+str((p[2],p1_type,p[3].type)))
-            (bin_type, type_cast1, type_cast2) = bin_operator(p[2],p1_type,p[3])
-            print("######################Obtained Values for "+str((p[2],p[1],p[3]))+" as "+ str((bin_type, type_cast1, type_cast2)))
-            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], p[1].coord)
+            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
+            if isinstance(p[1], c_ast.ID):
+                p1_type = self.CST.lookupFullScope(p[1].name)[1]
+                if isinstance(p1_type, c_ast.TypeDecl):
+                    p1_type = p1_type.type
+            elif isinstance(p[1], c_ast.Constant):
+                p1_type = p[1].type
+                p1_type = c_ast.IdentifierType([p1_type])
+            elif isinstance(p[1], c_ast.BinaryOp):
+                p1_type = p[1].type
+            
+            if isinstance(p[3], c_ast.ID):
+                p3_type = self.CST.lookupFullScope(p[3].name)[1]
+                if isinstance(p3_type, c_ast.TypeDecl):
+                    p3_type = p3_type.type
+            elif isinstance(p[3], c_ast.Constant):
+                p3_type = p[3].type
+                p3_type = c_ast.IdentifierType([p3_type])
+            elif isinstance(p[3], c_ast.BinaryOp):
+                p3_type = p[3].type
+
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
+            (bin_type, type_cast1, type_cast3) = bin_operator(p[2],p1_type,p3_type)
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+            if type_cast1:
+                p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
+            if type_cast3:
+                p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
+            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], bin_type, p[1].coord)
 
     def p_cast_expression_1(self, p):
         """ cast_expression : unary_expression """
@@ -1554,7 +1578,7 @@ class CParser(PLYParser):
 
     def p_cast_expression_2(self, p):
         """ cast_expression : LPAREN type_name RPAREN cast_expression """
-        p[0] = c_ast.Cast(p[2], p[4], self._coord(p.lineno(1)))
+        p[0] = c_ast.Cast(p[2], p[4], p[2], self._coord(p.lineno(1)))
 
     def p_unary_expression_1(self, p):
         """ unary_expression    : postfix_expression """
