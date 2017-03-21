@@ -268,22 +268,24 @@ def bin_operator(op,left, right):
 			adderror("wrong arguements passed to binary operator" + op)
 
 	elif op == '*=' or op == '/=':
-		if priority[typer[0]] == priority[typel[0]]:
-				return (left, None, None)
-		elif priority[typer[0]] > priority[typel[0]]:
-			return (left, right, None)
-		elif priority[typer[0]] < priority[typel[0]]:
-			return (left, None, left)
+		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
+
+			if priority[typer[0]] == priority[typel[0]]:
+					return (left, None, None)
+			elif priority[typer[0]] > priority[typel[0]]:
+				return (left, right, None)
+			elif priority[typer[0]] < priority[typel[0]]:
+				return (left, None, left)
+			else:
+				return (left, None, left)
+
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
+
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
 		else:
-			return (left, None, left)
-
-	elif groupl == 'unsigned' and groupr == 'unsigned':
-		return (left, None, None)
-
-	elif groupl == 'signed' and groupr == 'signed':
-		return (left, None, None)
-	else:
-			adderror("wrong arguements passed to binary operator" + op)
+				adderror("wrong arguements passed to binary operator" + op)
 
 
 
