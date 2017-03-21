@@ -1,8 +1,6 @@
 int main(){
-    {
-        typedef int a;
-        a b = 5;
-    }
-    a b = 5;
+    int * a;
+    char *b;
+    a = b-a;
     return 0;
 }

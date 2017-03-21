@@ -1,9 +1,7 @@
 int main(){
-    int *a;
-    a = a+4;
-    int ** b;
-    b = b-a;
-    /* int b=3+4; */
-    /* int c = b+a; */
+    int a = 5;
+    a = a++;
+    int * b = &a;
+    int c = *b;
     return 0;
 }

@@ -61,7 +61,7 @@ def get_type(entry):
 
 	while not isinstance(entry, c_ast.Constant) and not isinstance(entry, c_ast.IdentifierType):
 		print("ENTRY "+str(entry))
-	entry = entry.type
+	        entry = entry.type
 
 	if isinstance(entry, c_ast.IdentifierType):
 		entry = (entry.type)[0]
@@ -349,14 +349,22 @@ def bin_operator(op,left, right):
 
 
 	#     Increment/decrement
-def unary_operator(oper, key):
+def uni_operator(op, key):
 	print("Starting unary_operator")
-	typeKey = get_type(left)
-	print("typeKey " + str(typel))
-	groupl = group(typeKey[0])
+	typeKey = get_type(key)
+	print("typeKey " + str(typeKey))
+	groupKey = group(typeKey[0])
+	print("groupKey" + str(groupKey))
 
-	if op == '++' or op == '--' or op == '!' or op == '~':
+	if op == '++' or op == '--' or op == '~':
+            if groupKey == "uptoInt":
 		return key
+            else:
+                adderror("Incorrect type in unary_operator "+oper)
+                return c_ast.IdentifierType(['int'])
+
+        elif op == '!':
+            return c_ast.IdentifierType(['int'])
 
 	elif op == '*':
 		assert key.type is not None

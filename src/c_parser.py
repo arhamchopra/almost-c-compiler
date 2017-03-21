@@ -193,6 +193,23 @@ class CParser(PLYParser):
                 "in this scope" % name, coord)
         self.CST.addEntry(name, type)
 
+    def _get_type(self, v):
+        if isinstance(v, c_ast.ID):
+            p1_type = self.CST.lookupFullScope(v.name)[1]
+            if isinstance(p1_type, c_ast.TypeDecl):
+                p1_type = p1_type.type
+        elif isinstance(v, c_ast.Constant):
+            p1_type = v.type
+            p1_type = c_ast.IdentifierType([p1_type])
+        elif isinstance(v, c_ast.BinaryOp):
+            p1_type = v.type
+        elif isinstance(v, c_ast.UnaryOp):
+            p1_type = v.type
+        else:
+            p1_type = None
+        return p1_type
+
+
     def _is_type_in_scope(self, name):
         """ Is *name* a typedef-name in the current scope?
         """
@@ -1543,25 +1560,8 @@ class CParser(PLYParser):
             p[0] = p[1]
         else:
             print("######################Obtained Values for "+str((p[2],p[1],p[3])))
-            if isinstance(p[1], c_ast.ID):
-                p1_type = self.CST.lookupFullScope(p[1].name)[1]
-                if isinstance(p1_type, c_ast.TypeDecl):
-                    p1_type = p1_type.type
-            elif isinstance(p[1], c_ast.Constant):
-                p1_type = p[1].type
-                p1_type = c_ast.IdentifierType([p1_type])
-            elif isinstance(p[1], c_ast.BinaryOp):
-                p1_type = p[1].type
-            
-            if isinstance(p[3], c_ast.ID):
-                p3_type = self.CST.lookupFullScope(p[3].name)[1]
-                if isinstance(p3_type, c_ast.TypeDecl):
-                    p3_type = p3_type.type
-            elif isinstance(p[3], c_ast.Constant):
-                p3_type = p[3].type
-                p3_type = c_ast.IdentifierType([p3_type])
-            elif isinstance(p[3], c_ast.BinaryOp):
-                p3_type = p[3].type
+            p1_type = self._get_type(p[1])
+            p3_type = self._get_type(p[3])
 
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
             (bin_type, type_cast1, type_cast3) = bin_operator(p[2],p1_type,p3_type)
@@ -1588,18 +1588,20 @@ class CParser(PLYParser):
         """ unary_expression    : PLUSPLUS unary_expression
                                 | MINUSMINUS unary_expression
         """
-
-        p[0] = c_ast.UnaryOp(p[1], p[2], p[2].type, p[2].coord)
+        print("######################Obtained Values for "+str((p[1],p[2])))
+        p2_type = self._get_type(p[2])
+        print("######################Obtained Values for "+str(p2_type))
+        p[0] = c_ast.UnaryOp(p[1], p[2], uni_operator(p[1], p2_type), p[2].coord)
+        print("######################Obtained Values for "+str(p[0].type))
 
     def p_unary_expression_3(self, p):
         """ unary_expression    : unary_operator cast_expression
         """
-        if p[1]=='&':
-            p[0] = c_ast.UnaryOp(p[1], p[2], modify_type(p[2].type, '&'), p[2].coord)
-        elif p[1]=='*':
-            p[0] = c_ast.UnaryOp(p[1], p[2], modify_type(p[2].type,'*'), p[2].coord)
-        else:
-            p[0] = c_ast.UnaryOp(p[1], p[2], p[2].type , p[2].coord)
+        print("######################Obtained Values for "+str((p[1],p[2])))
+        p2_type = self._get_type(p[2])
+        print("######################Obtained Values for "+str(p2_type))
+        p[0] = c_ast.UnaryOp(p[1], p[2], uni_operator(p[1], p2_type), p[2].coord)
+        print("######################Obtained Values for "+str(p[0].type))
 
 
 
@@ -1629,8 +1631,12 @@ class CParser(PLYParser):
 
     def p_postfix_expression_2(self, p):
         """ postfix_expression  : postfix_expression LBRACKET expression RBRACKET """
-        p[0] = c_ast.ArrayRef(p[1], p[3], modify_type(p[1].type, '*'), p[1].coord)
-
+        print("######################Obtained Values for "+str((p[1],p[3])))
+        p1_type = self._get_type(p[1])
+        print("######################Obtained Values for "+str(p1_type))
+        p[0] = c_ast.ArrayRef(p[1], p[3], uni_operator('*', p1_type), p[1].coord)
+        print("######################Obtained Values for "+str(p[0].type))
+#[TODO]
     def p_postfix_expression_3(self, p):
         """ postfix_expression  : postfix_expression LPAREN argument_expression_list RPAREN
                                 | postfix_expression LPAREN RPAREN
@@ -1654,7 +1660,11 @@ class CParser(PLYParser):
         """ postfix_expression  : postfix_expression PLUSPLUS
                                 | postfix_expression MINUSMINUS
         """
-        p[0] = c_ast.UnaryOp('p' + p[2], p[1], p[1].type, p[1].coord)
+        print("######################Obtained Values for "+str((p[2],p[1])))
+        p1_type = self._get_type(p[1])
+        print("######################Obtained Values for "+str(p1_type))
+        p[0] = c_ast.UnaryOp('p' + p[2], p[1], uni_operator(p[2], p1_type), p[1].coord)
+        print("######################Obtained Values for "+str(p[0].type))
 
 #[TODO]
     def p_postfix_expression_6(self, p):
