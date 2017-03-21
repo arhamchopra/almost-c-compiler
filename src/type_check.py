@@ -41,10 +41,12 @@ def isPointer_Array(type):
 
 def depth(ptr):
 	if isinstance(ptr, c_ast.PtrDecl) or isinstance(ptr, c_ast.ArrayDecl):
-		return depth(ptr.type) + 1
+		(d,t) = depth(ptr.type)
+		return(d+1,t)
 
 	else:
-		return 0
+		if isinstance(ptr, c_ast.TypeDecl):
+			return (0,ptr.type.names[0])
 
 def get_type(entry):
 	print("Starting get_type")
@@ -70,6 +72,17 @@ def get_type(entry):
 
 	print("return of get_type "+str(entry))
 	return (entry, None)
+
+def valid_sub(ptr):
+	if isinstance(ptr.type, c_ast.PtrDecl):
+		return valid_sub(ptr.type)
+	elif isinstance(ptr.type, c_ast.ArrayDecl):
+		if isinstance(ptr.type.type, c_ast.TypeDecl):
+			return True
+		else:
+			return False
+	elif isinstance(ptr.type, c_ast.TypeDecl):
+		return  True
 
 
 def bin_operator(op,left, right):
@@ -128,7 +141,7 @@ def bin_operator(op,left, right):
 				return (left, None, left)
 
 		elif ((groupl == 'ptr' or groupl == 'array') and (groupr == 'ptr' or groupr == 'array')):
-			if typel[1] == typer[1]:
+			if typel[1] == typer[1] and valid_sub(left) and valid_sub(right):
 				t = c_ast.IdentifierType(['int'])
 				return (t, None, None)
 			else:
