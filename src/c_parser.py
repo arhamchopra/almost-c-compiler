@@ -207,6 +207,8 @@ class CParser(PLYParser):
             p1_type = v.type
         elif isinstance(v, c_ast.UnaryOp):
             p1_type = v.type
+        elif isinstance(v,c_ast.ArrayRef):
+            p1_type = v.type
         else:
             p1_type = None
         return p1_type
@@ -1078,11 +1080,21 @@ class CParser(PLYParser):
         quals = (p[3] if len(p) > 5 else []) or []
         # Accept dimension qualifiers
         # Per C99 6.7.5.3 p7
+        if isinstance(p[1], c_ast.TypeDecl):
+            size = 1
+        else:
+            if len(p) > 5:
+                size = p[1].size * p[4].value
+            else:
+                size = p[1].size * p[3].value
+
         arr = c_ast.ArrayDecl(
             type=None,
             dim=p[4] if len(p) > 5 else p[3],
             dim_quals=quals,
+            size=size,
             coord=p[1].coord)
+        print "-----------------------------3dimensions of " + str(p[1])
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
@@ -1097,11 +1109,23 @@ class CParser(PLYParser):
             for item in [p[3],p[4]]]
         dim_quals = [qual for sublist in listed_quals for qual in sublist
             if qual is not None]
+        
+        if isinstance(p[1], c_ast.TypeDecl):
+            size = 1
+        else:
+            if len(p) > 5:
+                size = p[1].size * p[4].value
+            else:
+                size = p[1].size * p[3].value
+
+
         arr = c_ast.ArrayDecl(
             type=None,
             dim=p[5],
             dim_quals=dim_quals,
+            size = size,
             coord=p[1].coord)
+        print "-----------------------------2dimensions of " + str(p[1])
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
@@ -1110,12 +1134,21 @@ class CParser(PLYParser):
     def p_direct_declarator_5(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt TIMES RBRACKET
         """
+        if isinstance(p[1], c_ast.TypeDecl):
+            size = 1
+        else:
+            if len(p) > 5:
+                size = p[1].size * p[4].value
+            else:
+                size = p[1].size * p[3].value
+
         arr = c_ast.ArrayDecl(
             type=None,
             dim=c_ast.ID(p[4], self._coord(p.lineno(4))),
             dim_quals=p[3] if p[3] != None else [],
+            size = size,
             coord=p[1].coord)
-
+        print "-----------------------------1dimensions of " + str(p[4])
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
     def p_direct_declarator_6(self, p):
