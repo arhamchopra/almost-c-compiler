@@ -172,7 +172,7 @@ def bin_operator(op,left, right):
 			return('int', None, None)
 
 
-	elif op == '|' or op == '&' or op == '^':
+	elif op == '|' or op == '&' or op == '^' or op == '<<' or op == '>>' or op == '%':
 		if groupl == 'uptoInt' and groupr == 'uptoInt':
 			if priority[typer[0]] == priority[typel[0]]:
 				return (left, None, None)
@@ -189,27 +189,7 @@ def bin_operator(op,left, right):
 		
 		else:
 			#  print("wrong arguements passed to binary operator " + op)
-                        adderror("wrong arguements passed to binary operator " + op)
-			return('int', None, None)
-
-
-	elif op == '<<' or op == '>>' or op == '%':
-		if groupl == 'uptoInt' and groupr == 'uptoInt':
-			if priority[typer[0]] == priority[typel[0]]:
-				return (left, None, None)
-			elif priority[typer[0]] > priority[typel[0]]:
-				return (right, right, None)
-			elif priority[typer[0]] < priority[typel[0]]:
-				return (left, None, left)
-
-		elif groupl == 'unsigned' and groupr == 'unsigned':
-			return (left, None, None)
-
-		elif groupl == 'signed' and groupr == 'signed':
-			return (left, None, None)
-		
-		else:
-			adderror("wrong arguements passed to binary operator " + op)
+            adderror("wrong arguements passed to binary operator " + op)
 			return('int', None, None)
 
 	elif op == '||' or op == '&&':
@@ -268,40 +248,121 @@ def bin_operator(op,left, right):
 
 # End
 	    # Assignment operators
-	# elif op == '=':
+	elif op == '=':
+		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
+			if priority[typer[0]] == priority[typel[0]]:
+				return (left, None, None)
+			else:
+				return (left, None, left)
 
-	# elif op == '*=':
+		elif ((groupl == 'ptr' ) and (groupr == 'ptr' or groupr == 'array')):
+			if typel[1] == typer[1]:
+				return (left, None, None)
 
-	# elif op == '/=':
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
+
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
+		else:
+			adderror("wrong arguements passed to binary operator" + op)
+
+	elif op == '*=' or op == '/=':
+		if priority[typer[0]] == priority[typel[0]]:
+				return (left, None, None)
+			elif priority[typer[0]] > priority[typel[0]]:
+				return (left, right, None)
+			elif priority[typer[0]] < priority[typel[0]]:
+				return (left, None, left)
+			else:
+				return (left, None, left)
+
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
+
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
+		else:
+			adderror("wrong arguements passed to binary operator" + op)
 
 
-	# elif op == '+=':
 
-	# elif op == '-=':
+	elif op == '+=':
+		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
+			if priority[typer[0]] == priority[typel[0]]:
+				return (left, None, None)
+			elif priority[typer[0]] > priority[typel[0]]:
+				return (left, right, None)
+			elif priority[typer[0]] < priority[typel[0]]:
+				return (left, None, left)
 
-	# elif op == '%=':
-
-	# elif op == '<<=':
-
-	# elif op == '>>=':
-
-	# elif op == '&=':
-
-	# elif op == '|=':
-
-	# elif op == '^=':
+		elif ((groupl == 'ptr') and (groupr == 'uptoInt')):
+			return (left, None, None)
 
 
-	    # Increment/decrement
-	# elif op == '++':
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
 
-	# elif op == '--':
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
+		
+		else:
+			adderror("wrong arguements passed to binary operator +")
 
-	# elif op == '!':
+	elif op == '-=':
+		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
+			if priority[typer[0]] == priority[typel[0]]:
+				return (left, None, None)
+			elif priority[typer[0]] > priority[typel[0]]:
+				return (left, right, None)
+			elif priority[typer[0]] < priority[typel[0]]:
+				return (left, None, left)
 
-	# elif op == '~':
-	# 	pass
+		elif ((groupl == 'ptr') and (groupr == 'uptoInt')):
+			return (left, None, None)
 
+
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
+
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
+
+
+	elif op == '%=' or op  == '<<=' or op == '>>=' or op == '&=' or op == '|=' or op == ' ^=':
+		if (groupl == 'uptoInt' ) and (groupr == 'uptoInt'):
+			if priority[typer[0]] == priority[typel[0]]:
+				return (left, None, None)
+			elif priority[typer[0]] > priority[typel[0]]:
+				return (left, right, None)
+			elif priority[typer[0]] < priority[typel[0]]:
+				return (left, None, left)
+
+		elif groupl == 'unsigned' and groupr == 'unsigned':
+			return (left, None, None)
+
+		elif groupl == 'signed' and groupr == 'signed':
+			return (left, None, None)
+	
+
+
+	#     Increment/decrement
+def unary_operator(oper, key):
+	print("Starting unary_operator")
+	typeKey = get_type(left)
+	print("typeKey " + str(typel))
+	groupl = group(typeKey[0])
+
+	if op == '++' or op == '--' or op == '!' or op == '~':
+		return key
+
+	elif op == '*':
+		assert key.type is not None
+		return key.type
+
+	elif op == '&':
+		t = c_ast.PtrDecl([], key)
+		return t
 	#     # ->
 	# elif op == '->':
 
