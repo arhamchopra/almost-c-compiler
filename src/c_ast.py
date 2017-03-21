@@ -133,12 +133,15 @@ class NodeVisitor(object):
 
 
 class ArrayDecl(Node):
-    __slots__ = ('type', 'dim', 'dim_quals','size', 'coord', '__weakref__')
-    def __init__(self, type, dim, size, dim_quals, coord=None):
+    # __slots__ = ('type', 'dim', 'dim_quals','size', 'coord', '__weakref__')
+    __slots__ = ('type', 'dim', 'dim_quals','coord', '__weakref__')
+
+    # def __init__(self, type, dim, size, dim_quals, coord=None):
+    def __init__(self, type, dim,  dim_quals, coord=None):
         self.type = type
         self.dim = dim
         self.dim_quals = dim_quals
-        self.size = size
+        # self.size = size
         self.coord = coord
 
     def children(self):

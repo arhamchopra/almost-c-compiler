@@ -194,10 +194,16 @@ class CParser(PLYParser):
         self.CST.addEntry(name, type)
 
     def _get_type(self, v):
+        # print " *********************** printing variable name " + str(v)
         if isinstance(v, c_ast.ID):
             p1_type = self.CST.lookupFullScope(v.name)[1]
+            # if p1_type == None:
+            #     self._parse_error("Failed lookup")
+
             if isinstance(p1_type, c_ast.TypeDecl):
                 p1_type = p1_type.type
+        elif isinstance(v, c_ast.TypeDecl):
+            p1_type = v.type        
         elif isinstance(v, c_ast.Constant):
             p1_type = v.type
             p1_type = c_ast.IdentifierType([p1_type])
@@ -207,6 +213,10 @@ class CParser(PLYParser):
             p1_type = v.type
         elif isinstance(v,c_ast.ArrayRef):
             p1_type = v.type
+        elif isinstance(v,c_ast.Cast):
+            p1_type = v.type 
+            if isinstance(p1_type, c_ast.Typename):
+                p1_type = p1_type.type 
         else:
             p1_type = None
         return p1_type
@@ -326,7 +336,7 @@ class CParser(PLYParser):
 
             modifier_tail.type = decl_tail.type
             decl_tail.type = modifier_head
-            decl.size = modifier.size
+            # decl.size = modifier.size
             return decl
 
     # Due to the order in which declarators are constructed,
@@ -478,11 +488,26 @@ class CParser(PLYParser):
                     coord=decl['decl'].coord)
                 
 
-            if isinstance(declaration.type,
-                    (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-                fixed_decl = declaration
-            else:
-                fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
+
+
+                if isinstance(declaration.type,
+                        (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+                    fixed_decl = declaration
+                else:
+                    fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
+
+                if declaration.init:
+                    print("######################Obtained Values for "+str(('=', declaration.type)))
+                    p1_type = self._get_type(declaration.type)
+                    p3_type = self._get_type(declaration.init)
+                    print("######################Obtained Values for "+str(('=', p1_type, p3_type)))
+                    (bin_type, type_cast1, type_cast3) = bin_operator('=', p1_type, p3_type)
+                    if bin_type == 'error':
+                        self._parse_error("Error in assignment",declaration.coord)
+
+                    print("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+                    if p3_type:
+                        declaration.init = c_ast.Cast(p3_type, declaration.init , p3_type)
 
             
             # Add the type name defined by typedef to a
@@ -1070,23 +1095,23 @@ class CParser(PLYParser):
         # Accept dimension qualifiers
         # Per C99 6.7.5.3 p7
 
-        if len(p) > 5:
-            if p[1].type == None:
-                si = int(p[4].value)
-            else:
-                si = int(p[1].size) * int(p[4].value)
-        else:
-            if p[1].type == None:
-                si = int(p[3].value)
-            else:
-                si = p[1].si * p[3].value
+        # if len(p) > 5:
+        #     if p[1].type == None:
+        #         si = int(p[4].value)
+        #     else:
+        #         si = int(p[1].size) * int(p[4].value)
+        # else:
+        #     if p[1].type == None:
+        #         si = int(p[3].value)
+        #     else:
+        #         si = p[1].si * p[3].value
 
         arr = c_ast.ArrayDecl(
             type=None,
             dim=p[4] if len(p) > 5 else p[3],
             dim_quals=quals,
-            size=si,
             coord=p[1].coord)
+            # size=si,
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
@@ -1102,21 +1127,21 @@ class CParser(PLYParser):
         dim_quals = [qual for sublist in listed_quals for qual in sublist
             if qual is not None]
         
-        if isinstance(p[1], c_ast.TypeDecl):
-            size = 1
-        else:
-            if len(p) > 5:
-                size = p[1].size * p[4].value
-            else:
-                size = p[1].size * p[3].value
+        # if isinstance(p[1], c_ast.TypeDecl):
+        #     size = 1
+        # else:
+        #     if len(p) > 5:
+        #         size = p[1].size * p[4].value
+        #     else:
+        #         size = p[1].size * p[3].value
 
 
         arr = c_ast.ArrayDecl(
             type=None,
             dim=p[5],
             dim_quals=dim_quals,
-            size = size,
             coord=p[1].coord)
+            # size = size,
         print "-----------------------------2dimensions of " + str(p[1])
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
@@ -1126,20 +1151,20 @@ class CParser(PLYParser):
     def p_direct_declarator_5(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt TIMES RBRACKET
         """
-        if isinstance(p[1], c_ast.TypeDecl):
-            size = 1
-        else:
-            if len(p) > 5:
-                size = p[1].size * p[4].value
-            else:
-                size = p[1].size * p[3].value
+        # if isinstance(p[1], c_ast.TypeDecl):
+        #     size = 1
+        # else:
+        #     if len(p) > 5:
+        #         size = p[1].size * p[4].value
+        #     else:
+        #         size = p[1].size * p[3].value
 
         arr = c_ast.ArrayDecl(
             type=None,
             dim=c_ast.ID(p[4], self._coord(p.lineno(4))),
             dim_quals=p[3] if p[3] != None else [],
-            size = size,
             coord=p[1].coord)
+            # size = size,
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
     def p_direct_declarator_6(self, p):
@@ -1533,8 +1558,25 @@ class CParser(PLYParser):
                                     | unary_expression assignment_operator assignment_expression
         """
         if len(p) == 2:
+            print " --------------------------- conditional expression" 
             p[0] = p[1]
         else:
+            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
+            p1_type = self._get_type(p[1])
+            p3_type = self._get_type(p[3])
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
+            (bin_type, type_cast1, type_cast3) = bin_operator(p[2], p1_type, p3_type)
+
+            if bin_type == 'error':
+                self._parse_error("could not assign type" + type_cast3 +" to " + type_cast1 + " using operator " + str(p[2]), p[1].coord)
+                bin_type = c_ast.IdentifierType(['int'])
+                
+
+
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+
+            if p3_type:
+                p[3] = c_ast.Cast(p3_type, p[3], p3_type)
             p[0] = c_ast.Assignment(p[2], p[1], p[3], p[1].coord)
 
     # K&R2 defines these as many separate rules, to encode
@@ -1601,6 +1643,14 @@ class CParser(PLYParser):
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
             (bin_type, type_cast1, type_cast3) = bin_operator(p[2],p1_type,p3_type)
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+            
+            if bin_type == 'error':
+                self._parse_error("wrong arguements " + type_cast1 +" and " + type_cast3 + " passed to binary operator " + str(p[2]), p[1].coord)
+                # adderror("wrong arguements" + type_cast1 +" and" + type_cast3 + " passed to binary operator " + p[2] + "at line no" + str(self.lexer.lineno))
+    
+                type_cast1=c_ast.IdentifierType(['int'])
+                type_cast2=c_ast.IdentifierType(['int'])
+
             if type_cast1:
                 p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
             if type_cast3:
@@ -1626,7 +1676,12 @@ class CParser(PLYParser):
         print("######################Obtained Values for "+str((p[1],p[2])))
         p2_type = self._get_type(p[2])
         print("######################Obtained Values for "+str(p2_type))
-        p[0] = c_ast.UnaryOp(p[1], p[2], uni_operator(p[1], p2_type), p[2].coord)
+
+        t = uni_operator(p[1], p2_type)
+        if t == 'error':
+            self._parse_error("invalid arguements for unary operator" + str(p[1]), p[2].coord)
+            t=c_ast.IdentifierType(['int'])
+        p[0] = c_ast.UnaryOp(p[1], p[2], t, p[2].coord)
         print("######################Obtained Values for "+str(p[0].type))
 
     def p_unary_expression_3(self, p):
@@ -1666,10 +1721,15 @@ class CParser(PLYParser):
 
     def p_postfix_expression_2(self, p):
         """ postfix_expression  : postfix_expression LBRACKET expression RBRACKET """
+        print("IN POSTFIX")
         print("######################Obtained Values for "+str((p[1],p[3])))
         p1_type = self._get_type(p[1])
         print("######################Obtained Values for "+str(p1_type))
-        p[0] = c_ast.ArrayRef(p[1], p[3], uni_operator('*', p1_type), p[1].coord)
+        t = uni_operator('*', p1_type)
+        if t == 'error':
+            self._parse_error(" Unary operation not supported on this expression",p[1].coord)
+        else:
+            p[0] = c_ast.ArrayRef(p[1], p[3], t, p[1].coord)
         print("######################Obtained Values for "+str(p[0].type))
 #[TODO]
     def p_postfix_expression_3(self, p):
@@ -1720,7 +1780,11 @@ class CParser(PLYParser):
         print("######################Obtained Values for "+str((p[2],p[1])))
         p1_type = self._get_type(p[1])
         print("######################Obtained Values for "+str(p1_type))
-        p[0] = c_ast.UnaryOp('p' + p[2], p[1], uni_operator(p[2], p1_type), p[1].coord)
+        t = uni_operator(p[2], p1_type)
+        if t == 'error':
+            self._parse_error(" Unary operation not supported on this expression",p[1].coord)
+            t = c_ast.IdentifierType(['int'])
+        p[0] = c_ast.UnaryOp('p' + p[2], p[1], t, p[1].coord)
         print("######################Obtained Values for "+str(p[0].type))
 
 #[TODO]
