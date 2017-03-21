@@ -198,8 +198,6 @@ class CParser(PLYParser):
             p1_type = self.CST.lookupFullScope(v.name)[1]
             if isinstance(p1_type, c_ast.TypeDecl):
                 p1_type = p1_type.type
-        elif isinstance(v, c_ast.TypeDecl):
-            p1_type = v.type
         elif isinstance(v, c_ast.Constant):
             p1_type = v.type
             p1_type = c_ast.IdentifierType([p1_type])
@@ -328,6 +326,7 @@ class CParser(PLYParser):
 
             modifier_tail.type = decl_tail.type
             decl_tail.type = modifier_head
+            decl.size = modifier.size
             return decl
 
     # Due to the order in which declarators are constructed,
@@ -477,23 +476,14 @@ class CParser(PLYParser):
                     init=decl.get('init'),
                     bitsize=decl.get('bitsize'),
                     coord=decl['decl'].coord)
+                
 
+            if isinstance(declaration.type,
+                    (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+                fixed_decl = declaration
+            else:
+                fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
 
-                if isinstance(declaration.type,
-                        (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-                    fixed_decl = declaration
-                else:
-                    fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
-
-                if declaration.init:
-                    print("######################Obtained Values for "+str(('=', declaration.type)))
-                    p1_type = self._get_type(declaration.type)
-                    p3_type = self._get_type(declaration.init)
-                    print("######################Obtained Values for "+str(('=', p1_type, p3_type)))
-                    (bin_type, type_cast1, type_cast3) = bin_operator('=', p1_type, p3_type)
-                    print("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
-                    if p3_type:
-                        declaration.init = c_ast.Cast(p3_type, declaration.init , p3_type)
             
             # Add the type name defined by typedef to a
             # symbol table (for usage in the lexer)
@@ -847,7 +837,6 @@ class CParser(PLYParser):
         """ init_declarator : declarator
                             | declarator EQUALS initializer
         """
-
         p[0] = dict(decl=p[1], init=(p[3] if len(p) > 2 else None))
 
     def p_specifier_qualifier_list_1(self, p):
@@ -1080,21 +1069,24 @@ class CParser(PLYParser):
         quals = (p[3] if len(p) > 5 else []) or []
         # Accept dimension qualifiers
         # Per C99 6.7.5.3 p7
-        if isinstance(p[1], c_ast.TypeDecl):
-            size = 1
-        else:
-            if len(p) > 5:
-                size = p[1].size * p[4].value
+
+        if len(p) > 5:
+            if p[1].type == None:
+                si = int(p[4].value)
             else:
-                size = p[1].size * p[3].value
+                si = int(p[1].size) * int(p[4].value)
+        else:
+            if p[1].type == None:
+                si = int(p[3].value)
+            else:
+                si = p[1].si * p[3].value
 
         arr = c_ast.ArrayDecl(
             type=None,
             dim=p[4] if len(p) > 5 else p[3],
             dim_quals=quals,
-            size=size,
+            size=si,
             coord=p[1].coord)
-        print "-----------------------------3dimensions of " + str(p[1])
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
@@ -1148,7 +1140,6 @@ class CParser(PLYParser):
             dim_quals=p[3] if p[3] != None else [],
             size = size,
             coord=p[1].coord)
-        print "-----------------------------1dimensions of " + str(p[4])
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
     def p_direct_declarator_6(self, p):
@@ -1542,17 +1533,8 @@ class CParser(PLYParser):
                                     | unary_expression assignment_operator assignment_expression
         """
         if len(p) == 2:
-            print("Condition Expression")
             p[0] = p[1]
         else:
-            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
-            p1_type = self._get_type(p[1])
-            p3_type = self._get_type(p[3])
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
-            (bin_type, type_cast1, type_cast3) = bin_operator(p[2], p1_type, p3_type)
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
-            if p3_type:
-                p[3] = c_ast.Cast(p3_type, p[3], p3_type)
             p[0] = c_ast.Assignment(p[2], p[1], p[3], p[1].coord)
 
     # K&R2 defines these as many separate rules, to encode

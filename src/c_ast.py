@@ -145,6 +145,7 @@ class ArrayDecl(Node):
         nodelist = []
         if self.type is not None: nodelist.append(("type", self.type))
         if self.dim is not None: nodelist.append(("dim", self.dim))
+        
         return tuple(nodelist)
 
     attr_names = ('dim_quals', )
