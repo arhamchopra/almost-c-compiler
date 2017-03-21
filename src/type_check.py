@@ -74,14 +74,14 @@ def get_type(entry):
 	return (entry, None)
 
 def valid_sub(ptr):
-	if isinstance(ptr.type, c_ast.PtrDecl):
+	if isinstance(ptr, c_ast.PtrDecl):
 		return valid_sub(ptr.type)
-	elif isinstance(ptr.type, c_ast.ArrayDecl):
-		if isinstance(ptr.type.type, c_ast.TypeDecl):
+	elif isinstance(ptr, c_ast.ArrayDecl):
+		if not isinstance(ptr.type, c_ast.ArrayDecl):
 			return True
 		else:
 			return False
-	elif isinstance(ptr.type, c_ast.TypeDecl):
+	elif isinstance(ptr, c_ast.TypeDecl):
 		return  True
 
 

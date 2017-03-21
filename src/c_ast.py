@@ -18,7 +18,7 @@
 
 import sys
 from parse_tree import *
-
+from symbol_table import *
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
@@ -78,8 +78,10 @@ class Node(object):
                 nodenames=nodenames,
                 showcoord=showcoord,
                 _my_node_name=child_name))
-
-        return addNodes(self.__class__.__name__, child_list) 
+        if _my_node_name:
+            return addNodes(self.__class__.__name__+" <"+_my_node_name+"> ", child_list) 
+        else:
+            return addNodes(self.__class__.__name__, child_list) 
 
 
 class NodeVisitor(object):
