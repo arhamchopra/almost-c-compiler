@@ -646,7 +646,6 @@ class CParser(PLYParser):
         spec = p[1]
         print("In the start of function_definition")
         body_scope = self.CST.popEntry()
-
         p[0] = self._build_function_definition(
             spec=spec,
             decl=p[2],
@@ -1663,9 +1662,31 @@ class CParser(PLYParser):
                                 | postfix_expression LPAREN RPAREN
         """
         #Check function type with type of argument_expression_list
-        entry = lookup_GST(p[1])
-
-        p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, modify_type(entry['type'], '*'),  p[1].coord)
+        #  entry = lookup_GST(p[1])
+        print("############### In Function call")
+        if isinstance(p[1], c_ast.ID):
+            func_decl = self.CST.lookupFT(p[1].name)
+            dec_list = func_decl[1].args.params
+            use_list = p[3].type
+            print(dec_list)
+            print(use_list)
+            count = 0
+            for d,u in zip(dec_list, use_list):
+                if self._get_type(d.type):
+                    if self._get_type(d.type).type[0] != u: 
+                        if group(self._get_type(d.type).type[0]) != group(u):
+                            print("ERRORORORORORORORORORORORO")
+                            break
+                else:
+                    print("EROROROROROORORORORORO")
+                    break
+                count +=1 
+                print(count)
+            if count == len(dec_list) and count == len(use_list):
+                print("Valid Function Call")
+                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+            else:
+                print("InValid Function Call")
 
 #[TODO]
     def p_postfix_expression_4(self, p):

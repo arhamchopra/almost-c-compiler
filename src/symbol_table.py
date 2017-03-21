@@ -102,6 +102,7 @@ class SymbolTable(object):
             if entry[0] == name:
                 return entry
         return None
+
     def lookupFullScope(self,  name):
         found = self.lookupCurrentScope(name)
         if found:
