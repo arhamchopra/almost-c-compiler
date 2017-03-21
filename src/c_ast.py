@@ -71,17 +71,30 @@ class Node(object):
 
         child_list = []
         for (child_name, child) in self.children():
-            child_list.append(child.show(
+            n = child.show(
                 buf,
                 offset=offset + 2,
                 attrnames=attrnames,
                 nodenames=nodenames,
                 showcoord=showcoord,
-                _my_node_name=child_name))
-        if _my_node_name:
-            return addNodes(self.__class__.__name__+" <"+_my_node_name+"> ", child_list) 
+                _my_node_name=child_name)
+            for i in n:
+                child_list.append(i)
+            #  child_list.append(n)
+
+        #  if self.__class__.__name__ != "PtrDecl" and self.__class__.__name__ != "IdentifierType" and  self.__class__.__name__ != "TypeDecl"and self.__class__.__name__ != "ArrayDecl" and self.__class__.__name__ != "FuncDecl" and self.__class__.__name__ != "ArrayRef":
+        if self.__class__.__name__ != "Decl" and self.__class__.__name__ != "FuncDecl" and self.__class__.__name__ != "IdentifierType" and self.__class__.__name__ != "PtrDecl" and self.__class__.__name__ != "ArrayDecl":
+            if hasattr(self, 's'):
+                if self.__class__.__name__=="TypeDecl":
+                    k = addNodes(" "+self.s+" "+str(self.stpointer), child_list)
+                else:
+                    k = addNodes(" "+self.s+" ", child_list)
+            else:
+                k = addNodes(self.__class__.__name__, child_list)
+            return [k]
         else:
-            return addNodes(self.__class__.__name__, child_list) 
+            return child_list
+        return addNodes(self.__class__.__name__, child_list)
 
 
 class NodeVisitor(object):
@@ -167,12 +180,13 @@ class ArrayRef(Node):
     attr_names = ()
 
 class Assignment(Node):
-    __slots__ = ('op', 'lvalue', 'rvalue', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'lvalue', 'rvalue', 'coord', '__weakref__')
     def __init__(self, op, lvalue, rvalue, coord=None):
         self.op = op
         self.lvalue = lvalue
         self.rvalue = rvalue
         self.coord = coord
+        self.s = op
 
     def children(self):
         nodelist = []
@@ -183,13 +197,14 @@ class Assignment(Node):
     attr_names = ('op', )
 
 class BinaryOp(Node):
-    __slots__ = ('op', 'left', 'right', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'left', 'right', 'type', 'coord', '__weakref__')
     def __init__(self, op, left, right, type='void', coord=None):
         self.op = op
         self.left = left
         self.right = right
         self.type = type 
         self.coord = coord
+        self.s = op
 
     def children(self):
         nodelist = []
@@ -226,12 +241,13 @@ class Case(Node):
     attr_names = ()
 
 class Cast(Node):
-    __slots__ = ('to_type', 'expr', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'to_type', 'expr', 'type', 'coord', '__weakref__')
     def __init__(self, to_type, expr, type="void", coord=None):
         self.to_type = to_type
         self.expr = expr
         self.coord = coord
         self.type = type 
+        self.s = "cast:"+str(to_type)
 
     def children(self):
         nodelist = []
@@ -242,10 +258,11 @@ class Cast(Node):
     attr_names = ()
 
 class Compound(Node):
-    __slots__ = ('block_items', 'coord', '__weakref__')
+    __slots__ = ('s', 'block_items', 'coord', '__weakref__')
     def __init__(self, block_items, coord=None):
         self.block_items = block_items
         self.coord = coord
+        self.s = "compound"
 
     def children(self):
         nodelist = []
@@ -271,11 +288,12 @@ class CompoundLiteral(Node):
     attr_names = ()
 
 class Constant(Node):
-    __slots__ = ('type', 'value', 'coord', '__weakref__')
+    __slots__ = ('s', 'type', 'value', 'coord', '__weakref__')
     def __init__(self, type, value, coord=None):
         self.type = type
         self.value = value
         self.coord = coord
+        self.s = value
 
     def children(self):
         nodelist = []
@@ -294,7 +312,7 @@ class Continue(Node):
     attr_names = ()
 
 class Decl(Node):
-    __slots__ = ('name', 'quals', 'storage', 'funcspec', 'type', 'init', 'bitsize', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'name', 'quals', 'storage', 'funcspec', 'type', 'init', 'bitsize', 'coord', '__weakref__')
     def __init__(self, name, quals, storage, funcspec, type, init, bitsize, coord=None):
         self.name = name
         self.quals = quals
@@ -304,6 +322,8 @@ class Decl(Node):
         self.init = init
         self.bitsize = bitsize
         self.coord = coord
+        #  self.s = type.declname
+        #  self.stpointer = None
 
     def children(self):
         nodelist = []
@@ -315,10 +335,11 @@ class Decl(Node):
     attr_names = ('name', 'quals', 'storage', 'funcspec', )
 
 class DeclList(Node):
-    __slots__ = ('decls', 'coord', '__weakref__')
+    __slots__ = ('s', 'decls', 'coord', '__weakref__')
     def __init__(self, decls, coord=None):
         self.decls = decls
         self.coord = coord
+        self.s = 'decls'
 
     def children(self):
         nodelist = []
@@ -343,11 +364,12 @@ class Default(Node):
     attr_names = ()
 
 class DoWhile(Node):
-    __slots__ = ('cond', 'stmt', 'coord', '__weakref__')
+    __slots__ = ('s', 'cond', 'stmt', 'coord', '__weakref__')
     def __init__(self, cond, stmt, coord=None):
         self.cond = cond
         self.stmt = stmt
         self.coord = coord
+        self.s = 'dowhile'
 
     def children(self):
         nodelist = []
@@ -358,9 +380,10 @@ class DoWhile(Node):
     attr_names = ()
 
 class EllipsisParam(Node):
-    __slots__ = ('coord', '__weakref__')
+    __slots__ = ('s', 'coord', '__weakref__')
     def __init__(self, coord=None):
         self.coord = coord
+        self.s = '...'
 
     def children(self):
         return ()
@@ -449,13 +472,14 @@ class FileAST(Node):
     attr_names = ()
 
 class For(Node):
-    __slots__ = ('init', 'cond', 'next', 'stmt', 'coord', '__weakref__')
+    __slots__ = ('s', 'init', 'cond', 'next', 'stmt', 'coord', '__weakref__')
     def __init__(self, init, cond, next, stmt, coord=None):
         self.init = init
         self.cond = cond
         self.next = next
         self.stmt = stmt
         self.coord = coord
+        self.s = 'for'
 
     def children(self):
         nodelist = []
@@ -528,11 +552,12 @@ class Goto(Node):
     attr_names = ('name', )
 
 class ID(Node):
-    __slots__ = ('name', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'name', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
         self.name = name
         self.coord = coord
         self.type = type 
+        self.s = name
 
     def children(self):
         nodelist = []
@@ -541,11 +566,12 @@ class ID(Node):
     attr_names = ('name', )
 
 class IdentifierType(Node):
-    __slots__ = ('names', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'names', 'type', 'coord', '__weakref__')
     def __init__(self, names, coord=None):
         self.names = names
         self.coord = coord
         self.type = names
+        self.s = names
 
     def children(self):
         nodelist = []
@@ -554,12 +580,13 @@ class IdentifierType(Node):
     attr_names = ('names', )
 
 class If(Node):
-    __slots__ = ('cond', 'iftrue', 'iffalse', 'coord', '__weakref__')
+    __slots__ = ('s', 'cond', 'iftrue', 'iffalse', 'coord', '__weakref__')
     def __init__(self, cond, iftrue, iffalse, coord=None):
         self.cond = cond
         self.iftrue = iftrue
         self.iffalse = iffalse
         self.coord = coord
+        self.s = 'if'
 
     def children(self):
         nodelist = []
@@ -719,12 +746,14 @@ class TernaryOp(Node):
     attr_names = ()
 
 class TypeDecl(Node):
-    __slots__ = ('declname', 'quals', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'declname', 'quals', 'type', 'coord', '__weakref__')
     def __init__(self, declname, quals, type, coord=None):
         self.declname = declname
         self.quals = quals
         self.type = type
         self.coord = coord
+        self.s = declname
+        self.stpointer = None
 
     def children(self):
         nodelist = []

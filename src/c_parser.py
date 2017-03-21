@@ -178,7 +178,7 @@ class CParser(PLYParser):
                 "in this scope" % name, coord)
         self._scope_stack[-1][name] = True
 
-    def _add_identifier(self, name, type, coord):
+    def _add_identifier(self, name, type, coord, entry):
         """ Add a new object, function, or enum member name (ie an ID) to the
             current scope
         """
@@ -191,7 +191,21 @@ class CParser(PLYParser):
             self._parse_error(
                 "Non-typedef %r previously declared as typedef "
                 "in this scope" % name, coord)
-        self.CST.addEntry(name, type)
+        print("In add Identifier")
+        print(entry)
+        e = self.CST.addEntry(name, type)
+        if isinstance(entry.type, c_ast.TypeDecl):
+            entry.type.s = entry.type.declname + str(entry.type.type.names)
+            entry.type.stpointer = e
+        elif isinstance(entry.type, c_ast.FuncDecl):
+            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
+        elif isinstance(entry.type, c_ast.PtrDecl):
+            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
+        elif isinstance(entry.type, c_ast.ArrayDecl):
+            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
+
+
+        
 
     def _get_type(self, v):
         if isinstance(v, c_ast.ID):
@@ -493,7 +507,7 @@ class CParser(PLYParser):
                     self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
                 else:
                     print("fixed_decl.type"+str(fixed_decl.type))
-                    self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord)
+                    self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord, fixed_decl)
 
             declarations.append(fixed_decl)
 
@@ -1167,7 +1181,7 @@ class CParser(PLYParser):
                 for param in func.args.params:
                     if isinstance(param, c_ast.EllipsisParam): break
                     print("Param.Type"+str(param.type))
-                    self._add_identifier(param.name, param.type, param.coord)
+                    self._add_identifier(param.name, param.type, param.coord, param)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=func)
 
@@ -1678,30 +1692,38 @@ class CParser(PLYParser):
         """
         #Check function type with type of argument_expression_list
         #  entry = lookup_GST(p[1])
-        print("############### In Function call")
-        if isinstance(p[1], c_ast.ID):
-            func_decl = self.CST.lookupFT(p[1].name)
-            dec_list = func_decl[1].args.params
-            use_list = p[3].type
-            print(dec_list)
-            print(use_list)
-            count = 0
-            for d,u in zip(dec_list, use_list):
-                if self._get_type(d.type):
-                    if self._get_type(d.type).type[0] != u: 
-                        if group(self._get_type(d.type).type[0]) != group(u):
-                            print("ERRORORORORORORORORORORORO")
-                            break
-                else:
-                    print("EROROROROROORORORORORO")
-                    break
-                count +=1 
-                print(count)
-            if count == len(dec_list) and count == len(use_list):
-                print("Valid Function Call")
-                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
-            else:
-                print("InValid Function Call")
+        #  print("############### In Function call")
+        #  if isinstance(p[1], c_ast.ID):
+        #      func_decl = self.CST.lookupFT(p[1].name)
+        #      dec_list = func_decl[1].args.params
+        #      use_list = p[3].type
+        #      print(dec_list)
+        #      print(use_list)
+        #      count = 0
+        #      for d,u in zip(dec_list, use_list):
+        #          print(d.type)
+        #          if self._get_type(d.type):
+        #              print(self._get_type(d.type))
+        #              if self._get_type(d.type).type[0] != u:
+        #                  print(self._get_type(d.type)[0])
+        #                  if group(self._get_type(d.type).type[0]) != group(u):
+        #                      print("ERROR IN TYPE Checking")
+        #                      break
+        #          else:
+        #              print(self._get_type(d.type))
+        #              print("EROROROROROORORORORORO")
+        #              break
+        #          count +=1
+        #          print(count)
+        #      if count == len(dec_list) and count == len(use_list):
+        #          print("Valid Function Call")
+        #          p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+        #      else:
+        #          p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+        #          print("InValid Function Call")
+        #  else:
+        p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+
 
 #[TODO]
     def p_postfix_expression_4(self, p):

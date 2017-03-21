@@ -3,6 +3,8 @@ int func(int a, int b){
 }
 
 int main(){
-    func(1,"abc");
+	int a;
+	int *b;
+    func(1,2);
     return 0;
 }
