@@ -19,6 +19,29 @@
 import sys
 from parse_tree import *
 from symbol_table import *
+
+def getType(v):
+    if isinstance(v, Constant):
+        return v.type
+    elif isinstance(v, IdentifierType):
+        return v.names
+    elif isinstance(v, PtrDecl):
+        return "ptr"
+    elif isinstance(v, ArrayDecl):
+        return "array"
+    elif isinstance(v, TypeDecl):
+        p1_type = v.type        
+    elif isinstance(v, BinaryOp):
+        p1_type = v.type
+    elif isinstance(v, UnaryOp):
+        p1_type = v.type
+    elif isinstance(v, ArrayRef):
+        p1_type = v.type
+    elif isinstance(v, Cast):
+        p1_type = v.type 
+        if isinstance(p1_type, Typename):
+            p1_type = p1_type.type 
+    return getType(p1_type)
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
@@ -83,14 +106,35 @@ class Node(object):
             #  child_list.append(n)
 
         #  if self.__class__.__name__ != "PtrDecl" and self.__class__.__name__ != "IdentifierType" and  self.__class__.__name__ != "TypeDecl"and self.__class__.__name__ != "ArrayDecl" and self.__class__.__name__ != "FuncDecl" and self.__class__.__name__ != "ArrayRef":
-        if self.__class__.__name__ != "Decl" and self.__class__.__name__ != "FuncDecl" and self.__class__.__name__ != "IdentifierType" and self.__class__.__name__ != "PtrDecl" and self.__class__.__name__ != "ArrayDecl":
+        if self.__class__.__name__ != "Decl" and self.__class__.__name__ != "IdentifierType":
             if hasattr(self, 's'):
-                if self.__class__.__name__=="TypeDecl":
-                    k = addNodes(" "+self.s+" "+str(self.stpointer), child_list)
+
+                if hasattr(self, 'stpointer'):
+
+                    if self.__class__.__name__ == "TypeDecl":
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(self.stpointer or ""), child_list)
+
+                    elif self.__class__.__name__ == "Cast":
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(self.stpointer or ""), child_list)
+
+                    elif self.__class__.__name__ == "ID":
+                            k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
+
+                    else:
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
+
+                elif self.__class__.__name__ == "BinaryOp":
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(getType(self) or ""), child_list)
+            
+                elif self.__class__.__name__ == "UnaryOp":
+                    k = addNodes(" "+str(self.s or "No S")+" "+str(getType(self) or ""), child_list)
+
                 else:
-                    k = addNodes(" "+self.s+" ", child_list)
+                    k = addNodes(" "+str(self.s)+" ", child_list)
+
             else:
-                k = addNodes(self.__class__.__name__, child_list)
+                k = addNodes(" "+str(self.__class__.__name__)+" ", child_list)
+
             return [k]
         else:
             return child_list
@@ -147,7 +191,7 @@ class NodeVisitor(object):
 
 class ArrayDecl(Node):
     # __slots__ = ('type', 'dim', 'dim_quals','size', 'coord', '__weakref__')
-    __slots__ = ('type', 'dim', 'dim_quals','coord', '__weakref__')
+    __slots__ = ('stpointer', 'type', 'dim', 'dim_quals','coord', '__weakref__')
 
     # def __init__(self, type, dim, size, dim_quals, coord=None):
     def __init__(self, type, dim,  dim_quals, coord=None):
@@ -156,6 +200,7 @@ class ArrayDecl(Node):
         self.dim_quals = dim_quals
         # self.size = size
         self.coord = coord
+        self.stpointer = None
 
     def children(self):
         nodelist = []
@@ -250,7 +295,7 @@ class Cast(Node):
         self.expr = expr
         self.coord = coord
         self.type = type 
-        self.s = "cast:"+str(to_type)
+        self.s = "cast:"+str(to_type.names)
 
     def children(self):
         nodelist = []
@@ -325,8 +370,8 @@ class Decl(Node):
         self.init = init
         self.bitsize = bitsize
         self.coord = coord
-        #  self.s = type.declname
-        #  self.stpointer = None
+        self.s = "NAME" 
+        self.stpointer = None
 
     def children(self):
         nodelist = []
@@ -510,11 +555,13 @@ class FuncCall(Node):
     attr_names = ()
 
 class FuncDecl(Node):
-    __slots__ = ('args', 'type', 'coord', '__weakref__')
+    __slots__ = ('stpointer', 's', 'args', 'type', 'coord', '__weakref__')
     def __init__(self, args, type, coord=None):
         self.args = args
         self.type = type
         self.coord = coord
+        self.stpointer = None
+        self.s = "FuncDecl"
 
     def children(self):
         nodelist = []
@@ -555,12 +602,13 @@ class Goto(Node):
     attr_names = ('name', )
 
 class ID(Node):
-    __slots__ = ('s', 'name', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'name', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
         self.name = name
         self.coord = coord
         self.type = type 
         self.s = name
+        self.stpointer = None
 
     def children(self):
         nodelist = []
@@ -659,11 +707,13 @@ class ParamList(Node):
     attr_names = ()
 
 class PtrDecl(Node):
-    __slots__ = ('quals', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'quals', 'type', 'coord', '__weakref__')
     def __init__(self, quals, type, coord=None):
         self.quals = quals
         self.type = type
         self.coord = coord
+        self.stpointer = None
+        self.s = "ptr"
 
     def children(self):
         nodelist = []
@@ -797,12 +847,13 @@ class Typename(Node):
     attr_names = ('name', 'quals', )
 
 class UnaryOp(Node):
-    __slots__ = ('op', 'expr', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'expr', 'type', 'coord', '__weakref__')
     def __init__(self, op, expr, type="void", coord=None):
         self.op = op
         self.expr = expr
         self.coord = coord
         self.type = type
+        self.s = op
 
     def children(self):
         nodelist = []

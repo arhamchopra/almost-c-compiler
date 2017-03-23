@@ -194,15 +194,8 @@ class CParser(PLYParser):
         print("In add Identifier")
         print(entry)
         e = self.CST.addEntry(name, type)
-        if isinstance(entry.type, c_ast.TypeDecl):
-            entry.type.s = entry.type.declname + str(entry.type.type.names)
-            entry.type.stpointer = e
-        elif isinstance(entry.type, c_ast.FuncDecl):
-            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
-        elif isinstance(entry.type, c_ast.PtrDecl):
-            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
-        elif isinstance(entry.type, c_ast.ArrayDecl):
-            entry.type.type.s = entry.type.type.declname + str(entry.type.type.type.names)
+        #  entry.stpointer = e
+        entry.type.stpointer = e
 
 
         
@@ -210,7 +203,9 @@ class CParser(PLYParser):
     def _get_type(self, v):
         # print " *********************** printing variable name " + str(v)
         if isinstance(v, c_ast.ID):
-            p1_type = self.CST.lookupFullScope(v.name)[1]
+            K = [self.CST.lookupFullScope(v.name)[i] for i in [1, 5]]
+            p1_type = K[0]
+            v.stpointer = K[1]
             # if p1_type == None:
             #     self._parse_error("Failed lookup")
 
@@ -1589,7 +1584,7 @@ class CParser(PLYParser):
 
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
 
-            if p3_type:
+            if type_cast3:
                 p[3] = c_ast.Cast(p3_type, p[3], p3_type)
             p[0] = c_ast.Assignment(p[2], p[1], p[3], p[1].coord)
 
