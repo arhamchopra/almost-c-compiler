@@ -3,8 +3,10 @@ int func(int a, int b){
 }
 
 int main(){
-	int a;
-	int *b;
-    func(1,2);
+	float b;
+	char a;
+    func(b,a);
+    int v = 0;
+    /* v = NULL; */
     return 0;
 }

@@ -565,8 +565,8 @@ class FuncDecl(Node):
 
     def children(self):
         nodelist = []
-        if self.args is not None: nodelist.append(("args", self.args))
         if self.type is not None: nodelist.append(("type", self.type))
+        if self.args is not None: nodelist.append(("args", self.args))
         return tuple(nodelist)
 
     attr_names = ()
