@@ -63,9 +63,10 @@ class SymbolTable(object):
         size = 1
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
-        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child), self.id))
-        self.table['cur_scope'].append((lexeme, type, size, offset, child))
-        return (self.id,self.table['cur_offset'])
+        pointer = (self.id, offset)
+        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
+        self.table['cur_scope'].append((lexeme, type, size, offset, child, pointer))
+        return pointer
 
     def addToFT(self, lexeme, type, child=None):
         SymbolTable.FT.append((lexeme, type, child))
