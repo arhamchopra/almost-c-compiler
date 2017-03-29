@@ -77,6 +77,12 @@ class SymbolTable(object):
         print("{} was popped".format(e))
         return e
 
+    def popFT(self):
+        print("Popping entry from FT: ")
+        e = SymbolTable.FT.pop()
+        print("{} was popped".format(e))
+        return e
+
     def setLastLexeme(self, lexeme):
         print("Setting last lexeme: {} to {}".format(e, lexeme))
         e = self.table["cur_scope"].pop()
@@ -100,9 +106,13 @@ class SymbolTable(object):
         return None
 
     def lookupFT(self, name):
+        print("Looking for {}".format(name))
         for entry in SymbolTable.FT:
             if entry[0] == name:
+                print("Entry Found in FT")
                 return entry
+            print("Not Looking for but Found Entry: {} ".format(entry))
+        print("Not Found in FT")
         return None
 
     def lookupFullScope(self,  name):

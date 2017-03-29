@@ -42,6 +42,7 @@ def getType(v):
         if isinstance(p1_type, Typename):
             p1_type = p1_type.type 
     return getType(p1_type)
+
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
@@ -295,7 +296,11 @@ class Cast(Node):
         self.expr = expr
         self.coord = coord
         self.type = type 
-        self.s = "cast:"+str(to_type.names)
+        #  print("Got ToTypes : {}".format(to_type))
+        if isinstance(to_type, Typename):
+            self.s = "cast:"+str(to_type.type.type.names)
+        else:
+            self.s = "cast:"+str(to_type.names)
 
     def children(self):
         nodelist = []
@@ -540,11 +545,12 @@ class For(Node):
     attr_names = ()
 
 class FuncCall(Node):
-    __slots__ = ('name', 'args', 'coord', '__weakref__')
-    def __init__(self, name, args, coord=None):
+    __slots__ = ('name', 'args','type', 'coord', '__weakref__')
+    def __init__(self, name, args, type='void', coord=None):
         self.name = name
         self.args = args
         self.coord = coord
+        self.type = type
 
     def children(self):
         nodelist = []
@@ -565,8 +571,8 @@ class FuncDecl(Node):
 
     def children(self):
         nodelist = []
-        if self.args is not None: nodelist.append(("args", self.args))
         if self.type is not None: nodelist.append(("type", self.type))
+        if self.args is not None: nodelist.append(("args", self.args))
         return tuple(nodelist)
 
     attr_names = ()

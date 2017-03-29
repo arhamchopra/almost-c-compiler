@@ -54,9 +54,9 @@ Operator Disambiguation:
 
 Typecasting to be done in 
     Expressions
-        If the type of any child does not match with the operator type then add a type cast node (operator type) to the child
+        If the type of any child does not match with the operator type then add a type cast node (operator type) to the child -- Done
     Function Arguments
-        Keep the input arg list, and check the type of each argument with list
+        Keep the input arg list, and check the type of each argument with list -- Done
     Return Values
     Think of more
 
@@ -68,3 +68,16 @@ Errors Handling
     Context free errors:
         Keep the count variable for function calls and arrays
     Think of other possible ways
+
+
+Handling Array of arrays in function calls
+	we need to make sure that n-1 dimensions of a n dimension array object are constants
+
+Recursion and Typechecking in Recursion:
+	Break the function definition into 2 parts, first part consists of specifier and declarator andsecond part has compound statement the first part on completion adds the type specifier and the declator in the function table. In case of recursion, the declarator of the function is in the symbol table so it is not a problem. For checking return type, we check the last return specifier type of the last function pushed in the function table. -- Done	
+
+TypeChecking in assignment expression 
+	return a type for each expression and store it with the assignment expression
+
+Checking the possibility of TypeCasting
+	During the function call casting we have to check whether we can type cast the given argument to the required type or not
