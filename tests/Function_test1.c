@@ -9,7 +9,7 @@ float func2(int a, int b){
 int main(){
 	/* float b; */
 	/* char a; */
-    func(1,(float)func(1,2));
+    func(1,3);
     /* int v = 0; */
     /* v = NULL; */
     return 0;

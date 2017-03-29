@@ -1567,7 +1567,17 @@ class CParser(PLYParser):
         """ jump_statement  : RETURN expression SEMI
                             | RETURN SEMI
         """
-        p[0] = c_ast.Return(p[2] if len(p) == 4 else None, self._coord(p.lineno(1)))
+        if len(p) == 4:
+            function = self.CST.getLastElemFT()
+            func_decl = function[1]
+            func_type = func_decl.type.type
+            if self._get_type(p[2]).names[-1] == func_type.names[-1]:
+                p[0] = c_ast.Return(p[2], self._coord(p.lineno(1)))
+            else:
+                #Check if cast is possible
+                p[0] = c_ast.Return(c_ast.Cast(self._get_type(p[2]), p[2], self._get_type(p[2])), self._coord(p.lineno(1)))
+        else:
+            p[0] = c_ast.Return(None, self._coord(p.lineno(1)))
 
     def p_expression_statement(self, p):
         """ expression_statement : expression_opt SEMI """

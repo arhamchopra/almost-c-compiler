@@ -57,7 +57,7 @@ Typecasting to be done in
         If the type of any child does not match with the operator type then add a type cast node (operator type) to the child -- Done
     Function Arguments
         Keep the input arg list, and check the type of each argument with list -- Done
-    Return Values
+    Return Values -- Done
     Think of more
 
 Errors Handling
