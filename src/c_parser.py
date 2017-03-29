@@ -224,6 +224,8 @@ class CParser(PLYParser):
             p1_type = v.type
         elif isinstance(v, c_ast.Decl):
             p1_type = v.type.type
+        elif isinstance(v, c_ast.FuncCall):
+            p1_type = v.type.type
         elif isinstance(v,c_ast.Cast):
             p1_type = v.type 
 
@@ -1757,6 +1759,7 @@ class CParser(PLYParser):
         """
         #Check function type with type of argument_expression_list
         # entry = lookup_GST(p[1])
+        function_type = self.CST.lookupFT(p[1])[1]
         print("##################################### In Function call")
         if isinstance(p[1], c_ast.ID):
             func_decl = self.CST.lookupFT(p[1].name)
@@ -1789,16 +1792,16 @@ class CParser(PLYParser):
                         explist.exprs.append(u)                    
                         explist.type.append(self._get_type(u))
                 if (error_free):
-                    p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None,  p[1].coord)
+                    p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None, function_type,  p[1].coord)
 
                 #     print("InValid Function Call")
             else:
                 self._parse_error("[Error]: Expected " + str(len(dec_list)) + " number of arguments in function call but found " + str(len(use_list)), p[1].coord )
-                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
         else:
             self._parse_error("Invalid function call",p[1].coord)
 
-            p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None,  p[1].coord)
+            p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
 
 #[TODO]
     def p_postfix_expression_4(self, p):

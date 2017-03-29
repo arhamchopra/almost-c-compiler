@@ -42,6 +42,7 @@ def getType(v):
         if isinstance(p1_type, Typename):
             p1_type = p1_type.type 
     return getType(p1_type)
+
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
@@ -540,11 +541,12 @@ class For(Node):
     attr_names = ()
 
 class FuncCall(Node):
-    __slots__ = ('name', 'args', 'coord', '__weakref__')
-    def __init__(self, name, args, coord=None):
+    __slots__ = ('name', 'args','type', 'coord', '__weakref__')
+    def __init__(self, name, args, type='void', coord=None):
         self.name = name
         self.args = args
         self.coord = coord
+        self.type = type
 
     def children(self):
         nodelist = []
