@@ -83,6 +83,9 @@ class SymbolTable(object):
         print("{} was popped".format(e))
         return e
 
+    def getLastElemFT(self):
+        return SymbolTable.FT[-1]
+
     def setLastLexeme(self, lexeme):
         print("Setting last lexeme: {} to {}".format(e, lexeme))
         e = self.table["cur_scope"].pop()
