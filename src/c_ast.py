@@ -296,7 +296,11 @@ class Cast(Node):
         self.expr = expr
         self.coord = coord
         self.type = type 
-        self.s = "cast:"+str(to_type.names)
+        #  print("Got ToTypes : {}".format(to_type))
+        if isinstance(to_type, Typename):
+            self.s = "cast:"+str(to_type.type.type.names)
+        else:
+            self.s = "cast:"+str(to_type.names)
 
     def children(self):
         nodelist = []
