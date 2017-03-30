@@ -213,6 +213,10 @@ class CParser(PLYParser):
                 p1_type = p1_type.type
         elif isinstance(v, c_ast.TypeDecl):
             p1_type = v.type        
+        elif isinstance(v, c_ast.PtrDecl):
+            return v
+        elif isinstance(v, c_ast.ArrayDecl):
+            return v
         elif isinstance(v, c_ast.Constant):
             p1_type = v.type
             p1_type = c_ast.IdentifierType([p1_type])
@@ -517,6 +521,7 @@ class CParser(PLYParser):
                     fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
 
                 if declaration.init:
+                    print("In Declaration With Init")
                     print("######################Obtained Values for "+str(('=', declaration.type)))
                     p1_type = self._get_type(declaration.type)
                     p3_type = self._get_type(declaration.init)
@@ -526,7 +531,7 @@ class CParser(PLYParser):
                         self._parse_error("Error in assignment",declaration.coord)
 
                     print("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
-                    if p3_type:
+                    if type_cast3:
                         declaration.init = c_ast.Cast(p3_type, declaration.init , p3_type)
 
             

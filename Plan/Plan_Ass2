@@ -5,7 +5,7 @@ Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cu
 
 Symbol Table Entry Spec:
 Lexeme of variables and functions ---------- Done
-Types of variables and functions
+Types of variables and functions --------- Done
 sizes of variables
 offsets of variables ---------- Done
 
@@ -26,19 +26,17 @@ Updates in current symbol table:
         3) make the parent of CST as CST  ---------- Done
 
     Function_definition:
-        1) create new symbol table and link it to parent and set it as CST
-
-    Doubt: How to handle L attributed grammar in bottom up parsing
+        1) create new symbol table and link it to parent and set it as CST -------- Done
 
 Functionalites of symbol table:
-    addentry:
-    removeetry:
-    lookupentry:
+    addentry: ------- Done
+    removeetry: ------- Done
+    lookupentry: ------- Done
 
 Scope Handling
-    To be done with symbol table
-    Handling each function call as a new symbol table and new scope
-    Handling each { '''some code''' } as a new scope and symbol table
+    To be done with symbol table ------- Done
+    Handling each function call as a new symbol table and new scope ------- Done
+    Handling each { '''some code''' } as a new scope and symbol table ------- Done
 
 /**********************************************************************************************/
 Code for type checking
@@ -48,9 +46,9 @@ Code for type checking
 AST Construction
 
 Operator Disambiguation:
-    Use attributes
-    Set priority order among the different types( ie char int float double )
-    Check the type of each child, and assign type of operator to be the highest of the children
+    Use attributes ------- Done
+    Set priority order among the different types( ie char int float double ) ------- Done
+    Check the type of each child, and assign type of operator to be the highest of the children ------- Done
 
 Typecasting to be done in 
     Expressions
@@ -77,7 +75,7 @@ Recursion and Typechecking in Recursion:
 	Break the function definition into 2 parts, first part consists of specifier and declarator andsecond part has compound statement the first part on completion adds the type specifier and the declator in the function table. In case of recursion, the declarator of the function is in the symbol table so it is not a problem. For checking return type, we check the last return specifier type of the last function pushed in the function table. -- Done	
 
 TypeChecking in assignment expression 
-	return a type for each expression and store it with the assignment expression
+	return a type for each expression and store it with the assignment expression ------ Done
 
 Checking the possibility of TypeCasting
 	During the function call casting we have to check whether we can type cast the given argument to the required type or not

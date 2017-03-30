@@ -2,9 +2,15 @@
 # Table : PP, current_offset, current_scope
 # Entry : Tuple -- ( lexeme, type, size, offset )
 
-
+import c_ast
 
 def getSize(type):
+    print("IN GET SIZE")
+    print(type)
+    if isinstance(type, c_ast.TypeDecl):
+        return getSize(type.type)
+    if isinstance(type, c_ast.IdentifierType):
+        return getSize(type.names[-1])
     if type == "char":
         return 1
     if type == "int":
@@ -28,6 +34,13 @@ def getSize(type):
     if type == "_complex":
         return 8
     if type == "SymbTab":
+        return 0
+    if isinstance(type, c_ast.PtrDecl):
+        return 8
+    if isinstance(type, c_ast.ArrayDecl):        
+        print(type.dim)
+        return int(type.dim.value)*getSize(type.type)
+    if isinstance(type, c_ast.FuncDecl):
         return 0
 
 
@@ -59,8 +72,8 @@ class SymbolTable(object):
         return self
 
     def addEntry(self, lexeme, type, child=None):
-        #  size = getSize(type)
-        size = 1
+        size = getSize(type)
+        #  size = 1
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (self.id, offset)
