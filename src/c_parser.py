@@ -229,6 +229,9 @@ class CParser(PLYParser):
         elif isinstance(v, c_ast.Decl):
             p1_type = v.type.type
         elif isinstance(v, c_ast.FuncCall):
+            K = self.CST.lookupFullScope(v.name.name)[5]
+            print("THE POINTER FOR K : "+str(K))
+            v.stpointer = K
             p1_type = v.type
         elif isinstance(v,c_ast.Cast):
             p1_type = v.type 
@@ -268,8 +271,8 @@ class CParser(PLYParser):
     def _lex_on_rbrace_func(self):
         PST = self.CST.getPP()
         assert PST is not None
-        #  if self.CST.getCurOffset() == 0:
-        #     PST.popEntry()
+        off = self.CST.getCurOffset()
+        PST.setOffset(off+PST.getCurOffset()) 
         self.CST = PST
         self._pop_scope()
 
@@ -532,7 +535,7 @@ class CParser(PLYParser):
 
                     print("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
                     if type_cast3:
-                        declaration.init = c_ast.Cast(p3_type, declaration.init , p3_type)
+                        declaration.init = c_ast.Cast(type_cast3, declaration.init , type_cast3)
 
             
             # Add the type name defined by typedef to a
@@ -713,8 +716,9 @@ class CParser(PLYParser):
         p[0].body = p[3]
         #  func_def = self.CST.popEntry()
         func_def =  self.CST.popFT()
-        self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
+        e = self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
         self.CST.addToFT(func_def[0],func_def[1],body_scope[4])
+        p[0].decl.type.stpointer = e
         print("In the end of function_definition")
 
     def p_statement(self, p):
@@ -1580,7 +1584,7 @@ class CParser(PLYParser):
                 p[0] = c_ast.Return(p[2], self._coord(p.lineno(1)))
             else:
                 #Check if cast is possible
-                p[0] = c_ast.Return(c_ast.Cast(self._get_type(p[2]), p[2], self._get_type(p[2])), self._coord(p.lineno(1)))
+                p[0] = c_ast.Return(c_ast.Cast(func_type, p[2], func_type), self._coord(p.lineno(1)))
         else:
             p[0] = c_ast.Return(None, self._coord(p.lineno(1)))
 
@@ -1631,7 +1635,7 @@ class CParser(PLYParser):
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
 
             if type_cast3:
-                p[3] = c_ast.Cast(p3_type, p[3], p3_type)
+                p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
             p[0] = c_ast.Assignment(p[2], p[1], p[3], p[1].coord)
 
     # K&R2 defines these as many separate rules, to encode

@@ -6,7 +6,7 @@ Store as an object with different attributes ie. a = { 'PP':, 'cur_offset':, 'cu
 Symbol Table Entry Spec:
 Lexeme of variables and functions ---------- Done
 Types of variables and functions --------- Done
-sizes of variables
+sizes of variables ------ Done
 offsets of variables ---------- Done
 
 Construction of LST AND GST:
@@ -55,7 +55,7 @@ Typecasting to be done in
         If the type of any child does not match with the operator type then add a type cast node (operator type) to the child -- Done
     Function Arguments
         Keep the input arg list, and check the type of each argument with list -- Done
-    Return Values -- Done
+	    Return Values -- Done
     Think of more
 
 Errors Handling

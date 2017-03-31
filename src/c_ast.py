@@ -120,7 +120,8 @@ class Node(object):
 
                     elif self.__class__.__name__ == "ID":
                             k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
-
+                    elif self.__class__.__name__ == "FuncCall":
+                            k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
                     else:
                         k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
 
@@ -545,12 +546,14 @@ class For(Node):
     attr_names = ()
 
 class FuncCall(Node):
-    __slots__ = ('name', 'args','type', 'coord', '__weakref__')
+    __slots__ = ('s', 'name', 'args','type','stpointer', 'coord', '__weakref__')
     def __init__(self, name, args, type='void', coord=None):
         self.name = name
         self.args = args
         self.coord = coord
         self.type = type
+        self.stpointer = None
+        self.s = name.name
 
     def children(self):
         nodelist = []

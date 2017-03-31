@@ -72,7 +72,13 @@ class SymbolTable(object):
         return self
 
     def addEntry(self, lexeme, type, child=None):
-        size = getSize(type)
+        if isinstance(type, c_ast.FuncDecl):
+            if child:
+                size = child.table['cur_offset']
+            else:
+                size = 0
+        else:
+            size = getSize(type)
         #  size = 1
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
@@ -87,6 +93,10 @@ class SymbolTable(object):
     def popEntry(self):
         print("Popping entry from SymbolTable: {}".format(self.id))
         e = self.table['cur_scope'].pop()
+        if e[1] == "SymbTab":
+            self.table['cur_offset'] -= e[4].table['cur_offset']
+        else:
+            self.table['cur_offset'] -= getSize(e[1])
         print("{} was popped".format(e))
         return e
 
@@ -105,7 +115,9 @@ class SymbolTable(object):
         e[0] = lexeme
         self.table["cur_scope"].append(e)
 
-        
+    def setOffset(self, offset):
+        self.table['cur_offset'] = offset
+
     def getCurOffset(self):
         return self.table['cur_offset']
     
