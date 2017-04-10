@@ -111,19 +111,23 @@ class Node(object):
             if hasattr(self, 's'):
 
                 if hasattr(self, 'stpointer'):
-
+                    a = self.stpointer
+                    if a is None:
+                        stp = a
+                    else:
+                        stp = (a[0], a[1])
                     if self.__class__.__name__ == "TypeDecl":
-                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(self.stpointer or ""), child_list)
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(stp or ""), child_list)
 
                     elif self.__class__.__name__ == "Cast":
-                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(self.stpointer or ""), child_list)
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.type.names or "No Type Found")+" "+str(stp or ""), child_list)
 
                     elif self.__class__.__name__ == "ID":
-                            k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
+                            k = addNodes(" "+str(self.s or "No S")+" "+str(stp or ""), child_list)
                     elif self.__class__.__name__ == "FuncCall":
-                            k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
+                            k = addNodes(" "+str(self.s or "No S")+" "+str(stp or ""), child_list)
                     else:
-                        k = addNodes(" "+str(self.s or "No S")+" "+str(self.stpointer or ""), child_list)
+                        k = addNodes(" "+str(self.s or "No S")+" "+str(stp or ""), child_list)
 
                 elif self.__class__.__name__ == "BinaryOp":
                         k = addNodes(" "+str(self.s or "No S")+" "+str(getType(self) or ""), child_list)

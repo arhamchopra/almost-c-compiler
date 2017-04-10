@@ -53,6 +53,7 @@ class SymbolTable(object):
     # Initialize the SymbolTable
     def __init__(self, name=None):
         self.id = SymbolTable.GID
+        self.temp_id = 1
         SymbolTable.GID += 1
         print("Name = "+str(name))
         if name is None:
@@ -79,10 +80,9 @@ class SymbolTable(object):
                 size = 0
         else:
             size = getSize(type)
-        #  size = 1
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
-        pointer = (self.id, offset)
+        pointer = (offset, len(self.table['cur_scope']), self)
         print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
         self.table['cur_scope'].append((lexeme, type, size, offset, child, pointer))
         return pointer
@@ -169,3 +169,9 @@ class SymbolTable(object):
         print("Printing Function Table")
         for i in SymbolTable.FT:
             print(i)
+
+    def provideTemp(self, type):
+        lexeme = "$temp" + str(self.temp_id)
+        temp_id+=1
+        self.addEntry(lexeme, type, None)
+
