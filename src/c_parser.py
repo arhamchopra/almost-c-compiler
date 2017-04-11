@@ -1719,7 +1719,8 @@ class CParser(PLYParser):
                 p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
             if type_cast3:
                 p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
-            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], bin_type, p[1].coord)
+            temp_ref = " " # [TODO] generate code here 
+            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], temp_ref, bin_type, p[1].coord)
 
     def p_cast_expression_1(self, p):
         """ cast_expression : unary_expression """
@@ -1727,7 +1728,8 @@ class CParser(PLYParser):
 
     def p_cast_expression_2(self, p):
         """ cast_expression : LPAREN type_name RPAREN cast_expression """
-        p[0] = c_ast.Cast(p[2], p[4], p[2], self._coord(p.lineno(1)))
+        tmp_ref = " " # [TODO] add gen code here
+        p[0] = c_ast.Cast(p[2], p[4], tmp_ref, p[2], self._coord(p.lineno(1)))
 
     def p_unary_expression_1(self, p):
         """ unary_expression    : postfix_expression """
