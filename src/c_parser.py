@@ -23,6 +23,9 @@ from symbol_table import SymbolTable as ST
 from type_check import *
 
 
+global_CST = ""
+global_GST = ""
+
 class CParser(PLYParser):
     def __init__(
             self,
@@ -137,7 +140,9 @@ class CParser(PLYParser):
 
         self.CST = ST()
         self.CST = self.CST.makeNewTable(None)
+        global_CST = self.CST
         self.GST = self.CST
+        global_GST = self.GST
     def parse(self, text, filename='', debuglevel=0):
         """ Parses C code and returns an AST.
 
