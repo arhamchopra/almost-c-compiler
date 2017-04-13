@@ -2,7 +2,7 @@ import re
 
 import symbol_table
 import c_ast
-from symbol_table import getCST 
+from symbol_table import getCST, getSize
 
 # TODO In this file 
 
@@ -102,8 +102,19 @@ def emit(key, op, var_tuple):
         code_list.append(("=", var_tuple[1], temp, None))
 
     elif key == "ArrayRef":
-        pass
+        print("In Array Ref")
+        temp1 = CST.provideTemp(c_ast.IdentifierType(['int']))
+        type = var_tuple[1][2].getElementAtIndex(var_tuple[1][1])[1]
+        size = getSize(var_tuple[0])
+        code_list.append(("*", temp1, var_tuple[2], size))
+        
+        temp2 = CST.provideTemp(type)
+        code_list.append(("+", temp2, temp1, var_tuple[1]))
 
+        temp3 = CST.provideTemp(var_tuple[0])
+        code_list.append(("deref", temp3, temp2, None))
+        temp = temp3
+    
     return temp
 
 def PrintCode():

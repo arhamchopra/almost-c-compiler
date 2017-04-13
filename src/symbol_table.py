@@ -79,7 +79,10 @@ class SymbolTable(object):
             else:
                 size = 0
         else:
-            size = getSize(type)
+            if lexeme[0] == "#" and isinstance(type, c_ast.ArrayDecl):
+                size = 8
+            else:
+                size = getSize(type)
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
@@ -126,6 +129,10 @@ class SymbolTable(object):
     
     def getNesting(self):
         return self.table["nesting"]
+
+    def getElementAtIndex(self, index):
+        return self.table['cur_scope'][index]
+
     
     def lookupCurrentScope(self, name):
         for entry in self.table['cur_scope']:
@@ -171,7 +178,7 @@ class SymbolTable(object):
             print(i)
 
     def provideTemp(self, type):
-        lexeme = "$temp" + str(self.temp_id)
+        lexeme = "#temp" + str(self.temp_id)
         self.temp_id += 1
         return self.addEntry(lexeme, type, None)
 
