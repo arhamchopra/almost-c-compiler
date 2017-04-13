@@ -19,6 +19,7 @@
 import sys
 from parse_tree import *
 from symbol_table import *
+from code_gen import *
 
 def getType(v):
     if isinstance(v, Constant):
@@ -218,12 +219,13 @@ class ArrayDecl(Node):
     attr_names = ('dim_quals', )
 
 class ArrayRef(Node):
-    __slots__ = ('name', 'subscript', 'type', 'coord', '__weakref__')
+    __slots__ = ('name', 'subscript', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, subscript, type="void", coord=None):
         self.name = name
         self.subscript = subscript
         self.coord = coord
         self.type = type
+        self.refer = emit("ArrayRef", "[]", (type, name.refer, subscript))
 
     def children(self):
         nodelist = []
@@ -234,13 +236,15 @@ class ArrayRef(Node):
     attr_names = ()
 
 class Assignment(Node):
-    __slots__ = ('s', 'op', 'lvalue', 'rvalue', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'lvalue', 'rvalue', 'refer', 'coord', '__weakref__')
     def __init__(self, op, lvalue, rvalue, coord=None):
         self.op = op
         self.lvalue = lvalue
         self.rvalue = rvalue
         self.coord = coord
         self.s = op
+        #There might be a problem here
+        self.refer = emit("Assignment", "=", (rvalue.type, lvalue.refer, rvalue.refer))
 
     def children(self):
         nodelist = []
@@ -251,7 +255,7 @@ class Assignment(Node):
     attr_names = ('op', )
 
 class BinaryOp(Node):
-    __slots__ = ('s', 'op', 'left', 'right', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'left', 'right', 'type', 'refer', 'coord', '__weakref__')
     def __init__(self, op, left, right, type='void', coord=None):
         self.op = op
         self.left = left
@@ -259,6 +263,10 @@ class BinaryOp(Node):
         self.type = type 
         self.coord = coord
         self.s = op
+        print("In BinaryOp")
+        print("Left:"+str(left))
+        print("Right:"+str(right))
+        self.refer = emit("BinaryOp", op, (type, left.refer, right.refer)) 
 
     def children(self):
         nodelist = []
@@ -295,7 +303,7 @@ class Case(Node):
     attr_names = ()
 
 class Cast(Node):
-    __slots__ = ('s', 'to_type', 'expr', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'to_type', 'expr', 'type', 'refer', 'coord', '__weakref__')
     def __init__(self, to_type, expr, type="void", coord=None):
         self.to_type = to_type
         self.expr = expr
@@ -306,6 +314,8 @@ class Cast(Node):
             self.s = "cast:"+str(to_type.type.type.names)
         else:
             self.s = "cast:"+str(to_type.names)
+
+        self.refer = emit("Cast", to_type, (to_type, expr.refer))
 
     def children(self):
         nodelist = []
@@ -346,12 +356,13 @@ class CompoundLiteral(Node):
     attr_names = ()
 
 class Constant(Node):
-    __slots__ = ('s', 'type', 'value', 'coord', '__weakref__')
+    __slots__ = ('s', 'type', 'value', 'refer', 'coord', '__weakref__')
     def __init__(self, type, value, coord=None):
         self.type = type
         self.value = value
         self.coord = coord
         self.s = value
+        self.refer = value
 
     def children(self):
         nodelist = []
@@ -550,13 +561,14 @@ class For(Node):
     attr_names = ()
 
 class FuncCall(Node):
-    __slots__ = ('s', 'name', 'args','type','stpointer', 'coord', '__weakref__')
+    __slots__ = ('s', 'name', 'args','type','stpointer', 'refer', 'coord', '__weakref__')
     def __init__(self, name, args, type='void', coord=None):
         self.name = name
         self.args = args
         self.coord = coord
         self.type = type
         self.stpointer = None
+        self.refer = emit("Func", "f()", (type, args))
         self.s = name.name
 
     def children(self):
@@ -615,13 +627,14 @@ class Goto(Node):
     attr_names = ('name', )
 
 class ID(Node):
-    __slots__ = ('s', 'stpointer', 'name', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'name', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
         self.name = name
         self.coord = coord
         self.type = type 
         self.s = name
         self.stpointer = None
+        self.refer = getReference(name)
 
     def children(self):
         nodelist = []
@@ -812,7 +825,7 @@ class TernaryOp(Node):
     attr_names = ()
 
 class TypeDecl(Node):
-    __slots__ = ('s', 'stpointer', 'declname', 'quals', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'declname', 'quals', 'type', 'refer', 'coord', '__weakref__')
     def __init__(self, declname, quals, type, coord=None):
         self.declname = declname
         self.quals = quals
@@ -820,6 +833,7 @@ class TypeDecl(Node):
         self.coord = coord
         self.s = declname
         self.stpointer = None
+        self.refer = None 
 
     def children(self):
         nodelist = []
@@ -860,13 +874,14 @@ class Typename(Node):
     attr_names = ('name', 'quals', )
 
 class UnaryOp(Node):
-    __slots__ = ('s', 'op', 'expr', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'op', 'expr', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, op, expr, type="void", coord=None):
         self.op = op
         self.expr = expr
         self.coord = coord
         self.type = type
         self.s = op
+        self.refer = emit("UnaryOp", op, (type, expr.refer))
 
     def children(self):
         nodelist = []

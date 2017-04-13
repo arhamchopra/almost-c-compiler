@@ -1,0 +1,19 @@
+TODO
+
+For Generating the 3 AC Codes
+
+    Initialized Declarations
+    Function Declarations
+    Function Calls
+    Activation Records
+    Expressions Testing
+
+
+
+For AST Generation
+
+    Struct Handling 
+    TypeDef
+    Enum
+    Ellipsis
+

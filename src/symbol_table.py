@@ -172,6 +172,27 @@ class SymbolTable(object):
 
     def provideTemp(self, type):
         lexeme = "$temp" + str(self.temp_id)
-        temp_id+=1
-        self.addEntry(lexeme, type, None)
+        self.temp_id += 1
+        return self.addEntry(lexeme, type, None)
 
+CST = SymbolTable().makeNewTable(None)
+GST = CST
+
+def getNewST():
+    global CST, GST
+    new_st = SymbolTable()
+    new_st.makeNewTable(CST)
+    CST = new_st
+    return CST 
+
+def popST():
+    global CST, GST
+    PST = CST.getPP()
+    assert PST is not None
+    off = CST.getCurOffset()
+    PST.setOffset(off+PST.getCurOffset()) 
+    CST = PST
+    return CST
+
+def getCST():
+    return CST;

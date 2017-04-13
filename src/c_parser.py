@@ -19,12 +19,9 @@ import c_ast
 from plyparser import PLYParser, Coord, ParseError
 from ast_transforms import fix_switch_cases
 from parse_tree import *
-from symbol_table import SymbolTable as ST
+from symbol_table import CST, GST, getNewST, popST
 from type_check import *
-
-
-global_CST = ""
-global_GST = ""
+from code_gen import PrintCode
 
 class CParser(PLYParser):
     def __init__(
@@ -138,11 +135,13 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-        self.CST = ST()
-        self.CST = self.CST.makeNewTable(None)
-        global_CST = self.CST
-        self.GST = self.CST
-        global_GST = self.GST
+        self.CST = CST
+        self.GST = GST
+        #  self.CST = ST()
+        #  self.CST = self.CST.makeNewTable(None)
+        #  global_CST = self.CST
+        #  self.GST = self.CST
+        #  global_GST = self.GST
     def parse(self, text, filename='', debuglevel=0):
         """ Parses C code and returns an AST.
 
@@ -200,7 +199,11 @@ class CParser(PLYParser):
         print(entry)
         e = self.CST.addEntry(name, type)
         #  entry.stpointer = e
-        entry.type.stpointer = e
+        if isinstance(entry.type, c_ast.TypeDecl):
+            entry.type.stpointer = e
+            entry.type.refer = e
+        else:
+            entry.type.stpointer = e
 
 
         
@@ -268,17 +271,11 @@ class CParser(PLYParser):
         self._parse_error(msg, self._coord(line, column))
 
     def _lex_on_lbrace_func(self):
-        new_st = ST()
-        new_st = new_st.makeNewTable(self.CST)
-        self.CST = new_st
+        self.CST = getNewST()
         self._push_scope()
 
     def _lex_on_rbrace_func(self):
-        PST = self.CST.getPP()
-        assert PST is not None
-        off = self.CST.getCurOffset()
-        PST.setOffset(off+PST.getCurOffset()) 
-        self.CST = PST
+        self.CST = popST()
         self._pop_scope()
 
     def _lex_type_lookup_func(self, name):
@@ -1634,9 +1631,7 @@ class CParser(PLYParser):
             if bin_type == 'error':
                 self._parse_error("could not assign type" + type_cast3 +" to " + type_cast1 + " using operator " + str(p[2]), p[1].coord)
                 bin_type = c_ast.IdentifierType(['int'])
-                
-
-
+            
             print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
 
             if type_cast3:
@@ -1719,8 +1714,7 @@ class CParser(PLYParser):
                 p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
             if type_cast3:
                 p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
-            temp_ref = " " # [TODO] generate code here 
-            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], temp_ref, bin_type, p[1].coord)
+            p[0] = c_ast.BinaryOp(p[2], p[1], p[3], bin_type, p[1].coord)
 
     def p_cast_expression_1(self, p):
         """ cast_expression : unary_expression """
@@ -1728,8 +1722,7 @@ class CParser(PLYParser):
 
     def p_cast_expression_2(self, p):
         """ cast_expression : LPAREN type_name RPAREN cast_expression """
-        tmp_ref = " " # [TODO] add gen code here
-        p[0] = c_ast.Cast(p[2], p[4], tmp_ref, p[2], self._coord(p.lineno(1)))
+        p[0] = c_ast.Cast(p[2], p[4], p[2], self._coord(p.lineno(1)))
 
     def p_unary_expression_1(self, p):
         """ unary_expression    : postfix_expression """
@@ -2026,6 +2019,7 @@ class CParser(PLYParser):
             print("PRINTING     ............................")
             self.CST.Print()
             self.CST.PrintFT()
+            PrintCode()
         else:
             for msg in getErrorMsg():
                 print(msg)
