@@ -1,5 +1,8 @@
 TODO
 
+Separate out the binary Expressions into boolean, comparison and maths operators based on the code we have to write for them .... Refer Slide 29 of lec 16
+For boolean leave the operator as is and for relational(comparison) add code like if else
+
 For Generating the 3 AC Codes
 
     Initialized Declarations
