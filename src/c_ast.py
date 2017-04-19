@@ -568,8 +568,8 @@ class FuncCall(Node):
         self.coord = coord
         self.type = type
         self.stpointer = None
-        self.refer = emit("Func", "f()", (type, args))
-        self.s = name.name
+        self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
+        self.s ="FuncCall" 
 
     def children(self):
         nodelist = []
@@ -597,12 +597,13 @@ class FuncDecl(Node):
     attr_names = ()
 
 class FuncDef(Node):
-    __slots__ = ('decl', 'param_decls', 'body', 'coord', '__weakref__')
+    __slots__ = ('decl', 'param_decls', 'body', 'refer', 'coord', '__weakref__')
     def __init__(self, decl, param_decls, body, coord=None):
         self.decl = decl
         self.param_decls = param_decls
         self.body = body
         self.coord = coord
+        self.refer = emit('FuncDef', 'FuncDef', (decl.type.type.declname))
 
     def children(self):
         nodelist = []
@@ -629,6 +630,7 @@ class Goto(Node):
 class ID(Node):
     __slots__ = ('s', 'stpointer', 'name', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
+        print("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
         self.type = type 

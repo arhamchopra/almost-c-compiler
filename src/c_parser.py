@@ -191,6 +191,13 @@ class CParser(PLYParser):
         #          "Non-typedef %r previously declared as typedef "
         #          "in this scope" % name, coord)
         #  self._scope_stack[-1][name] = False
+        if self.CST.lookupFT(name):
+            print("[add_identifier]We found the name to be in Function Table")
+        elif self.CST.lookupCurrentScope(name):
+            print("[add_identifier]We found the name to be in Symbol Table")
+        else:
+            print("[add_identifier]We found the Nothing matching it")
+
         if self.CST.lookupCurrentScope(name) or self.CST.lookupFT(name):
             self._parse_error(
                 "Non-typedef %r previously declared as typedef "
@@ -248,6 +255,11 @@ class CParser(PLYParser):
                 p1_type = p1_type.type 
             if isinstance(p1_type, c_ast.TypeDecl):
                 p1_type = p1_type.type 
+        elif isinstance(v, c_ast.Typename):
+            p1_type = v.type
+            # p1_type is now a TypeDecl object
+            p1_type = p1_type.type
+            # p1_type is now a IdentifierType object
         else:
             p1_type = None
         # self._parse_error(p1_type, None)
@@ -690,7 +702,12 @@ class CParser(PLYParser):
     def p_function_start(self, p):
         """ function_start : declaration_specifiers declarator
         """
+        print("I am in function_start... This is great")
         spec = p[1]
+        print("[function_start]"+str(p[2]))
+        print("[function_start]"+str(p[2].type))
+        print("[function_start]"+str(p[2].type.declname))
+        prevdecl = self.CST.removeEntry(p[2].type.declname)
         p[0] = self._build_function_definition(
             spec=spec,
             decl=p[2],
@@ -701,8 +718,12 @@ class CParser(PLYParser):
         #  print("Function Type {}".format(func_def[1].type))
         #  print("Function Type {}".format(func_def[1].type.type))
         #  print("Function Type {}".format(func_def[1].type.type.type))
-        self.CST.addToFT(func_def[0], func_def[1], None)
-
+        print("Checking whether the function was declared or not")
+        print(prevdecl)
+        if prevdecl:
+            self.CST.addToFT(func_def[0], func_def[1], "start_def", None, prevdecl[4])
+        else:
+            self.CST.addToFT(func_def[0], func_def[1], "start_def", None, [])
 
     def p_function_definition_2(self, p):
         """ function_definition : function_start declaration_list_opt compound_statement
@@ -719,7 +740,7 @@ class CParser(PLYParser):
         #  func_def = self.CST.popEntry()
         func_def =  self.CST.popFT()
         e = self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
-        self.CST.addToFT(func_def[0],func_def[1],body_scope[4])
+        self.CST.addToFT(func_def[0],func_def[1], "defined",body_scope[4], func_def[4])
         p[0].decl.type.stpointer = e
         print("In the end of function_definition")
 
@@ -779,11 +800,28 @@ class CParser(PLYParser):
                     typedef_namespace=True)
 
         else:
+            func_list = []
+            var_list = []
+            for decl in p[2]:
+                if isinstance(decl['decl'], c_ast.FuncDecl):
+                    func_list.append(decl)
+                else:
+                    var_list.append(decl)
+            print("[decl_body]We got the function_list as "+str(func_list))
+            print("[decl_body]We got the var_list as "+str(var_list))
+            p[2] = var_list + func_list
+            print("[decl_body]We got the final_list as "+str(p[2]))
             decls = self._build_declarations(
                 spec=spec,
                 decls=p[2],
                 typedef_namespace=True)
 
+            for decl in func_list:
+                entry = self.CST.popEntry()
+                assert isinstance(entry[1], c_ast.FuncDecl) 
+                self.CST.addToFT(entry[0], entry[1], "declared", None, [])
+            print("[decl_body]Print the FT ")
+            self.CST.PrintFT()
         p[0] = decls
 
     # The declaration has been split to a decl_body sub-rule and
@@ -804,13 +842,14 @@ class CParser(PLYParser):
     # line is reached.
     def p_declaration(self, p):
         """ declaration : decl_body SEMI
-        """
+            """
         p[0] = p[1]
-
+    
     # Since each declaration is a list of declarations, this
     # rule will combine all the declarations and return a single
     # list
     #
+    
     def p_declaration_list(self, p):
         """ declaration_list    : declaration
                                 | declaration_list declaration
@@ -826,8 +865,7 @@ class CParser(PLYParser):
     def p_declaration_specifiers_2(self, p):
         """ declaration_specifiers  : type_specifier declaration_specifiers_opt
         """
-        p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
-
+        p[0] = self._add_declaration_specifier(p[2], p[1], 'type') 
     def p_declaration_specifiers_3(self, p):
         """ declaration_specifiers  : storage_class_specifier declaration_specifiers_opt
         """
@@ -1817,6 +1855,10 @@ class CParser(PLYParser):
             if len(dec_list) == len(use_list):
                 for d,u in zip(dec_list, use_list):
 
+                    print("Element of dec_list")
+                    print(d)
+                    print("Element of use_list")
+                    print(u)
                     t = self._get_type(u).type
                     print("Function List Decl Type: "+str(self._get_type(d).type[-1]))
                     print("Argument List Decl Type: "+str(t[-1]))

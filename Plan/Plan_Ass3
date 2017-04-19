@@ -6,10 +6,13 @@ For boolean leave the operator as is and for relational(comparison) add code lik
 For Generating the 3 AC Codes
 
     Initialized Declarations
-    Function Declarations
-    Function Calls
     Activation Records
     Expressions Testing
+    Control Flow Expressions
+
+Done:
+    Function Declarations
+    Function Calls
 
 
 

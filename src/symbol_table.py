@@ -90,8 +90,12 @@ class SymbolTable(object):
         self.table['cur_scope'].append((lexeme, type, size, offset, child, pointer))
         return pointer
 
-    def addToFT(self, lexeme, type, child=None):
-        SymbolTable.FT.append((lexeme, type, child))
+    def addToFT(self, lexeme, type, status, child=None, p_list=None):
+        for entry in SymbolTable.FT:
+            if lexeme == entry[0]:
+                adderror("Reusing a used name")
+                return
+        SymbolTable.FT.append((lexeme, type, status, child, p_list))
 
     def popEntry(self):
         print("Popping entry from SymbolTable: {}".format(self.id))
@@ -102,6 +106,16 @@ class SymbolTable(object):
             self.table['cur_offset'] -= getSize(e[1])
         print("{} was popped".format(e))
         return e
+
+    def removeEntry(self, name):
+        print("IN removeEntry")
+        for entry in SymbolTable.FT:
+            if name == entry[0]:
+                ret = entry
+                SymbolTable.FT.remove(ret)
+                print(ret)
+                return ret 
+
 
     def popFT(self):
         print("Popping entry from FT: ")
@@ -132,7 +146,6 @@ class SymbolTable(object):
 
     def getElementAtIndex(self, index):
         return self.table['cur_scope'][index]
-
     
     def lookupCurrentScope(self, name):
         for entry in self.table['cur_scope']:
@@ -151,6 +164,25 @@ class SymbolTable(object):
         return None
 
     def lookupFullScope(self,  name):
+        entry = self._lookupFullScope(name)
+        if entry:
+            print("Found in ST")
+            print(name)
+            l = list(entry)
+            l.append("ST")
+            entry = tuple(l)
+            return entry
+        else:
+            entry = self.lookupFT(name)
+            print("Found in function")
+            print(name)
+            l = list(entry)
+            l.append("FT")
+            entry = tuple(l)
+            return entry
+
+
+    def _lookupFullScope(self,  name):
         found = self.lookupCurrentScope(name)
         if found:
             return found
@@ -158,7 +190,7 @@ class SymbolTable(object):
             PP = self.table['PP']
             if PP:
                 self = PP
-                return self.lookupFullScope(name)
+                return self._lookupFullScope(name)
             else:
                 return None
 

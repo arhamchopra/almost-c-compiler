@@ -13,16 +13,16 @@ def emit(key, op, var_tuple):
     print("In Emit")
     print(key, op, var_tuple)
     CST = getCST()
-    if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
-        print("HAGGA 1")
-        temp = CST.provideTemp(var_tuple[0])
-
-    if not isinstance(var_tuple[1], tuple):
-        print("HAGGA HAGGA HAGGA HAGGAPA")
-        temp = CST.provideTemp(var_tuple[0])
+    #  if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
+    #      print("HAGGA 1")
+    #      temp = CST.provideTemp(var_tuple[0])
+    #
+    #  if not isinstance(var_tuple[1], tuple):
+    #      print("HAGGA HAGGA HAGGA HAGGAPA")
+    #      temp = CST.provideTemp(var_tuple[0])
         
     #  print(CST.Print())
-    elif key == "BinaryOp":
+    if key == "BinaryOp":
         assert len(var_tuple) == 3
         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
             print("In BinaryOp"+op)
@@ -114,6 +114,23 @@ def emit(key, op, var_tuple):
         temp3 = CST.provideTemp(var_tuple[0])
         code_list.append(("deref", temp3, temp2, None))
         temp = temp3
+    elif key == "FuncCall":
+        print("[emit]FuncCall")
+        temp1 = CST.provideTemp(var_tuple[0])
+        for var in var_tuple[2]:
+            print("[emit]Pushing the tuple "+str(var))
+            code_list.append(('push', None, var.refer, None))
+        #[TODO] Check if the length of function list should be passed or not
+        code_list.append(('call',temp1, var_tuple[1],len(var_tuple[2])))
+
+        #[TODO] Add code for activation records here
+        temp = temp1
+    elif key == "FuncDef":
+        code_list.append(("begin", None, var_tuple))
+        temp = None
+
+
+        
     
     return temp
 
@@ -125,7 +142,9 @@ def PrintCode():
 def getReference(name):
     print("In getReference")
     CST = getCST()
-    ref = CST.lookupFullScope(name)[5]
-    print(ref)
-    return ref
+    entry = CST.lookupFullScope(name)
+    if(entry[-1] == "ST"):
+        return entry[5] 
+    else:
+        return None        
 
