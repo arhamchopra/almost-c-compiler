@@ -9,7 +9,9 @@ For Generating the 3 AC Codes
     Activation Records
     Expressions Testing
     Control Flow Expressions
-
+        Separate the bin op into different parts based on true list and false list
+        add assignment expressions like *= += ... --- Done
+        
 Done:
     Function Declarations
     Function Calls

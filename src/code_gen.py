@@ -24,6 +24,8 @@ def emit(key, op, var_tuple):
     #  print(CST.Print())
     if key == "BinaryOp":
         assert len(var_tuple) == 3
+        # Have to separate the operator based on the true list and false list
+        # -,+,*,/,^,&,|,~,<<,>>,
         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
             print("In BinaryOp"+op)
             temp = CST.provideTemp(var_tuple[0])
@@ -97,9 +99,17 @@ def emit(key, op, var_tuple):
             temp = temp2           
 
     elif key == "Assignment":
-        print("IN Assignemnt")
-        temp = var_tuple[2]
-        code_list.append(("=", var_tuple[1], temp, None))
+        print("[Assignment]IN Assignemnt")
+        if op == "=":
+            temp = var_tuple[2]
+            code_list.append(("=", var_tuple[1], temp, None))
+        else:
+            op_equal = op[-1]
+            op_exp = op[:-1]
+            temp1 = CST.provideTemp(var_tuple[0])
+            code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
+            code_list.append((op_equal, var_tuple[1], temp1))
+            temp = temp1 
 
     elif key == "ArrayRef":
         print("In Array Ref")

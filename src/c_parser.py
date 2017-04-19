@@ -220,6 +220,7 @@ class CParser(PLYParser):
         if isinstance(v, c_ast.ID):
             K = [self.CST.lookupFullScope(v.name)[i] for i in [1, 5]]
             p1_type = K[0]
+            v.type = p1_type
             v.stpointer = K[1]
             # if p1_type == None:
             #     self._parse_error("Failed lookup")

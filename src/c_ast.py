@@ -244,7 +244,8 @@ class Assignment(Node):
         self.coord = coord
         self.s = op
         #There might be a problem here
-        self.refer = emit("Assignment", "=", (rvalue.type, lvalue.refer, rvalue.refer))
+        print("[Assignment]"+str(rvalue.type)+" "+str(lvalue.type))
+        self.refer = emit("Assignment", op, (rvalue.type, lvalue.refer, rvalue.refer))
 
     def children(self):
         nodelist = []
@@ -633,7 +634,15 @@ class ID(Node):
         print("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
-        self.type = type 
+        if type:
+            self.type = type 
+        else:
+            CST = getCST()
+            entry = CST.lookupFullScope(name)
+            if(entry[-1]=="ST"):
+                type = entry[1];
+            else:
+                type= None
         self.s = name
         self.stpointer = None
         self.refer = getReference(name)

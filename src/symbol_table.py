@@ -210,6 +210,7 @@ class SymbolTable(object):
             print(i)
 
     def provideTemp(self, type):
+        print("[provideTemp]Making a tmp of type "+str(type))
         lexeme = "#temp" + str(self.temp_id)
         self.temp_id += 1
         return self.addEntry(lexeme, type, None)
