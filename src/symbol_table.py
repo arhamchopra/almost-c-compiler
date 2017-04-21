@@ -4,9 +4,15 @@
 
 import c_ast
 
+user_debug = False 
+    
+def printDebug(s):
+    if user_debug:
+        print(s)
+
 def getSize(type):
-    print("IN GET SIZE")
-    print(type)
+    printDebug("IN GET SIZE")
+    printDebug(type)
     if isinstance(type, c_ast.TypeDecl):
         return getSize(type.type)
     if isinstance(type, c_ast.IdentifierType):
@@ -38,11 +44,10 @@ def getSize(type):
     if isinstance(type, c_ast.PtrDecl):
         return 8
     if isinstance(type, c_ast.ArrayDecl):        
-        print(type.dim)
+        printDebug(type.dim)
         return int(type.dim.value)*getSize(type.type)
     if isinstance(type, c_ast.FuncDecl):
         return 0
-
 
 # This class include all the functionality of SymbolTable 
 class SymbolTable(object):
@@ -55,7 +60,7 @@ class SymbolTable(object):
         self.id = SymbolTable.GID
         self.temp_id = 1
         SymbolTable.GID += 1
-        print("Name = "+str(name))
+        printDebug("Name = "+str(name))
         if name is None:
             self.name = "ID"+str(self.id)
         else:
@@ -65,11 +70,11 @@ class SymbolTable(object):
         if PP == None:
             self.table = { 'PP': None, 'cur_offset': 0, 'cur_scope': [], 'nesting': 0 }
             SymbolTable.GST=self
-            print("Creating Root SymbolTable:{}".format(self.id))
+            printDebug("Creating Root SymbolTable:{}".format(self.id))
         else:
             self.table = { 'PP': PP, 'cur_offset': 0, 'cur_scope': [], 'nesting': PP.getNesting()+1 }
             PP.addEntry(self.name, "SymbTab", self)
-            print("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
+            printDebug("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
         return self
 
     def addEntry(self, lexeme, type, child=None):
@@ -86,8 +91,8 @@ class SymbolTable(object):
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
-        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
-        self.table['cur_scope'].append((lexeme, type, size, offset, child, pointer))
+        printDebug("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
+        self.table['cur_scope'].append((lexeme, type, size, child, pointer))
         return pointer
 
     def addToFT(self, lexeme, type, status, child=None, p_list=None):
@@ -98,36 +103,36 @@ class SymbolTable(object):
         SymbolTable.FT.append((lexeme, type, status, child, p_list))
 
     def popEntry(self):
-        print("Popping entry from SymbolTable: {}".format(self.id))
+        printDebug("Popping entry from SymbolTable: {}".format(self.id))
         e = self.table['cur_scope'].pop()
         if e[1] == "SymbTab":
             self.table['cur_offset'] -= e[4].table['cur_offset']
         else:
             self.table['cur_offset'] -= getSize(e[1])
-        print("{} was popped".format(e))
+        printDebug("{} was popped".format(e))
         return e
 
     def removeEntry(self, name):
-        print("IN removeEntry")
+        printDebug("IN removeEntry")
         for entry in SymbolTable.FT:
             if name == entry[0]:
                 ret = entry
                 SymbolTable.FT.remove(ret)
-                print(ret)
+                printDebug(ret)
                 return ret 
 
 
     def popFT(self):
-        print("Popping entry from FT: ")
+        printDebug("Popping entry from FT: ")
         e = SymbolTable.FT.pop()
-        print("{} was popped".format(e))
+        printDebug("{} was popped".format(e))
         return e
 
     def getLastElemFT(self):
         return SymbolTable.FT[-1]
 
     def setLastLexeme(self, lexeme):
-        print("Setting last lexeme: {} to {}".format(e, lexeme))
+        printDebug("Setting last lexeme: {} to {}".format(e, lexeme))
         e = self.table["cur_scope"].pop()
         e[0] = lexeme
         self.table["cur_scope"].append(e)
@@ -154,28 +159,28 @@ class SymbolTable(object):
         return None
 
     def lookupFT(self, name):
-        print("Looking for {}".format(name))
+        printDebug("Looking for {}".format(name))
         for entry in SymbolTable.FT:
             if entry[0] == name:
-                print("Entry Found in FT")
+                printDebug("Entry Found in FT")
                 return entry
-            print("Not Looking for but Found Entry: {} ".format(entry))
-        print("Not Found in FT")
+            printDebug("Not Looking for but Found Entry: {} ".format(entry))
+        printDebug("Not Found in FT")
         return None
 
     def lookupFullScope(self,  name):
         entry = self._lookupFullScope(name)
         if entry:
-            print("Found in ST")
-            print(name)
+            printDebug("Found in ST")
+            printDebug(name)
             l = list(entry)
             l.append("ST")
             entry = tuple(l)
             return entry
         else:
             entry = self.lookupFT(name)
-            print("Found in function")
-            print(name)
+            printDebug("Found in function")
+            printDebug(name)
             l = list(entry)
             l.append("FT")
             entry = tuple(l)
@@ -195,22 +200,22 @@ class SymbolTable(object):
                 return None
 
     def Print(self):
-        print("Printing SymbolTable:"+ str(self.id))
+        printDebug("Printing SymbolTable:"+ str(self.id))
         for entry in self.table['cur_scope']:
             if entry[4]:
-                print(entry)
+                printDebug(entry)
                 entry[4].Print()
             else:
-                print(entry)
-        print("Finished SymbolTable:"+ str(self.id))
+                printDebug(entry)
+        printDebug("Finished SymbolTable:"+ str(self.id))
                 
     def PrintFT(self):
-        print("Printing Function Table")
+        printDebug("Printing Function Table")
         for i in SymbolTable.FT:
-            print(i)
+            printDebug(i)
 
     def provideTemp(self, type):
-        print("[provideTemp]Making a tmp of type "+str(type))
+        printDebug("[provideTemp]Making a tmp of type "+str(type))
         lexeme = "#temp" + str(self.temp_id)
         self.temp_id += 1
         return self.addEntry(lexeme, type, None)

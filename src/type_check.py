@@ -13,6 +13,13 @@ priority = {
 	'void' : -1,
 	}
 
+
+user_debug = False 
+    
+def printDebug(s):
+    if user_debug:
+        printDebug(s)
+
 def group(var):
 	if var == 'char' or var ==  'short' or var ==  'int' or var ==  'long':
 		return 'uptoInt'
@@ -51,7 +58,7 @@ def depth(ptr):
 			return (0,ptr.names[0])
 
 def get_type(entry):
-	print("Starting get_type")
+	printDebug("Starting get_type")
 	if isinstance(entry, basestring):
 	    return (entry, None)
 
@@ -61,7 +68,7 @@ def get_type(entry):
 	elif isinstance(entry, c_ast.ArrayDecl):
 		return ('array', depth(entry))
 # Not an Array or Pointer
-	print("ENTRY "+str(entry))
+	printDebug("ENTRY "+str(entry))
 	while not isinstance(entry, c_ast.Constant) and not isinstance(entry, c_ast.IdentifierType):
 	        entry = entry.type
 
@@ -70,7 +77,7 @@ def get_type(entry):
 	else:
 		entry =entry.type
 
-	print("return of get_type "+str(entry))
+	printDebug("return of get_type "+str(entry))
 	return (entry, None)
 
 def valid_sub(ptr):
@@ -86,15 +93,15 @@ def valid_sub(ptr):
 
 
 def bin_operator(op,left, right):
-	print("Starting Bin_operator")
+	printDebug("Starting Bin_operator")
 	typel = get_type(left)
-	print("typel " + str(typel))
+	printDebug("typel " + str(typel))
 	typer = get_type(right)
-	print("typer " + str(typer))
+	printDebug("typer " + str(typer))
 	groupl = group(typel[0])
-	print("groupl " + str(groupl))
+	printDebug("groupl " + str(groupl))
 	groupr = group(typer[0])
-	print("groupr " + str(groupr))
+	printDebug("groupr " + str(groupr))
 
 	# if groupl == :
 	# 	if(priority[typel[0]] == priority[typer[0]]):
@@ -171,9 +178,9 @@ def bin_operator(op,left, right):
 
 # club
 	elif op == '*' or op ==  '/':
-		print("arguements passed to binary operator " + op)
+		printDebug("arguements passed to binary operator " + op)
 		if (groupl == 'uptoInt' or groupl == 'float') and (groupr == 'uptoInt' or groupr == 'float'):
-			print("Both Ints")
+			printDebug("Both Ints")
 			if priority[typer[0]] == priority[typel[0]]:
 				return (left, None, None)
 			elif priority[typer[0]] > priority[typel[0]]:
@@ -386,11 +393,11 @@ def bin_operator(op,left, right):
 
 	#     Increment/decrement
 def uni_operator(op, key):
-	print("Starting unary_operator")
+	printDebug("Starting unary_operator")
 	typeKey = get_type(key)
-	print("typeKey " + str(typeKey))
+	printDebug("typeKey " + str(typeKey))
 	groupKey = group(typeKey[0])
-	print("groupKey" + str(groupKey))
+	printDebug("groupKey" + str(groupKey))
 
 	if op == '++' or op == '--' or op == '~':
 		if groupKey == "uptoInt":

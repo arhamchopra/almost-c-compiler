@@ -20,6 +20,20 @@ import sys
 from parse_tree import *
 from symbol_table import *
 from code_gen import *
+import re
+
+# TODO In this file 
+
+code_list = []
+
+# In if statement we are checking whether the tmp has value non zero if so then we take goto else if tmp is 0 we take else
+
+
+user_debug = False 
+    
+def printDebug(s):
+    if user_debug:
+        printDebug(s)
 
 def getType(v):
     if isinstance(v, Constant):
@@ -244,7 +258,7 @@ class Assignment(Node):
         self.coord = coord
         self.s = op
         #There might be a problem here
-        print("[Assignment]"+str(rvalue.type)+" "+str(lvalue.type))
+        printDebug("[Assignment]"+str(rvalue.type)+" "+str(lvalue.type))
         self.refer = emit("Assignment", op, (rvalue.type, lvalue.refer, rvalue.refer))
 
     def children(self):
@@ -264,9 +278,9 @@ class BinaryOp(Node):
         self.type = type 
         self.coord = coord
         self.s = op
-        print("In BinaryOp")
-        print("Left:"+str(left))
-        print("Right:"+str(right))
+        printDebug("In BinaryOp")
+        printDebug("Left:"+str(left))
+        printDebug("Right:"+str(right))
         self.refer = emit("BinaryOp", op, (type, left.refer, right.refer)) 
 
     def children(self):
@@ -310,7 +324,7 @@ class Cast(Node):
         self.expr = expr
         self.coord = coord
         self.type = type 
-        #  print("Got ToTypes : {}".format(to_type))
+        #  printDebug("Got ToTypes : {}".format(to_type))
         if isinstance(to_type, Typename):
             self.s = "cast:"+str(to_type.type.type.names)
         else:
@@ -363,7 +377,7 @@ class Constant(Node):
         self.value = value
         self.coord = coord
         self.s = value
-        self.refer = value
+        self.refer = TAC(value, makeNewData())
 
     def children(self):
         nodelist = []
@@ -604,7 +618,7 @@ class FuncDef(Node):
         self.param_decls = param_decls
         self.body = body
         self.coord = coord
-        self.refer = emit('FuncDef', 'FuncDef', (decl.type.type.declname))
+        self.refer = emit('FuncDef', 'FuncDef', (TAC(decl.type.stpointer, makeNewData())))
 
     def children(self):
         nodelist = []
@@ -631,7 +645,7 @@ class Goto(Node):
 class ID(Node):
     __slots__ = ('s', 'stpointer', 'name', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
-        print("ID HERE:"+ str(name))
+        printDebug("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
         if type:
@@ -844,7 +858,7 @@ class TypeDecl(Node):
         self.coord = coord
         self.s = declname
         self.stpointer = None
-        self.refer = None 
+        self.refer = TAC(None, makeNewData()) 
 
     def children(self):
         nodelist = []
@@ -942,4 +956,264 @@ class Pragma(Node):
         return tuple(nodelist)
 
     attr_names = ('string', )
+
+
+class TAC(Object):
+    def __init__(self, refer, data):
+        self.refer = refer
+        self.data = data
+
+    def addToFalselist(self, id):
+        self.data["falselist"].append(id)
+    
+    def addToTruelist(self, id):
+        self.data["truelist"].append(id)
+    
+    def addToBreaklist(self, id):
+        self.data["breaklist"].append(id)
+    
+    def addToContlist(self, id):
+        self.data["contlist"].append(id)
+        
+
+
+def emit(key, op, var_tuple):
+    print("[emit]In Emit")
+    print("[emit]"+str(key, op, var_tuple))
+    CST = getCST()
+    #  if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
+    #      print("HAGGA 1")
+    #      temp = CST.provideTemp(var_tuple[0])
+    #
+    #  if not isinstance(var_tuple[1], tuple):
+    #      print("HAGGA HAGGA HAGGA HAGGAPA")
+    #      temp = CST.provideTemp(var_tuple[0])
+        
+    #  print(CST.Print())
+    if key == "BinaryOp":
+        assert len(var_tuple) == 3
+        # Have to separate the operator based on the true list and false list
+        # -,+,*,/,^,&,|,~,<<,>>,
+        # [TODO]
+        if re.match(r"\-|\+|\*|\/|\||\&|\^", op) or op == "<<" or op == ">>":
+            print("[emit]In BinaryOp"+op)
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append((op, temp, var_tuple[1], var_tuple[2]))
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, 'goto', None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+            
+        elif op == "%":
+            temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            temp2 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            code_list.append(("/", temp1, var_tuple[1], var_tuple[2]))
+            code_list.append(("*", temp2, temp1, var_tuple[2]))
+            code_list.append(("-", temp3, var_tuple[1], temp2))
+            temp = temp3 
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+
+        elif re.match(r"<=|>=|==|!=|<|>", op):
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(('if'+op, a, b, getNextInstr()+4))
+            code_list.append(('=', temp, 0, None))
+            code_list.append(('goto', getNextInstr()+2))
+            code_list.append(('=', temp, 1, None))
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+
+        # Assignment of logical operators is not handled
+
+    elif key == "Cast":
+        assert len(var_tuple) == 3
+        temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
+        code_list.append(("Cast", temp, var_tuple[0], var_tuple[1]))
+
+    elif key == "UnaryOp":
+        assert len(var_tuple) == 3
+        if op == "&":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(('&', temp, var_tuple[1], None))
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+                
+        elif op == "*":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(("deref", temp, var_tuple[1], None))
+            
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+        
+        elif op == "+":
+            temp = var_tuple[1]
+        
+        elif op == "-":
+            temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
+            code_list.append(("-", temp, 0, var_tuple[1]))
+
+        # [TODO]
+        elif op == "~":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(("~", temp, var_tuple[1], None))
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, "goto", None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+
+        elif op == "!":
+            temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
+
+            #  Not storing the assignments of logical operators
+            #  code_list.append(("!", temp, var_tuple[1], None))
+        
+            temp.data["truelist"] = var_tuple[1].data["falselist"]
+            temp.data["falselist"] = var_tuple[1].data["truelist"]
+
+        elif op == "++":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(("+", temp, var_tuple[1], 1 ))
+            code_list.append(("=", var_tuple[1], temp, None))
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+
+        elif op == "--":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+            code_list.append(("-", temp, var_tuple[1], 1 ))
+            code_list.append(("=", var_tuple[1], temp, None))
+            
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+
+        elif op == "p++":
+            temp1 = CST.provideTemp(var_tuple[0])
+            temp2 = CST.provideTemp(var_tuple[0])
+            code_list.append(("=", temp2, var_tuple[1], None ))
+            code_list.append(("+", temp1, var_tuple[1], 1 ))
+            temp = temp2
+
+            var_tuple[1].addToTruelist(getNextInstr())
+            code_list.append(('if', var_tuple[1], None, None))
+
+            var_tuple[1].addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+            
+            code_list.append(("=", var_tuple[1], temp1, None))
+
+        elif op == "p--":
+            temp1 = CST.provideTemp(var_tuple[0])
+            temp2 = CST.provideTemp(var_tuple[0])
+            code_list.append(("=", temp2, var_tuple[1], None ))
+            code_list.append(("-", temp1, var_tuple[1], 1 ))
+            temp = temp2           
+            
+            var_tuple[1].addToTruelist(getNextInstr())
+            code_list.append(('if', var_tuple[1], None, None))
+
+            var_tuple[1].addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+            
+            code_list.append(("=", var_tuple[1], temp1, None))
+
+    elif key == "Assignment":
+        print("[Assignment]IN Assignemnt")
+        if op == "=":
+            temp = var_tuple[2]
+            code_list.append(("=", var_tuple[1], temp, None))
+        else:
+            op_equal = op[-1]
+            op_exp = op[:-1]
+            temp1 = CST.provideTemp(var_tuple[0])
+            code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
+            code_list.append((op_equal, var_tuple[1], temp1))
+            temp = temp1 
+
+    elif key == "ArrayRef":
+        print("In Array Ref")
+        temp1 = CST.provideTemp(c_ast.IdentifierType(['int']))
+        type = var_tuple[1][2].getElementAtIndex(var_tuple[1][1])[1]
+        size = getSize(var_tuple[0])
+        code_list.append(("*", temp1, var_tuple[2], size))
+        
+        temp2 = CST.provideTemp(type)
+        code_list.append(("+", temp2, temp1, var_tuple[1]))
+
+        temp3 = CST.provideTemp(var_tuple[0])
+        code_list.append(("deref", temp3, temp2, None))
+        temp = temp3
+    elif key == "FuncCall":
+        print("[emit]FuncCall")
+        temp1 = CST.provideTemp(var_tuple[0])
+        for var in var_tuple[2]:
+            print("[emit]Pushing the tuple "+str(var))
+            code_list.append(('push', None, var.refer, None))
+        #[TODO] Check if the length of function list should be passed or not
+        code_list.append(('call',temp1, var_tuple[1],len(var_tuple[2])))
+
+        #[TODO] Add code for activation records here
+        temp = temp1
+    elif key == "FuncDef":
+        code_list.append(("begin", None, var_tuple))
+        temp = None
+
+    return temp
+
+def makeNewData():
+    data = {
+            "truelist":[],
+            "falselist":[],
+            "contlist":[],
+            "breaklist":[],
+            }
+    return data
+
+
+def PrintCode():
+    print("We are now printing the 3AC Code ------------------------------------------------")
+    for i in code_list:
+        print(i)
+
+def getReference(name):
+    print("In getReference")
+    CST = getCST()
+    entry = CST.lookupFullScope(name)
+    if(entry[-1] == "ST"):
+        return TAC(entry[5], makeNewData())
+    else:
+        return None 
+
+def getNextInstr():
+    return len(code_list)
+
+#         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
 

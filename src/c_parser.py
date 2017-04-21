@@ -21,7 +21,14 @@ from ast_transforms import fix_switch_cases
 from parse_tree import *
 from symbol_table import CST, GST, getNewST, popST
 from type_check import *
-from code_gen import PrintCode
+from code_gen import PrintCode, getNextInstr, emit
+
+user_debug = False 
+    
+def printDebug(s):
+    if user_debug:
+        print(s)
+
 
 class CParser(PLYParser):
     def __init__(
@@ -191,21 +198,28 @@ class CParser(PLYParser):
         #          "Non-typedef %r previously declared as typedef "
         #          "in this scope" % name, coord)
         #  self._scope_stack[-1][name] = False
-        if self.CST.lookupFT(name):
-            print("[add_identifier]We found the name to be in Function Table")
-        elif self.CST.lookupCurrentScope(name):
-            print("[add_identifier]We found the name to be in Symbol Table")
-        else:
-            print("[add_identifier]We found the Nothing matching it")
 
-        if self.CST.lookupCurrentScope(name) or self.CST.lookupFT(name):
+        # Checking where then name belongs to FT or ST or none
+        printDebug("[add_identifier]In add Identifier")
+        if self.CST.lookupFT(name):
+            printDebug("[add_identifier]We found the name to be in Function Table")
+        elif self.CST.lookupCurrentScope(name):
+            printDebug("[add_identifier]We found the name to be in Symbol Table")
+        else:
+            printDebug("[add_identifier]We found the Nothing matching it")
+
+        printDebug("[add_identifier]The entry is :" + str(entry))
+
+        # If name already exists in the current ST then it should not be added into the ST again.
+        # We are assuming that in the global scope there will be no variable with the same name as a function declaration
+        if self.CST.lookupCurrentScope(name):
             self._parse_error(
-                "Non-typedef %r previously declared as typedef "
+                "Reusing previously declared name : %r "
                 "in this scope" % name, coord)
-        print("In add Identifier")
-        print(entry)
+
         e = self.CST.addEntry(name, type)
         #  entry.stpointer = e
+        # [TODO] look for refer and stpointer should keep only one
         if isinstance(entry.type, c_ast.TypeDecl):
             entry.type.stpointer = e
             entry.type.refer = e
@@ -216,14 +230,11 @@ class CParser(PLYParser):
         
 
     def _get_type(self, v):
-        # print " *********************** printing variable name " + str(v)
         if isinstance(v, c_ast.ID):
             K = [self.CST.lookupFullScope(v.name)[i] for i in [1, 5]]
             p1_type = K[0]
             v.type = p1_type
             v.stpointer = K[1]
-            # if p1_type == None:
-            #     self._parse_error("Failed lookup")
 
             if isinstance(p1_type, c_ast.TypeDecl):
                 p1_type = p1_type.type
@@ -246,7 +257,7 @@ class CParser(PLYParser):
             p1_type = v.type.type
         elif isinstance(v, c_ast.FuncCall):
             K = self.CST.lookupFullScope(v.name.name)[5]
-            print("THE POINTER FOR K : "+str(K))
+            printDebug("THE POINTER FOR K : "+str(K))
             v.stpointer = K
             p1_type = v.type
         elif isinstance(v,c_ast.Cast):
@@ -264,7 +275,7 @@ class CParser(PLYParser):
         else:
             p1_type = None
         # self._parse_error(p1_type, None)
-        print "printing p1_type " + str(p1_type)
+        printDebug("printing p1_type " + str(p1_type))
         # assert False
 
         return p1_type
@@ -347,10 +358,10 @@ class CParser(PLYParser):
 
             Note: the declarator and modifier may be modified
         """
-        #~ print '****'
+        #~ printDebug('****')
         #~ decl.show(offset=3)
         #~ modifier.show(offset=3)
-        #~ print '****'
+        #~ printDebug('****')
 
         modifier_head = modifier
         modifier_tail = modifier
@@ -539,16 +550,16 @@ class CParser(PLYParser):
                     fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
 
                 if declaration.init:
-                    print("In Declaration With Init")
-                    print("######################Obtained Values for "+str(('=', declaration.type)))
+                    printDebug("In Declaration With Init")
+                    printDebug("######################Obtained Values for "+str(('=', declaration.type)))
                     p1_type = self._get_type(declaration.type)
                     p3_type = self._get_type(declaration.init)
-                    print("######################Obtained Values for "+str(('=', p1_type, p3_type)))
+                    printDebug("######################Obtained Values for "+str(('=', p1_type, p3_type)))
                     (bin_type, type_cast1, type_cast3) = bin_operator('=', p1_type, p3_type)
                     if bin_type == 'error':
                         self._parse_error("Error in assignment",declaration.coord)
 
-                    print("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+                    printDebug("######################Obtained Values for "+str(('=',p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
                     if type_cast3:
                         declaration.init = c_ast.Cast(type_cast3, declaration.init , type_cast3)
 
@@ -560,7 +571,7 @@ class CParser(PLYParser):
                 if is_typedef:
                     self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
                 else:
-                    print("fixed_decl.type"+str(fixed_decl.type))
+                    printDebug("fixed_decl.type"+str(fixed_decl.type))
                     self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord, fixed_decl)
 
             declarations.append(fixed_decl)
@@ -703,11 +714,11 @@ class CParser(PLYParser):
     def p_function_start(self, p):
         """ function_start : declaration_specifiers declarator
         """
-        print("I am in function_start... This is great")
+        printDebug("I am in function_start... This is great")
         spec = p[1]
-        print("[function_start]"+str(p[2]))
-        print("[function_start]"+str(p[2].type))
-        print("[function_start]"+str(p[2].type.declname))
+        printDebug("[function_start]"+str(p[2]))
+        printDebug("[function_start]"+str(p[2].type))
+        printDebug("[function_start]"+str(p[2].type.declname))
         prevdecl = self.CST.removeEntry(p[2].type.declname)
         p[0] = self._build_function_definition(
             spec=spec,
@@ -715,12 +726,12 @@ class CParser(PLYParser):
             param_decls=None,
             body=None)
         func_def = self.CST.popEntry()
-        #  print("Function Type {}".format(func_def[1]))
-        #  print("Function Type {}".format(func_def[1].type))
-        #  print("Function Type {}".format(func_def[1].type.type))
-        #  print("Function Type {}".format(func_def[1].type.type.type))
-        print("Checking whether the function was declared or not")
-        print(prevdecl)
+        #  printDebug("Function Type {}".format(func_def[1]))
+        #  printDebug("Function Type {}".format(func_def[1].type))
+        #  printDebug("Function Type {}".format(func_def[1].type.type))
+        #  printDebug("Function Type {}".format(func_def[1].type.type.type))
+        printDebug("Checking whether the function was declared or not")
+        printDebug(prevdecl)
         if prevdecl:
             self.CST.addToFT(func_def[0], func_def[1], "start_def", None, prevdecl[4])
         else:
@@ -729,7 +740,7 @@ class CParser(PLYParser):
     def p_function_definition_2(self, p):
         """ function_definition : function_start declaration_list_opt compound_statement
         """
-        print("In the start of function_definition")
+        printDebug("In the start of function_definition")
         body_scope = self.CST.popEntry()
         #  p[0] = self._build_function_definition(
         #      spec=spec,
@@ -743,7 +754,7 @@ class CParser(PLYParser):
         e = self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
         self.CST.addToFT(func_def[0],func_def[1], "defined",body_scope[4], func_def[4])
         p[0].decl.type.stpointer = e
-        print("In the end of function_definition")
+        printDebug("In the end of function_definition")
 
     def p_statement(self, p):
         """ statement   : labeled_statement
@@ -808,10 +819,10 @@ class CParser(PLYParser):
                     func_list.append(decl)
                 else:
                     var_list.append(decl)
-            print("[decl_body]We got the function_list as "+str(func_list))
-            print("[decl_body]We got the var_list as "+str(var_list))
+            printDebug("[decl_body]We got the function_list as "+str(func_list))
+            printDebug("[decl_body]We got the var_list as "+str(var_list))
             p[2] = var_list + func_list
-            print("[decl_body]We got the final_list as "+str(p[2]))
+            printDebug("[decl_body]We got the final_list as "+str(p[2]))
             decls = self._build_declarations(
                 spec=spec,
                 decls=p[2],
@@ -821,7 +832,7 @@ class CParser(PLYParser):
                 entry = self.CST.popEntry()
                 assert isinstance(entry[1], c_ast.FuncDecl) 
                 self.CST.addToFT(entry[0], entry[1], "declared", None, [])
-            print("[decl_body]Print the FT ")
+            printDebug("[decl_body]Print the FT ")
             self.CST.PrintFT()
         p[0] = decls
 
@@ -830,7 +841,7 @@ class CParser(PLYParser):
     # for defining typedefs.
     #
     # If a typedef line was directly followed by a line using the
-                #     print("InValid Function Call")
+                #     printDebug("InValid Function Call")
     # type defined with the typedef, the type would not be
     # recognized. This is because to reduce the declaration rule,
     # the parser's lookahead asked for the token after SEMI, which
@@ -1232,7 +1243,7 @@ class CParser(PLYParser):
             dim_quals=dim_quals,
             coord=p[1].coord)
             # size = size,
-        print "-----------------------------2dimensions of " + str(p[1])
+        printDebug("-----------------------------2dimensions of " + str(p[1]))
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
 
@@ -1281,7 +1292,7 @@ class CParser(PLYParser):
             if func.args is not None:
                 for param in func.args.params:
                     if isinstance(param, c_ast.EllipsisParam): break
-                    print("Param.Type"+str(param.type))
+                    printDebug("Param.Type"+str(param.type))
                     self._add_identifier(param.name, param.type, param.coord, param)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=func)
@@ -1544,6 +1555,18 @@ class CParser(PLYParser):
         """
         p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
+    def p_marker1(self, p):
+        """ marker1 : """
+        p[0] = {}
+        p[0].quad = getNextInstr()
+
+    def p_marker2(self, p):
+        """ marker2 : """
+        p[0] = {}
+        p[0].nextlist = [getNextInstr()]
+        emit('JMP', 'goto', (None, 'Empty'))
+
+
     # Since we made block_item a list, this just combines lists
     #
     def p_block_item_list(self, p):
@@ -1572,12 +1595,12 @@ class CParser(PLYParser):
         p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
 
     def p_selection_statement_1(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement """
-        p[0] = c_ast.If(p[3], p[5], None, self._coord(p.lineno(1)))
+        """ selection_statement : IF LPAREN expression RPAREN marker1 statement """
+        p[0] = c_ast.If(p[3], p[6], None, self._coord(p.lineno(1)))
 
     def p_selection_statement_2(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement """
-        p[0] = c_ast.If(p[3], p[5], p[7], self._coord(p.lineno(1)))
+        """ selection_statement : IF LPAREN expression RPAREN marker1 statement marker2 ELSE marker1 statement """
+        p[0] = c_ast.If(p[3], p[6], p[10], self._coord(p.lineno(1)))
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
@@ -1585,15 +1608,15 @@ class CParser(PLYParser):
                 c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
 
     def p_iteration_statement_1(self, p):
-        """ iteration_statement : WHILE LPAREN expression RPAREN statement """
-        p[0] = c_ast.While(p[3], p[5], self._coord(p.lineno(1)))
+        """ iteration_statement : WHILE marker1 LPAREN expression RPAREN marker1 statement """
+        p[0] = c_ast.While(p[4], p[7], self._coord(p.lineno(1)))
 
     def p_iteration_statement_2(self, p):
-        """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
-        p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
+        """ iteration_statement : DO marker1 statement WHILE marker1 LPAREN expression RPAREN SEMI """
+        p[0] = c_ast.DoWhile(p[7], p[3], self._coord(p.lineno(1)))
 
     def p_iteration_statement_3(self, p):
-        """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
+        """ iteration_statement : FOR LPAREN expression_opt SEMI marker1 expression_opt SEMI marker1 expression_opt RPAREN marker1 statement """
         p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
 
     def p_iteration_statement_4(self, p):
@@ -1658,20 +1681,20 @@ class CParser(PLYParser):
                                     | unary_expression assignment_operator assignment_expression
         """
         if len(p) == 2:
-            print " --------------------------- conditional expression" 
+            printDebug(" --------------------------- conditional expression")
             p[0] = p[1]
         else:
-            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
+            printDebug("######################Obtained Values for "+str((p[2],p[1],p[3])))
             p1_type = self._get_type(p[1])
             p3_type = self._get_type(p[3])
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
+            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
             (bin_type, type_cast1, type_cast3) = bin_operator(p[2], p1_type, p3_type)
 
             if bin_type == 'error':
                 self._parse_error("could not assign type" + type_cast3 +" to " + type_cast1 + " using operator " + str(p[2]), p[1].coord)
                 bin_type = c_ast.IdentifierType(['int'])
             
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
 
             if type_cast3:
                 p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
@@ -1734,13 +1757,13 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
+            printDebug("######################Obtained Values for "+str((p[2],p[1],p[3])))
             p1_type = self._get_type(p[1])
             p3_type = self._get_type(p[3])
 
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
+            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
             (bin_type, type_cast1, type_cast3) = bin_operator(p[2],p1_type,p3_type)
-            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
             
             if bin_type == 'error':
                 self._parse_error("wrong arguements " + type_cast1 +" and " + type_cast3 + " passed to binary operator " + str(p[2]), p[1].coord)
@@ -1771,25 +1794,25 @@ class CParser(PLYParser):
         """ unary_expression    : PLUSPLUS unary_expression
                                 | MINUSMINUS unary_expression
         """
-        print("######################Obtained Values for "+str((p[1],p[2])))
+        printDebug("######################Obtained Values for "+str((p[1],p[2])))
         p2_type = self._get_type(p[2])
-        print("######################Obtained Values for "+str(p2_type))
+        printDebug("######################Obtained Values for "+str(p2_type))
 
         t = uni_operator(p[1], p2_type)
         if t == 'error':
             self._parse_error("invalid arguements for unary operator" + str(p[1]), p[2].coord)
             t=c_ast.IdentifierType(['int'])
         p[0] = c_ast.UnaryOp(p[1], p[2], t, p[2].coord)
-        print("######################Obtained Values for "+str(p[0].type))
+        printDebug("######################Obtained Values for "+str(p[0].type))
 
     def p_unary_expression_3(self, p):
         """ unary_expression    : unary_operator cast_expression
         """
-        print("######################Obtained Values for "+str((p[1],p[2])))
+        printDebug("######################Obtained Values for "+str((p[1],p[2])))
         p2_type = self._get_type(p[2])
-        print("######################Obtained Values for "+str(p2_type))
+        printDebug("######################Obtained Values for "+str(p2_type))
         p[0] = c_ast.UnaryOp(p[1], p[2], uni_operator(p[1], p2_type), p[2].coord)
-        print("######################Obtained Values for "+str(p[0].type))
+        printDebug("######################Obtained Values for "+str(p[0].type))
 
 
 
@@ -1819,16 +1842,16 @@ class CParser(PLYParser):
 
     def p_postfix_expression_2(self, p):
         """ postfix_expression  : postfix_expression LBRACKET expression RBRACKET """
-        print("IN POSTFIX")
-        print("######################Obtained Values for "+str((p[1],p[3])))
+        printDebug("IN POSTFIX")
+        printDebug("######################Obtained Values for "+str((p[1],p[3])))
         p1_type = self._get_type(p[1])
-        print("######################Obtained Values for "+str(p1_type))
+        printDebug("######################Obtained Values for "+str(p1_type))
         t = uni_operator('*', p1_type)
         if t == 'error':
             self._parse_error(" Unary operation not supported on this expression",p[1].coord)
         else:
             p[0] = c_ast.ArrayRef(p[1], p[3], t, p[1].coord)
-        print("######################Obtained Values for "+str(p[0].type))
+        printDebug("######################Obtained Values for "+str(p[0].type))
     
     def p_postfix_expression_3(self, p):
         """ postfix_expression  : postfix_expression LPAREN argument_expression_list RPAREN
@@ -1838,33 +1861,33 @@ class CParser(PLYParser):
         # entry = lookup_GST(p[1])
         function_decl = self.CST.lookupFT(p[1].name)[1]
         function_type = function_decl.type.type
-        print("Function Type is {}".format(function_type))
-        print("##################################### In Function call")
+        printDebug("Function Type is {}".format(function_type))
+        printDebug("##################################### In Function call")
         if isinstance(p[1], c_ast.ID):
             func_decl = self.CST.lookupFT(p[1].name)
-            print "func_decl " + str(func_decl)
-            print "func_use  " + str(p[3])
+            printDebug("func_decl " + str(func_decl))
+            printDebug("func_use  " + str(p[3]))
             dec_list = func_decl[1].args.params
             use_list = p[3].type
             new_list = []
 
-            print "Function Decl_List " + str(dec_list)
-            print "Function Use_List " + str(use_list)
+            printDebug("Function Decl_List " + str(dec_list))
+            printDebug("Function Use_List " + str(use_list))
             explist = c_ast.ExprList([],[], p[3].coord)
 
             error_free = True
             if len(dec_list) == len(use_list):
                 for d,u in zip(dec_list, use_list):
 
-                    print("Element of dec_list")
-                    print(d)
-                    print("Element of use_list")
-                    print(u)
+                    printDebug("Element of dec_list")
+                    printDebug(d)
+                    printDebug("Element of use_list")
+                    printDebug(u)
                     t = self._get_type(u).type
-                    print("Function List Decl Type: "+str(self._get_type(d).type[-1]))
-                    print("Argument List Decl Type: "+str(t[-1]))
+                    printDebug("Function List Decl Type: "+str(self._get_type(d).type[-1]))
+                    printDebug("Argument List Decl Type: "+str(t[-1]))
                     if self._get_type(d).type[-1] != t[-1]:
-                        print("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                        printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
                         # Check for type casting, if not allowed set error_free = False
                         # error_free = False
                         # self._parse_error("type of u is " + str(t),p[1].coord)
@@ -1877,7 +1900,7 @@ class CParser(PLYParser):
                 if (error_free):
                     p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None, function_type,  p[1].coord)
 
-                #     print("InValid Function Call")
+                #     printDebug("InValid Function Call")
             else:
                 self._parse_error("[Error]: Expected " + str(len(dec_list)) + " number of arguments in function call but found " + str(len(use_list)), p[1].coord )
                 p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
@@ -1900,15 +1923,15 @@ class CParser(PLYParser):
         """ postfix_expression  : postfix_expression PLUSPLUS
                                 | postfix_expression MINUSMINUS
         """
-        print("######################Obtained Values for "+str((p[2],p[1])))
+        printDebug("######################Obtained Values for "+str((p[2],p[1])))
         p1_type = self._get_type(p[1])
-        print("######################Obtained Values for "+str(p1_type))
+        printDebug("######################Obtained Values for "+str(p1_type))
         t = uni_operator(p[2], p1_type)
         if t == 'error':
             self._parse_error(" Unary operation not supported on this expression",p[1].coord)
             t = c_ast.IdentifierType(['int'])
         p[0] = c_ast.UnaryOp('p' + p[2], p[1], t, p[1].coord)
-        print("######################Obtained Values for "+str(p[0].type))
+        printDebug("######################Obtained Values for "+str(p[0].type))
 
 #[TODO]
     def p_postfix_expression_6(self, p):
