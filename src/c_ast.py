@@ -19,7 +19,7 @@
 import sys
 from parse_tree import *
 from symbol_table import *
-from code_gen import *
+#  from code_gen import *
 import re
 
 # TODO In this file 
@@ -958,7 +958,7 @@ class Pragma(Node):
     attr_names = ('string', )
 
 
-class TAC(Object):
+class TAC():
     def __init__(self, refer, data):
         self.refer = refer
         self.data = data
@@ -1037,6 +1037,15 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
         # Assignment of logical operators is not handled
+    elif op == "||":
+        temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+        code_list.append(('||', temp, var_tuple[1], var_tuple[2]))
+
+    elif op == "&&":
+        temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+        code_list.append(('&&', temp, var_tuple[1], var_tuple[2]))
 
     elif key == "Cast":
         assert len(var_tuple) == 3
@@ -1116,8 +1125,8 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
         elif op == "p++":
-            temp1 = CST.provideTemp(var_tuple[0])
-            temp2 = CST.provideTemp(var_tuple[0])
+            temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            temp2 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
             code_list.append(("=", temp2, var_tuple[1], None ))
             code_list.append(("+", temp1, var_tuple[1], 1 ))
             temp = temp2
@@ -1131,8 +1140,8 @@ def emit(key, op, var_tuple):
             code_list.append(("=", var_tuple[1], temp1, None))
 
         elif op == "p--":
-            temp1 = CST.provideTemp(var_tuple[0])
-            temp2 = CST.provideTemp(var_tuple[0])
+            temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            temp2 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
             code_list.append(("=", temp2, var_tuple[1], None ))
             code_list.append(("-", temp1, var_tuple[1], 1 ))
             temp = temp2           
@@ -1144,33 +1153,55 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
             
             code_list.append(("=", var_tuple[1], temp1, None))
-
+    # [TODO] might be error prone
     elif key == "Assignment":
         print("[Assignment]IN Assignemnt")
         if op == "=":
             temp = var_tuple[2]
             code_list.append(("=", var_tuple[1], temp, None))
+
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
+            
         else:
             op_equal = op[-1]
             op_exp = op[:-1]
-            temp1 = CST.provideTemp(var_tuple[0])
+
+            temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
             code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
             code_list.append((op_equal, var_tuple[1], temp1))
             temp = temp1 
+            
+            temp.addToTruelist(getNextInstr())
+            code_list.append(('if', temp, None, None))
+
+            temp.addToFalselist(getNextInstr())
+            code_list.append(('goto', None, None, None))
 
     elif key == "ArrayRef":
         print("In Array Ref")
-        temp1 = CST.provideTemp(c_ast.IdentifierType(['int']))
+        temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         type = var_tuple[1][2].getElementAtIndex(var_tuple[1][1])[1]
         size = getSize(var_tuple[0])
         code_list.append(("*", temp1, var_tuple[2], size))
         
-        temp2 = CST.provideTemp(type)
+        temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("+", temp2, temp1, var_tuple[1]))
 
         temp3 = CST.provideTemp(var_tuple[0])
         code_list.append(("deref", temp3, temp2, None))
         temp = temp3
+
+        temp.addToTruelist(getNextInstr())
+        code_list.append(('if', temp, None, None))
+
+        temp.addToFalselist(getNextInstr())
+        code_list.append(('goto', None, None, None))
+
     elif key == "FuncCall":
         print("[emit]FuncCall")
         temp1 = CST.provideTemp(var_tuple[0])
@@ -1179,9 +1210,16 @@ def emit(key, op, var_tuple):
             code_list.append(('push', None, var.refer, None))
         #[TODO] Check if the length of function list should be passed or not
         code_list.append(('call',temp1, var_tuple[1],len(var_tuple[2])))
-
+        
         #[TODO] Add code for activation records here
         temp = temp1
+        
+        temp.addToTruelist(getNextInstr())
+        code_list.append(('if', temp, None, None))
+
+        temp.addToFalselist(getNextInstr())
+        code_list.append(('goto', None, None, None))
+
     elif key == "FuncDef":
         code_list.append(("begin", None, var_tuple))
         temp = None
@@ -1216,4 +1254,11 @@ def getNextInstr():
     return len(code_list)
 
 #         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
+
+def backpatch(c_list, index):
+    for i in c_list:
+        if code_list[i][0] == 'if' or code_list[i][0]=='goto':
+            code_list[i][-1] = index
+        else:
+            print("[backpatch]We are in serious trouble")
 

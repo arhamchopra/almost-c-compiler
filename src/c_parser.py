@@ -21,7 +21,7 @@ from ast_transforms import fix_switch_cases
 from parse_tree import *
 from symbol_table import CST, GST, getNewST, popST
 from type_check import *
-from code_gen import PrintCode, getNextInstr, emit
+#  from code_gen import PrintCode, getNextInstr, emit
 
 user_debug = False 
     
