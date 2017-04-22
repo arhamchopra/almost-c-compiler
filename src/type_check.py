@@ -92,7 +92,7 @@ def valid_sub(ptr):
 		return  True
 
 
-def bin_operator(op,left, right):
+def bin_operator(op, left, right):
 	printDebug("Starting Bin_operator")
 	typel = get_type(left)
 	printDebug("typel " + str(typel))

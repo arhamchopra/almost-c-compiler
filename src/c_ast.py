@@ -783,7 +783,7 @@ class PtrDecl(Node):
     attr_names = ('quals', )
 
 class Return(Node):
-    __slots__ = ('expr', 'coord', '__weakref__')
+    __slots__ = ('expr', 'coord', 'refer', '__weakref__')
     def __init__(self, expr, coord=None):
         self.expr = expr
         self.coord = coord
@@ -1062,16 +1062,16 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
         # Assignment of logical operators is not handled
-    elif op == "||":
-        temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+        elif op == "||":
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
-        code_list.append(('||', temp, var_tuple[1], var_tuple[2]))
+            code_list.append(('||', temp, var_tuple[1], var_tuple[2]))
 
-    elif op == "&&":
+        elif op == "&&":
 
-        temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
-        code_list.append(('&&', temp, var_tuple[1], var_tuple[2]))
+            code_list.append(('&&', temp, var_tuple[1], var_tuple[2]))
 
     elif key == "Cast":
         #  assert len(var_tuple) == 3
@@ -1268,7 +1268,7 @@ def makeNewData():
 
 
 def PrintCode():
-    print("We are now printing the 3AC Code ------------------------------------------------")
+    print("We are now printing the 3AC Code .........") 
     for line in range(len(code_list)):
         #  printDebug("[PrintCode]"+str(code_list[line]))
         if ( code_list[line][0][:2] =='if' or code_list[line][0]=='goto' ) and not code_list[line][-1]:
@@ -1303,8 +1303,10 @@ def getNextInstr():
 #         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
 
 def backpatch(c_list, index):
+    printDebug("[backpatch]In backpatch")
     for i in c_list:
         if code_list[i][0][:2] == 'if' or code_list[i][0] == 'goto':
+            printDebug(i)
             l = list(code_list[i])
             l[-1] = index
             code_list[i] = tuple(l) 

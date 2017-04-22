@@ -226,6 +226,8 @@ class CParser(PLYParser):
         else:
             entry.type.stpointer = e
 
+        return e
+
 
         
 
@@ -521,6 +523,7 @@ class CParser(PLYParser):
                 del spec['type'][-1]
 
         for decl in decls:
+            ptr = ''
             assert decl['decl'] is not None
             if is_typedef:
                 declaration = c_ast.Typedef(
@@ -572,9 +575,13 @@ class CParser(PLYParser):
                     self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
                 else:
                     printDebug("fixed_decl.type"+str(fixed_decl.type))
-                    self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord, fixed_decl)
+                    ptr = self._add_identifier(fixed_decl.name, fixed_decl.type, fixed_decl.coord, fixed_decl)
 
             declarations.append(fixed_decl)
+
+            if fixed_decl.init:
+                printDebug("[_build_declarations]REFER : "+str(ptr))
+                c_ast.emit('Assignment', '=', (fixed_decl.type, c_ast.TAC(ptr, c_ast.makeNewData()), fixed_decl.init.refer))
 
         return declarations
 
@@ -765,7 +772,7 @@ class CParser(PLYParser):
                         | iteration_statement
                         | jump_statement
         """
-        print("[statement]In Statement")
+        printDebug("[statement]In Statement")
         p[0] = p[1]
 
     # In C, declarations can come several in a line:
@@ -1561,7 +1568,7 @@ class CParser(PLYParser):
         """ marker1 : """
         p[0] = {'quad':''}
         p[0]['quad'] = c_ast.getNextInstr()
-        print("[maker1]We are in Marker1 YAYAYAYAY")
+        printDebug("[maker1]We are in Marker1 YAYAYAYAY")
 
     def p_marker2(self, p):
         """ marker2 : """
@@ -1579,8 +1586,8 @@ class CParser(PLYParser):
         # Empty block items (plain ';') produce [None], so ignore them
         p[0] = p[1] if (len(p) == 2 or p[3] == [None]) else p[1] + p[3]
         if len(p) == 4:
-            print("[block_item_list]BREAKLISTCHILD "+str(p[1][-1].refer.data['breaklist']))
-            print("[block_item_list]NEXTLISTCHILD "+str(p[1][-1].refer.data['nextlist']))
+            printDebug("[block_item_list]BREAKLISTCHILD "+str(p[1][-1].refer.data['breaklist']))
+            printDebug("[block_item_list]NEXTLISTCHILD "+str(p[1][-1].refer.data['nextlist']))
 
             c_ast.backpatch(p[1][-1].refer.data["nextlist"], p[2]['quad'])
             p[0][-1].refer.data["nextlist"] = p[3][-1].refer.data["nextlist"]
@@ -1589,8 +1596,8 @@ class CParser(PLYParser):
 
             p[0][-1].refer.data["contlist"] = p[1][-1].refer.data["contlist"] + p[3][-1].refer.data["contlist"]
 
-            print("[block_item_list]BREAKLIST "+str(p[0][-1].refer.data['breaklist']))
-            print("[block_item_list]NEXTLIST "+str(p[0][-1].refer.data['nextlist']))
+            printDebug("[block_item_list]BREAKLIST "+str(p[0][-1].refer.data['breaklist']))
+            printDebug("[block_item_list]NEXTLIST "+str(p[0][-1].refer.data['nextlist']))
         else :
             p[0][-1].refer.data["breaklist"] = p[1][-1].refer.data["breaklist"]
             p[0][-1].refer.data["contlist"] = p[1][-1].refer.data["contlist"]
@@ -1598,12 +1605,14 @@ class CParser(PLYParser):
 
 
     def p_compound_statement_1(self, p):
-        """ compound_statement : brace_open block_item_list_opt brace_close """
-        print("[compound_statement]In Compound Statement")
+        """ compound_statement : brace_open block_item_list_opt marker1 brace_close """
+        printDebug("[compound_statement]In Compound Statement")
         p[0] = c_ast.Compound(
             block_items=p[2],
             coord=self._coord(p.lineno(1)))
-        p[2][-1].refer.transferData(p[0].refer)
+        if p[2]:
+            p[2][-1].refer.transferData(p[0].refer)
+            c_ast.backpatch(p[0].refer.data["nextlist"], p[3]['quad'])
 
     def p_labeled_statement_1(self, p):
         """ labeled_statement : ID COLON statement """
@@ -1623,6 +1632,7 @@ class CParser(PLYParser):
         c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
         p[0].refer.data["breaklist"] = p[6].refer.data["breaklist"]
         p[0].refer.data["contlist"] = p[6].refer.data["contlist"]
+        p[0].refer.data["nextlist"] = p[6].refer.data["nextlist"] + p[3].refer.data["falselist"]
 
     def p_selection_statement_2(self, p):
         """ selection_statement : IF LPAREN expression RPAREN marker1 statement marker2 ELSE marker1 statement """
@@ -1631,6 +1641,7 @@ class CParser(PLYParser):
         c_ast.backpatch(p[3].refer.data["falselist"], p[9]['quad'])
         p[0].refer.data["breaklist"] = p[10].refer.data["breaklist"] + p[6].refer.data["breaklist"]
         p[0].refer.data["contlist"] = p[10].refer.data["contlist"] + p[6].refer.data["contlist"]
+        p[0].refer.data["nextlist"] = p[6].refer.data["nextlist"] + p[10].refer.data["nextlist"]
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
@@ -1644,7 +1655,7 @@ class CParser(PLYParser):
         c_ast.backpatch(p[7].refer.data["nextlist"], p[2]['quad'])
         c_ast.backpatch(p[4].refer.data["truelist"], p[6]['quad'])
         c_ast.backpatch(p[4].refer.data["contlist"], p[6]['quad'])
-        p[0].refer.data["nextlist"] = p[4].refer.data["falselist"] + p[7]["breaklist"]
+        p[0].refer.data["nextlist"] = p[4].refer.data["falselist"] + p[7].refer.data["breaklist"]
 
         c_ast.emit("JMP",'goto', p[2]['quad'])
 
@@ -1667,7 +1678,7 @@ class CParser(PLYParser):
         c_ast.backpatch(p[6].refer.data["truelist"], p[12]['quad'])
         p[0].refer.data["nextlist"] = p[6].refer.data["falselist"] + p[13].refer.data["breaklist"]
 
-        print("[iteration_statement]"+str(p[13].refer.data["breaklist"]))
+        printDebug("[iteration_statement]"+str(p[13].refer.data["breaklist"]))
 
         c_ast.emit('JMP', 'goto', p[8]['quad'])
 
@@ -1682,7 +1693,7 @@ class CParser(PLYParser):
 
     def p_jump_statement_2(self, p):
         """ jump_statement  : BREAK SEMI """
-        print("[Break]In Break")
+        printDebug("[Break]In Break")
         p[0] = c_ast.Break(self._coord(p.lineno(1)))
         p[0].refer.addToBreaklist(c_ast.getNextInstr())
         c_ast.emit('JMP', 'goto', None)
@@ -1815,13 +1826,13 @@ class CParser(PLYParser):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p)==4:
-            printDebug("######################Obtained Values for "+str((p[2],p[1],p[3])))
+            print("######################Obtained Values for "+str((p[2],p[1],p[3])))
             p1_type = self._get_type(p[1])
             p3_type = self._get_type(p[3])
 
-            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type)))
             (bin_type, type_cast1, type_cast3) = bin_operator(p[2],p1_type,p3_type)
-            printDebug("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
+            print("######################Obtained Values for "+str((p[2],p1_type,p3_type))+" as "+ str((bin_type, type_cast1, type_cast3)))
             
             if bin_type == 'error':
                 self._parse_error("wrong arguements " + type_cast1 +" and " + type_cast3 + " passed to binary operator " + str(p[2]), p[1].coord)
@@ -2167,7 +2178,7 @@ class CParser(PLYParser):
             print("Making the parse tree wait for a minute :)")
             t.show(nodenames = True)
             saveGraph(fname)
-            print("PRINTING     ............................")
+            print("PRINTING ............................")
             self.CST.Print()
             self.CST.PrintFT()
             c_ast.PrintCode()
