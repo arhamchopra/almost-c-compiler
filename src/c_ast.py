@@ -292,9 +292,11 @@ class BinaryOp(Node):
     attr_names = ('op', )
 
 class Break(Node):
-    __slots__ = ('coord', '__weakref__')
+    __slots__ = ('coord', 'refer', '__weakref__')
     def __init__(self, coord=None):
         self.coord = coord
+        self.refer = TAC((0,0,0), makeNewData()) 
+
 
     def children(self):
         return ()
@@ -387,9 +389,10 @@ class Constant(Node):
     attr_names = ('type', 'value', )
 
 class Continue(Node):
-    __slots__ = ('coord', '__weakref__')
+    __slots__ = ('coord', 'refer', '__weakref__')
     def __init__(self, coord=None):
         self.coord = coord
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         return ()
@@ -982,6 +985,10 @@ class TAC():
     
     def addToContlist(self, id):
         self.data["contlist"].append(id)
+
+    def transferData(self, TAC_object):
+        TAC_object.data = self.data
+
 
     def __str__(self):
         if type(self.refer) == tuple:

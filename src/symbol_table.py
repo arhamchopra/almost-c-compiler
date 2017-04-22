@@ -4,7 +4,7 @@
 
 import c_ast
 
-user_debug = True 
+user_debug = False 
     
 def printDebug(s):
     if user_debug:
