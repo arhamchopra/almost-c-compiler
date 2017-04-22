@@ -7,11 +7,11 @@ For Generating the 3 AC Codes
 
     Initialized Declarations
     Activation Records
-    Expressions Testing
     Control Flow Expressions
-        Separate the bin op into different parts based on true list and false list
-        add assignment expressions like *= += ... --- Done
-        
+        Break and Continue Statements
+        Handling the switch case
+    Expressions Testing
+
 Done:
     Function Declarations
     Function Calls
@@ -21,6 +21,7 @@ Done:
 For AST Generation
 
     Struct Handling 
+    Switch Case
     TypeDef
     Enum
     Ellipsis

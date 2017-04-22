@@ -418,6 +418,9 @@ def uni_operator(op, key):
 	elif op == '&':
 		t = c_ast.PtrDecl([], key)
 		return t
+        elif op == '-' or op == '+':
+                return key
+
 	#     # ->
 	# elif op == '->':
 

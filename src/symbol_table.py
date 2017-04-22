@@ -4,15 +4,15 @@
 
 import c_ast
 
-user_debug = False 
+user_debug = True 
     
 def printDebug(s):
     if user_debug:
         print(s)
 
 def getSize(type):
-    printDebug("IN GET SIZE")
-    printDebug(type)
+    printDebug("[getSize]IN GET SIZE")
+    printDebug("[getSize]"+str(type))
     if isinstance(type, c_ast.TypeDecl):
         return getSize(type.type)
     if isinstance(type, c_ast.IdentifierType):

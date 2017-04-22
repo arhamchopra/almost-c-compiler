@@ -765,6 +765,7 @@ class CParser(PLYParser):
                         | iteration_statement
                         | jump_statement
         """
+        print("[statement]In Statement")
         p[0] = p[1]
 
     # In C, declarations can come several in a line:
@@ -1560,25 +1561,32 @@ class CParser(PLYParser):
         """ marker1 : """
         p[0] = {'quad':''}
         p[0]['quad'] = c_ast.getNextInstr()
+        print("[maker1]We are in Marker1 YAYAYAYAY")
 
     def p_marker2(self, p):
         """ marker2 : """
-        p[0] = {}
-        p[0].nextlist = [getNextInstr()]
-        c_ast.emit('goto', None, None, None)
+        p[0] = {'nextlist':''}
+        p[0]['nextlist'] = [c_ast.getNextInstr()]
+        c_ast.emit('JMP', 'goto', None)
 
 
     # Since we made block_item a list, this just combines lists
     #
     def p_block_item_list(self, p):
         """ block_item_list : block_item
-                            | block_item_list block_item
+                            | block_item_list marker1 block_item
         """
         # Empty block items (plain ';') produce [None], so ignore them
-        p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
+        p[0] = p[1] if (len(p) == 2 or p[3] == [None]) else p[1] + p[3]
+        if len(p) == 4:
+            c_ast.backpatch(p[1][-1].refer.data["nextlist"], p[2]['quad'])
+            p[0][-1].refer.data["nextlist"] = p[3][-1].refer.data["nextlist"]
+        else :
+            c_ast.backpatch(p[1][-1].refer.data['nextlist'], 10101010)
 
     def p_compound_statement_1(self, p):
         """ compound_statement : brace_open block_item_list_opt brace_close """
+        print("[compound_statement]In Compound Statement")
         p[0] = c_ast.Compound(
             block_items=p[2],
             coord=self._coord(p.lineno(1)))
@@ -1600,11 +1608,12 @@ class CParser(PLYParser):
         p[0] = c_ast.If(p[3], p[6], None, self._coord(p.lineno(1)))
         c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
 
+
     def p_selection_statement_2(self, p):
         """ selection_statement : IF LPAREN expression RPAREN marker1 statement marker2 ELSE marker1 statement """
         p[0] = c_ast.If(p[3], p[6], p[10], self._coord(p.lineno(1)))
         c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
-        c_ast.backpatch(p[3].refer.data["falselist"], p[7]['quad'])
+        c_ast.backpatch(p[3].refer.data["falselist"], p[9]['quad'])
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
@@ -1615,13 +1624,33 @@ class CParser(PLYParser):
         """ iteration_statement : WHILE marker1 LPAREN expression RPAREN marker1 statement """
         p[0] = c_ast.While(p[4], p[7], self._coord(p.lineno(1)))
 
+        c_ast.backpatch(p[7].refer.data["nextlist"], p[2]['quad'])
+        c_ast.backpatch(p[4].refer.data["truelist"], p[6]['quad'])
+        p[0].refer.data["nextlist"] = p[4].refer.data["falselist"]
+
+        c_ast.emit("JMP",'goto', p[2]['quad'])
+
     def p_iteration_statement_2(self, p):
         """ iteration_statement : DO marker1 statement WHILE marker1 LPAREN expression RPAREN SEMI """
         p[0] = c_ast.DoWhile(p[7], p[3], self._coord(p.lineno(1)))
 
+        c_ast.backpatch(p[7].refer.data["truelist"], p[2]['quad'])
+        c_ast.backpatch(p[3].refer.data["nextlist"], p[5]['quad'])
+        p[0].refer.data["nextlist"] = p[7].refer.data["falselist"]
+
     def p_iteration_statement_3(self, p):
-        """ iteration_statement : FOR LPAREN expression_opt SEMI marker1 expression_opt SEMI marker1 expression_opt RPAREN marker1 statement """
-        p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
+        """ iteration_statement : FOR LPAREN expression_opt SEMI marker1 expression_opt SEMI marker1 expression_opt marker2 RPAREN marker1 statement """
+        p[0] = c_ast.For(p[3], p[6], p[9], p[13], self._coord(p.lineno(1)))
+
+        c_ast.backpatch(p[10]['nextlist'], p[5]['quad'])
+        c_ast.backpatch(p[13].refer.data['nextlist'], p[8]['quad'])
+        c_ast.backpatch(p[6].refer.data["truelist"], p[12]['quad'])
+        p[0].refer.data["nextlist"] = p[6].refer.data["falselist"]
+
+        c_ast.emit('JMP', 'goto', p[8]['quad'])
+
+        
+        
 
     def p_iteration_statement_4(self, p):
         """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
@@ -1795,18 +1824,18 @@ class CParser(PLYParser):
 
             if type_cast1:
                 p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
-            if type_cast3:
+            if type_cast4:
                 p[4] = c_ast.Cast(type_cast4, p[4], type_cast4)
             p[0] = c_ast.BinaryOp(p[2], p[1], p[4], bin_type, p[1].coord)
 
             if p[2] == '||':
                 c_ast.backpatch(p[1].refer.data["falselist"], p[3]['quad'])
                 p[0].refer.data["truelist"] = p[1].refer.data["truelist"] + p[4].refer.data["truelist"]
-                p[0].refer.data["falselist"] = p[4].refer.data["falselits"]
+                p[0].refer.data["falselist"] = p[4].refer.data["falselist"]
                 
             elif p[2] == '&&':
                 c_ast.backpatch(p[1].refer.data["truelist"], p[3]['quad'])
-                p[0].refer.data["truelist"] = p[4].refer.data["truelits"]
+                p[0].refer.data["truelist"] = p[4].refer.data["truelist"]
                 p[0].refer.data["falselist"] = p[1].refer.data["falselist"] + p[4].refer.data["falselist"]
 
     def p_cast_expression_1(self, p):

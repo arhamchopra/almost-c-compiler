@@ -29,7 +29,7 @@ code_list = []
 # In if statement we are checking whether the tmp has value non zero if so then we take goto else if tmp is 0 we take else
 
 
-user_debug = True 
+user_debug = False 
     
 def printDebug(s):
     if user_debug:
@@ -341,11 +341,12 @@ class Cast(Node):
     attr_names = ()
 
 class Compound(Node):
-    __slots__ = ('s', 'block_items', 'coord', '__weakref__')
+    __slots__ = ('s', 'block_items', 'refer', 'coord', '__weakref__')
     def __init__(self, block_items, coord=None):
         self.block_items = block_items
         self.coord = coord
         self.s = "compound"
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -396,7 +397,7 @@ class Continue(Node):
     attr_names = ()
 
 class Decl(Node):
-    __slots__ = ('s', 'stpointer', 'name', 'quals', 'storage', 'funcspec', 'type', 'init', 'bitsize', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'name', 'quals', 'storage', 'funcspec', 'type', 'init', 'bitsize', 'refer', 'coord', '__weakref__')
     def __init__(self, name, quals, storage, funcspec, type, init, bitsize, coord=None):
         self.name = name
         self.quals = quals
@@ -408,6 +409,7 @@ class Decl(Node):
         self.coord = coord
         self.s = "NAME" 
         self.stpointer = None
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -448,12 +450,13 @@ class Default(Node):
     attr_names = ()
 
 class DoWhile(Node):
-    __slots__ = ('s', 'cond', 'stmt', 'coord', '__weakref__')
+    __slots__ = ('s', 'cond', 'stmt', 'refer', 'coord', '__weakref__')
     def __init__(self, cond, stmt, coord=None):
         self.cond = cond
         self.stmt = stmt
         self.coord = coord
         self.s = 'dowhile'
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -475,9 +478,10 @@ class EllipsisParam(Node):
     attr_names = ()
 
 class EmptyStatement(Node):
-    __slots__ = ('coord', '__weakref__')
+    __slots__ = ('coord', 'refer', '__weakref__')
     def __init__(self, coord=None):
         self.coord = coord
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         return ()
@@ -556,7 +560,7 @@ class FileAST(Node):
     attr_names = ()
 
 class For(Node):
-    __slots__ = ('s', 'init', 'cond', 'next', 'stmt', 'coord', '__weakref__')
+    __slots__ = ('s', 'init', 'cond', 'next', 'stmt', 'refer', 'coord', '__weakref__')
     def __init__(self, init, cond, next, stmt, coord=None):
         self.init = init
         self.cond = cond
@@ -564,6 +568,7 @@ class For(Node):
         self.stmt = stmt
         self.coord = coord
         self.s = 'for'
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -682,13 +687,14 @@ class IdentifierType(Node):
     attr_names = ('names', )
 
 class If(Node):
-    __slots__ = ('s', 'cond', 'iftrue', 'iffalse', 'coord', '__weakref__')
+    __slots__ = ('s', 'cond', 'iftrue', 'iffalse', 'refer', 'coord', '__weakref__')
     def __init__(self, cond, iftrue, iffalse, coord=None):
         self.cond = cond
         self.iftrue = iftrue
         self.iffalse = iffalse
         self.coord = coord
         self.s = 'if'
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -778,6 +784,7 @@ class Return(Node):
     def __init__(self, expr, coord=None):
         self.expr = expr
         self.coord = coord
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -931,11 +938,12 @@ class Union(Node):
     attr_names = ('name', )
 
 class While(Node):
-    __slots__ = ('cond', 'stmt', 'coord', '__weakref__')
+    __slots__ = ('cond', 'stmt', 'coord', 'refer', '__weakref__')
     def __init__(self, cond, stmt, coord=None):
         self.cond = cond
         self.stmt = stmt
         self.coord = coord
+        self.refer = TAC((0,0,0), makeNewData())
 
     def children(self):
         nodelist = []
@@ -1053,6 +1061,7 @@ def emit(key, op, var_tuple):
         code_list.append(('||', temp, var_tuple[1], var_tuple[2]))
 
     elif op == "&&":
+
         temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
         code_list.append(('&&', temp, var_tuple[1], var_tuple[2]))
@@ -1202,7 +1211,7 @@ def emit(key, op, var_tuple):
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("+", temp2, temp1, var_tuple[1]))
 
-        temp3 = CST.provideTemp(var_tuple[0])
+        temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("deref", temp3, temp2, None))
         temp = temp3
 
@@ -1214,7 +1223,7 @@ def emit(key, op, var_tuple):
 
     elif key == "FuncCall":
         printDebug("[emit]FuncCall")
-        temp1 = CST.provideTemp(var_tuple[0])
+        temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         for var in var_tuple[2]:
             printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
@@ -1234,6 +1243,10 @@ def emit(key, op, var_tuple):
         code_list.append(("begin", None, var_tuple, None))
         temp = var_tuple 
 
+    elif key == "JMP":
+        code_list.append(("goto", None, None, var_tuple))
+        temp = None
+
     return temp
 
 def makeNewData():
@@ -1242,6 +1255,7 @@ def makeNewData():
             "falselist":[],
             "contlist":[],
             "breaklist":[],
+            "nextlist":[],
             }
     return data
 
@@ -1258,6 +1272,8 @@ def PrintCode():
             for i in range(len(code_list[line])):
                 if code_list[line][i] == None:
                     v.append(" ")
+                elif isinstance(code_list[line][i], IdentifierType):
+                    v.append(code_list[line][i].type)
                 else:
                     v.append(code_list[line][i])
             #  printDebug(v)
