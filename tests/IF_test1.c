@@ -1,9 +1,10 @@
 int main(){
-    if (1) {
-        int a;
+
+    int a;
+    if (a>1) {
         int b;
-        b = 20;
         a = b+1;
+        b = 20;
     }
     return 0;
 }

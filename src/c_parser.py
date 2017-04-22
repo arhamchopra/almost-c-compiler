@@ -754,6 +754,7 @@ class CParser(PLYParser):
         e = self.CST.addEntry(func_def[0],func_def[1],body_scope[4])
         self.CST.addToFT(func_def[0],func_def[1], "defined",body_scope[4], func_def[4])
         p[0].decl.type.stpointer = e
+        p[0].refer.refer = e
         printDebug("In the end of function_definition")
 
     def p_statement(self, p):
@@ -1557,14 +1558,14 @@ class CParser(PLYParser):
 
     def p_marker1(self, p):
         """ marker1 : """
-        p[0] = {}
-        p[0].quad = getNextInstr()
+        p[0] = {'quad':''}
+        p[0]['quad'] = c_ast.getNextInstr()
 
     def p_marker2(self, p):
         """ marker2 : """
         p[0] = {}
         p[0].nextlist = [getNextInstr()]
-        emit('JMP', 'goto', (None, 'Empty'))
+        c_ast.emit('goto', None, None, None)
 
 
     # Since we made block_item a list, this just combines lists
@@ -1597,10 +1598,13 @@ class CParser(PLYParser):
     def p_selection_statement_1(self, p):
         """ selection_statement : IF LPAREN expression RPAREN marker1 statement """
         p[0] = c_ast.If(p[3], p[6], None, self._coord(p.lineno(1)))
+        c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
 
     def p_selection_statement_2(self, p):
         """ selection_statement : IF LPAREN expression RPAREN marker1 statement marker2 ELSE marker1 statement """
         p[0] = c_ast.If(p[3], p[6], p[10], self._coord(p.lineno(1)))
+        c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
+        c_ast.backpatch(p[3].refer.data["falselist"], p[7]['quad'])
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
@@ -1751,12 +1755,12 @@ class CParser(PLYParser):
                                 | binary_expression AND binary_expression
                                 | binary_expression OR binary_expression
                                 | binary_expression XOR binary_expression
-                                | binary_expression LAND binary_expression
-                                | binary_expression LOR binary_expression
+                                | binary_expression LAND marker1 binary_expression
+                                | binary_expression LOR marker1 binary_expression
         """
         if len(p) == 2:
             p[0] = p[1]
-        else:
+        elif len(p)==4:
             printDebug("######################Obtained Values for "+str((p[2],p[1],p[3])))
             p1_type = self._get_type(p[1])
             p3_type = self._get_type(p[3])
@@ -1770,13 +1774,40 @@ class CParser(PLYParser):
                 # adderror("wrong arguements" + type_cast1 +" and" + type_cast3 + " passed to binary operator " + p[2] + "at line no" + str(self.lexer.lineno))
     
                 type_cast1=c_ast.IdentifierType(['int'])
-                type_cast2=c_ast.IdentifierType(['int'])
+                type_cast3=c_ast.IdentifierType(['int'])
 
             if type_cast1:
                 p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
             if type_cast3:
                 p[3] = c_ast.Cast(type_cast3, p[3], type_cast3)
             p[0] = c_ast.BinaryOp(p[2], p[1], p[3], bin_type, p[1].coord)
+
+        elif len(p)==5:
+            p1_type = self._get_type(p[1])
+            p4_type = self._get_type(p[4])
+            (bin_type, type_cast1, type_cast4) = bin_operator(p[2],p1_type,p4_type)
+            if bin_type == 'error':
+                self._parse_error("wrong arguements " + type_cast1 +" and " + type_cast4 + " passed to binary operator " + str(p[2]), p[1].coord)
+                # adderror("wrong arguements" + type_cast1 +" and" + type_cast3 + " passed to binary operator " + p[2] + "at line no" + str(self.lexer.lineno))
+    
+                type_cast1=c_ast.IdentifierType(['int'])
+                type_cast4=c_ast.IdentifierType(['int'])
+
+            if type_cast1:
+                p[1] = c_ast.Cast(type_cast1, p[1], type_cast1)
+            if type_cast3:
+                p[4] = c_ast.Cast(type_cast4, p[4], type_cast4)
+            p[0] = c_ast.BinaryOp(p[2], p[1], p[4], bin_type, p[1].coord)
+
+            if p[2] == '||':
+                c_ast.backpatch(p[1].refer.data["falselist"], p[3]['quad'])
+                p[0].refer.data["truelist"] = p[1].refer.data["truelist"] + p[4].refer.data["truelist"]
+                p[0].refer.data["falselist"] = p[4].refer.data["falselits"]
+                
+            elif p[2] == '&&':
+                c_ast.backpatch(p[1].refer.data["truelist"], p[3]['quad'])
+                p[0].refer.data["truelist"] = p[4].refer.data["truelits"]
+                p[0].refer.data["falselist"] = p[1].refer.data["falselist"] + p[4].refer.data["falselist"]
 
     def p_cast_expression_1(self, p):
         """ cast_expression : unary_expression """
@@ -2085,7 +2116,7 @@ class CParser(PLYParser):
             print("PRINTING     ............................")
             self.CST.Print()
             self.CST.PrintFT()
-            PrintCode()
+            c_ast.PrintCode()
         else:
             for msg in getErrorMsg():
                 print(msg)

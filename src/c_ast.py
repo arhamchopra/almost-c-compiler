@@ -29,11 +29,11 @@ code_list = []
 # In if statement we are checking whether the tmp has value non zero if so then we take goto else if tmp is 0 we take else
 
 
-user_debug = False 
+user_debug = True 
     
 def printDebug(s):
     if user_debug:
-        printDebug(s)
+        print(s)
 
 def getType(v):
     if isinstance(v, Constant):
@@ -974,35 +974,43 @@ class TAC():
     
     def addToContlist(self, id):
         self.data["contlist"].append(id)
+
+    def __str__(self):
+        if type(self.refer) == tuple:
+            entry = getSTEntry(self.refer)
+            return str(entry[0])
+        else:
+            return str(self.refer)
+
         
 
 
 def emit(key, op, var_tuple):
-    print("[emit]In Emit")
-    print("[emit]"+str(key, op, var_tuple))
+    printDebug("[emit]In Emit")
+    printDebug("[emit]"+str((key, op, var_tuple)))
     CST = getCST()
     #  if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
-    #      print("HAGGA 1")
+    #      printDebug("HAGGA 1")
     #      temp = CST.provideTemp(var_tuple[0])
     #
     #  if not isinstance(var_tuple[1], tuple):
-    #      print("HAGGA HAGGA HAGGA HAGGAPA")
+    #      printDebug("HAGGA HAGGA HAGGA HAGGAPA")
     #      temp = CST.provideTemp(var_tuple[0])
         
-    #  print(CST.Print())
+    #  printDebug(CST.printDebug())
     if key == "BinaryOp":
-        assert len(var_tuple) == 3
+        #  assert len(var_tuple) == 3
         # Have to separate the operator based on the true list and false list
         # -,+,*,/,^,&,|,~,<<,>>,
         # [TODO]
         if re.match(r"\-|\+|\*|\/|\||\&|\^", op) or op == "<<" or op == ">>":
-            print("[emit]In BinaryOp"+op)
+            printDebug("[emit]In BinaryOp"+op)
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
             code_list.append((op, temp, var_tuple[1], var_tuple[2]))
 
             temp.addToTruelist(getNextInstr())
-            code_list.append(('if', temp, 'goto', None))
+            code_list.append(('if', temp, None, None))
 
             temp.addToFalselist(getNextInstr())
             code_list.append(('goto', None, None, None))
@@ -1023,11 +1031,13 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
         elif re.match(r"<=|>=|==|!=|<|>", op):
+            printDebug("[emit]In RelOp")
+            printDebug("[emit]"+str(var_tuple))
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
-            code_list.append(('if'+op, a, b, getNextInstr()+4))
+            code_list.append(('if'+op, var_tuple[1], var_tuple[2], getNextInstr()+3))
             code_list.append(('=', temp, 0, None))
-            code_list.append(('goto', getNextInstr()+2))
+            code_list.append(('goto', None, None, getNextInstr()+2))
             code_list.append(('=', temp, 1, None))
 
             temp.addToTruelist(getNextInstr())
@@ -1048,12 +1058,12 @@ def emit(key, op, var_tuple):
         code_list.append(('&&', temp, var_tuple[1], var_tuple[2]))
 
     elif key == "Cast":
-        assert len(var_tuple) == 3
+        #  assert len(var_tuple) == 3
         temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
         code_list.append(("Cast", temp, var_tuple[0], var_tuple[1]))
 
     elif key == "UnaryOp":
-        assert len(var_tuple) == 3
+        #  assert len(var_tuple) == 3
         if op == "&":
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
@@ -1086,7 +1096,7 @@ def emit(key, op, var_tuple):
             code_list.append(("~", temp, var_tuple[1], None))
 
             temp.addToTruelist(getNextInstr())
-            code_list.append(('if', temp, "goto", None))
+            code_list.append(('if', temp, None, None))
 
             temp.addToFalselist(getNextInstr())
             code_list.append(('goto', None, None, None))
@@ -1155,7 +1165,7 @@ def emit(key, op, var_tuple):
             code_list.append(("=", var_tuple[1], temp1, None))
     # [TODO] might be error prone
     elif key == "Assignment":
-        print("[Assignment]IN Assignemnt")
+        printDebug("[Assignment]IN Assignemnt")
         if op == "=":
             temp = var_tuple[2]
             code_list.append(("=", var_tuple[1], temp, None))
@@ -1183,7 +1193,7 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
     elif key == "ArrayRef":
-        print("In Array Ref")
+        printDebug("In Array Ref")
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         type = var_tuple[1][2].getElementAtIndex(var_tuple[1][1])[1]
         size = getSize(var_tuple[0])
@@ -1203,10 +1213,10 @@ def emit(key, op, var_tuple):
         code_list.append(('goto', None, None, None))
 
     elif key == "FuncCall":
-        print("[emit]FuncCall")
+        printDebug("[emit]FuncCall")
         temp1 = CST.provideTemp(var_tuple[0])
         for var in var_tuple[2]:
-            print("[emit]Pushing the tuple "+str(var))
+            printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
         #[TODO] Check if the length of function list should be passed or not
         code_list.append(('call',temp1, var_tuple[1],len(var_tuple[2])))
@@ -1221,8 +1231,8 @@ def emit(key, op, var_tuple):
         code_list.append(('goto', None, None, None))
 
     elif key == "FuncDef":
-        code_list.append(("begin", None, var_tuple))
-        temp = None
+        code_list.append(("begin", None, var_tuple, None))
+        temp = var_tuple 
 
     return temp
 
@@ -1238,11 +1248,25 @@ def makeNewData():
 
 def PrintCode():
     print("We are now printing the 3AC Code ------------------------------------------------")
-    for i in code_list:
-        print(i)
+    for line in range(len(code_list)):
+        #  printDebug("[PrintCode]"+str(code_list[line]))
+        if ( code_list[line][0][:2] =='if' or code_list[line][0]=='goto' ) and not code_list[line][-1]:
+            pass
+        else:
+            s = "Line:"+str(line)+"\t{0: >5}"+"\t{1: >5}"+"\t{2: >5}"+"\t{3: >5}"
+            v = []
+            for i in range(len(code_list[line])):
+                if code_list[line][i] == None:
+                    v.append(" ")
+                else:
+                    v.append(code_list[line][i])
+            #  printDebug(v)
+            #  print(v)
+            print(s.format(v[0],v[1],v[2],v[3]))
+
 
 def getReference(name):
-    print("In getReference")
+    printDebug("In getReference")
     CST = getCST()
     entry = CST.lookupFullScope(name)
     if(entry[-1] == "ST"):
@@ -1257,8 +1281,10 @@ def getNextInstr():
 
 def backpatch(c_list, index):
     for i in c_list:
-        if code_list[i][0] == 'if' or code_list[i][0]=='goto':
-            code_list[i][-1] = index
+        if code_list[i][0][:2] == 'if' or code_list[i][0] == 'goto':
+            l = list(code_list[i])
+            l[-1] = index
+            code_list[i] = tuple(l) 
         else:
-            print("[backpatch]We are in serious trouble")
+            printDebug("[backpatch]We are in serious trouble")
 

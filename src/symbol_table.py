@@ -92,7 +92,7 @@ class SymbolTable(object):
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
         printDebug("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
-        self.table['cur_scope'].append((lexeme, type, size, child, pointer))
+        self.table['cur_scope'].append((lexeme, type, offset, size, child, pointer))
         return pointer
 
     def addToFT(self, lexeme, type, status, child=None, p_list=None):
@@ -241,3 +241,10 @@ def popST():
 
 def getCST():
     return CST;
+
+def getGST():
+    return GST;
+
+def getSTEntry(refer):
+    ST = refer[2]
+    return ST.table["cur_scope"][refer[1]]
