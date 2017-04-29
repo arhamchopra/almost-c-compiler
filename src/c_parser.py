@@ -274,6 +274,9 @@ class CParser(PLYParser):
             # p1_type is now a TypeDecl object
             p1_type = p1_type.type
             # p1_type is now a IdentifierType object
+        elif isinstance(v, c_ast.StructRef):
+            p1_type = v.field_type
+            pass
         else:
             p1_type = None
         # self._parse_error(p1_type, None)
@@ -1015,6 +1018,9 @@ class CParser(PLYParser):
             name=p[2],
             decls=p[4],
             coord=self._coord(p.lineno(2)))
+        #  We have to pop the last entry since it will be added to ST by default using the left and r brace rules. Thus we pop it 
+        self.CST.addToStructT(p[2], p[4])
+        print(self.CST.popEntry())
 
     def p_struct_or_union(self, p):
         """ struct_or_union : STRUCT
@@ -1071,6 +1077,7 @@ class CParser(PLYParser):
 
         p[0] = decls
 
+    #  [TODO] We are not handling this
     def p_struct_declaration_2(self, p):
         """ struct_declaration : specifier_qualifier_list abstract_declarator SEMI
         """
@@ -1104,6 +1111,7 @@ class CParser(PLYParser):
         """
         p[0] = {'decl': p[1], 'bitsize': None}
 
+    #  [TODO]
     def p_struct_declarator_2(self, p):
         """ struct_declarator   : declarator COLON constant_expression
                                 | COLON constant_expression
@@ -2015,6 +2023,7 @@ class CParser(PLYParser):
         field = c_ast.ID(p[3], self._coord(p.lineno(3)))
         p[0] = c_ast.StructRef(p[1], p[2], field, p[1].coord)
 
+
     def p_postfix_expression_5(self, p):
         """ postfix_expression  : postfix_expression PLUSPLUS
                                 | postfix_expression MINUSMINUS
@@ -2181,6 +2190,7 @@ class CParser(PLYParser):
             print("PRINTING ............................")
             self.CST.Print()
             self.CST.PrintFT()
+            self.CST.PrintStructT()
             c_ast.PrintCode()
         else:
             for msg in getErrorMsg():

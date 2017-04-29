@@ -36,6 +36,8 @@ def printDebug(s):
         print(s)
 
 def getType(v):
+    print(v)
+    p1_type = None 
     if isinstance(v, Constant):
         return v.type
     elif isinstance(v, IdentifierType):
@@ -56,7 +58,13 @@ def getType(v):
         p1_type = v.type 
         if isinstance(p1_type, Typename):
             p1_type = p1_type.type 
-    return getType(p1_type)
+    elif isinstance(v, StructRef):
+        return v.field_type
+    if p1_type:
+        return getType(p1_type)
+    else:
+        print("[getType]Got an unknown type")
+        assert False
 
 class Node(object):
     __slots__ = ()
@@ -216,6 +224,9 @@ class ArrayDecl(Node):
 
     # def __init__(self, type, dim, size, dim_quals, coord=None):
     def __init__(self, type, dim,  dim_quals, coord=None):
+        print("[ArrayDecl]")
+        print(type)
+        print(dim)
         self.type = type
         self.dim = dim
         self.dim_quals = dim_quals
@@ -654,6 +665,7 @@ class ID(Node):
     __slots__ = ('s', 'stpointer', 'name', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
         printDebug("ID HERE:"+ str(name))
+        print("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
         if type:
@@ -797,11 +809,12 @@ class Return(Node):
     attr_names = ()
 
 class Struct(Node):
-    __slots__ = ('name', 'decls', 'coord', '__weakref__')
+    __slots__ = ('name', 'names', 'decls', 'coord', '__weakref__')
     def __init__(self, name, decls, coord=None):
         self.name = name
         self.decls = decls
         self.coord = coord
+        self.names = name
 
     def children(self):
         nodelist = []
@@ -812,12 +825,22 @@ class Struct(Node):
     attr_names = ('name', )
 
 class StructRef(Node):
-    __slots__ = ('name', 'type', 'field', 'coord', '__weakref__')
+    __slots__ = ('name', 'type', 'field', 'field_type', 'field_offset', 'refer', 'coord', '__weakref__')
     def __init__(self, name, type, field, coord=None):
         self.name = name
         self.type = type
         self.field = field
         self.coord = coord
+        CST = getCST()
+        entry = CST.lookupFullScope(name.name)
+        print("[StructRef]"+str(entry[1].type.name))
+        entry = CST.getStructTentry(entry[1].type.name, field.name)
+        if entry:
+            self.field_type = IdentifierType([entry[1]])
+            self.field_offset = entry[3]
+            self.refer = emit('StructRef', type, (self.field_type.type[-1], name.refer, self.field_offset))
+        else:
+            assert False
 
     def children(self):
         nodelist = []
@@ -973,6 +996,10 @@ class TAC():
     def __init__(self, refer, data):
         self.refer = refer
         self.data = data
+        self.points = None 
+        self.hasPointer = False
+        self.isArrayRef = False
+        self.array_pointer = None
 
     def addToFalselist(self, id):
         self.data["falselist"].append(id)
@@ -1182,9 +1209,15 @@ def emit(key, op, var_tuple):
     # [TODO] might be error prone
     elif key == "Assignment":
         printDebug("[Assignment]IN Assignemnt")
+        temp = var_tuple[2]
         if op == "=":
-            temp = var_tuple[2]
-            code_list.append(("=", var_tuple[1], temp, None))
+            if var_tuple[1].isArrayRef:
+                code_list.append(("MOVADR", var_tuple[1].array_pointer, temp, None))
+            else:
+                if var_tuple[1].hasPointer:
+                    code_list.append(('MOVPOINT', var_tuple[1], temp, None))
+                else:
+                    code_list.append(("=", var_tuple[1], temp, None))
 
             temp.addToTruelist(getNextInstr())
             code_list.append(('if', temp, None, None))
@@ -1199,7 +1232,10 @@ def emit(key, op, var_tuple):
             temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
             code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
-            code_list.append((op_equal, var_tuple[1], temp1))
+            if var_tuple[1].hasPointer:
+                code_list.append(("MOV", var_tuple[1], temp1, None))
+            else:
+                code_list.append((op_equal, var_tuple[1], temp1, None))
             temp = temp1 
             
             temp.addToTruelist(getNextInstr())
@@ -1210,23 +1246,50 @@ def emit(key, op, var_tuple):
 
     elif key == "ArrayRef":
         printDebug("In Array Ref")
-        temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-        type = var_tuple[1][2].getElementAtIndex(var_tuple[1][1])[1]
+        temp1 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
+        type = var_tuple[1].refer[2].getElementAtIndex(var_tuple[1].refer[1])[1]
         size = getSize(var_tuple[0])
         code_list.append(("*", temp1, var_tuple[2], size))
         
-        temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+        temp2 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
         code_list.append(("+", temp2, temp1, var_tuple[1]))
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("deref", temp3, temp2, None))
         temp = temp3
+        #  temp.points = list(var_tuple[1].refer)
+
+        #  temp.points[0] = temp.points[0] + int(var_tuple[2].value)*size
+        #  temp.points = tuple(temp.points)
+        temp.isArrayRef = True
+        temp.array_pointer = temp2
 
         temp.addToTruelist(getNextInstr())
         code_list.append(('if', temp, None, None))
 
         temp.addToFalselist(getNextInstr())
         code_list.append(('goto', None, None, None))
+
+        #  lookup name in ST
+        #  if the entry is struct then get the name of struct from the SymbolTable
+        #  else error
+        #  get the entry of ID from the list in StructT for entry
+        #  add the offset to the address of entry
+        #  set the points of temp TAC object to above value
+        #  set the type of temp to type of ID
+
+    elif key == "StructRef":
+        printDebug("[StructRef]In StructRef")
+        temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+        temp.hasPointer = True
+        temp.points = list(var_tuple[1].refer)
+        temp.points[0] = temp.points[0] + int(var_tuple[2])
+        
+        temp1 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
+
+        code_list.append(("+", temp1, var_tuple[1], var_tuple[2]))
+        code_list.append(('deref', temp, temp1, None))
+
 
     elif key == "FuncCall":
         printDebug("[emit]FuncCall")
@@ -1281,6 +1344,8 @@ def PrintCode():
                     v.append(" ")
                 elif isinstance(code_list[line][i], IdentifierType):
                     v.append(code_list[line][i].type)
+                elif isinstance(code_list[line][i], ID):
+                    v.append(code_list[line][i].name)
                 else:
                     v.append(code_list[line][i])
             #  printDebug(v)
@@ -1292,8 +1357,13 @@ def getReference(name):
     printDebug("In getReference")
     CST = getCST()
     entry = CST.lookupFullScope(name)
-    if(entry[-1] == "ST"):
-        return TAC(entry[5], makeNewData())
+    if entry:
+        if entry[-1] == "ST":
+            e = TAC(entry[5], makeNewData())
+            e.points = entry[5]
+            return e
+        else:
+            return None
     else:
         return None 
 

@@ -18,7 +18,7 @@ user_debug = False
     
 def printDebug(s):
     if user_debug:
-        printDebug(s)
+        print(s)
 
 def group(var):
 	if var == 'char' or var ==  'short' or var ==  'int' or var ==  'long':
@@ -93,6 +93,7 @@ def valid_sub(ptr):
 
 
 def bin_operator(op, left, right):
+        print("[bin_operator] Left:"+str(left)+" Right:"+str(right))
 	printDebug("Starting Bin_operator")
 	typel = get_type(left)
 	printDebug("typel " + str(typel))

@@ -1,11 +1,10 @@
 
 # Table : PP, current_offset, current_scope
 # Entry : Tuple -- ( lexeme, type, size, offset )
-
 import c_ast
 
 user_debug = False 
-    
+
 def printDebug(s):
     if user_debug:
         print(s)
@@ -45,15 +44,28 @@ def getSize(type):
         return 8
     if isinstance(type, c_ast.ArrayDecl):        
         printDebug(type.dim)
+        print("[getSize]")
+        print(type)
+        print(type.dim)
         return int(type.dim.value)*getSize(type.type)
     if isinstance(type, c_ast.FuncDecl):
         return 0
+    if isinstance(type, c_ast.Struct):
+        st = SymbolTable()
+        entry = st.lookupStructT(type.name)
+        print(entry)
+        if entry:
+            return entry[1]
+        else:
+            assert False
+
 
 # This class include all the functionality of SymbolTable 
 class SymbolTable(object):
     GID = 0             #SymbolTable Id for indetification purpose
     GST=None
     FT=[]
+    StructT=[]
 
     # Initialize the SymbolTable
     def __init__(self, name=None):
@@ -78,6 +90,10 @@ class SymbolTable(object):
         return self
 
     def addEntry(self, lexeme, type, child=None):
+        try:
+            print("[addEntry]Adding the entry to ST " + str((lexeme, type.type.name)))
+        except:
+            pass
         if isinstance(type, c_ast.FuncDecl):
             if child:
                 size = child.table['cur_offset']
@@ -128,6 +144,54 @@ class SymbolTable(object):
         printDebug("{} was popped".format(e))
         return e
 
+
+# StructEntry : (lexeme, size,  entries)
+# Object of StructEntry : (lexeme, type, size, offset)
+#  Entries will be a list of Decl Objects and we will extract the type of the them and add them to ST.
+    def addToStructT(self, name, entries):
+        printDebug(name)
+        offset = 0
+        entries_template = []
+        for var in entries:
+            elem = var.type
+            printDebug(elem.declname)
+            printDebug(elem.type.type)
+            elem_size = getSize(elem.type.type[-1])
+            entries_template.append((elem.declname, elem.type.type[-1], elem_size, offset))
+            offset = offset + elem_size 
+
+        SymbolTable.StructT.append((name, offset, entries_template))
+        return (name, offset, entries_template)
+
+    def popStructT(self, name):
+        return SymbolTable.StructT.pop()
+
+    def lookupStructT(self, name):
+        printDebug("[lookupStructT]In lookupStructT looking for " +str(name))
+        for entry in SymbolTable.StructT:
+            printDebug("[lookupStructT]Found " + entry[0])
+            if entry[0] == name:
+                printDebug("[lookupStructT]Found Entry " +str(name)+" in StructT")
+                return entry
+
+        printDebug("[lookupStructT]DId not find Entry " +str(name)+" in StructT")
+        return None
+
+    def getStructTentry(self, struct_name, elem_name):
+        printDebug("[getStructTentry]In getStructTentry looking for " +str(elem_name))
+        struct = self.lookupStructT(struct_name)
+        for elem in struct[2]:
+            if elem[0] == elem_name:
+                printDebug("[getStructTentry]Found Elem " +str(elem_name))
+                return elem
+
+        printDebug("[getStructTentry]Did not find Elem " +str(elem_name))
+        return None
+
+
+
+
+
     def getLastElemFT(self):
         return SymbolTable.FT[-1]
 
@@ -142,16 +206,16 @@ class SymbolTable(object):
 
     def getCurOffset(self):
         return self.table['cur_offset']
-    
+
     def getPP(self):
         return self.table["PP"]
-    
+
     def getNesting(self):
         return self.table["nesting"]
 
     def getElementAtIndex(self, index):
         return self.table['cur_scope'][index]
-    
+
     def lookupCurrentScope(self, name):
         for entry in self.table['cur_scope']:
             if entry[0] == name:
@@ -169,7 +233,9 @@ class SymbolTable(object):
         return None
 
     def lookupFullScope(self,  name):
+        printDebug("[lookupFullScope]Looking for " + name)
         entry = self._lookupFullScope(name)
+        printDebug(entry)
         if entry:
             printDebug("Found in ST")
             printDebug(name)
@@ -179,12 +245,15 @@ class SymbolTable(object):
             return entry
         else:
             entry = self.lookupFT(name)
-            printDebug("Found in function")
-            printDebug(name)
-            l = list(entry)
-            l.append("FT")
-            entry = tuple(l)
-            return entry
+            if entry:
+                printDebug("Found in function")
+                printDebug(name)
+                l = list(entry)
+                l.append("FT")
+                entry = tuple(l)
+                return entry
+            else:
+                return None
 
 
     def _lookupFullScope(self,  name):
@@ -200,18 +269,23 @@ class SymbolTable(object):
                 return None
 
     def Print(self):
-        printDebug("Printing SymbolTable:"+ str(self.id))
+        print("Printing SymbolTable:"+ str(self.id))
         for entry in self.table['cur_scope']:
             if entry[4]:
-                printDebug(entry)
+                print(entry)
                 entry[4].Print()
             else:
-                printDebug(entry)
-        printDebug("Finished SymbolTable:"+ str(self.id))
-                
+                print(entry)
+        print("Finished SymbolTable:"+ str(self.id))
+
     def PrintFT(self):
-        printDebug("Printing Function Table")
+        print("Printing Function Table")
         for i in SymbolTable.FT:
+           print(i)
+
+    def PrintStructT(self):
+        printDebug("Printing Struct Table")
+        for i in SymbolTable.StructT:
             printDebug(i)
 
     def provideTemp(self, type):
