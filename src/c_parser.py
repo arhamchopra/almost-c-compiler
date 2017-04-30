@@ -229,10 +229,32 @@ class CParser(PLYParser):
         return e
 
 
+    def compare(self, t1, t2):
+        print("Comparing "+str(t1) + " "+str(t2))
+        if(isinstance(t1, c_ast.IdentifierType) and isinstance(t2, c_ast.IdentifierType)):
+            #  print(t1.type[-1])
+            #  print(t2.type[-1])
+            if t1.type[-1] == t2.type[-1]:
+                print("Got Match")
+                return True
+            else:
+                return False
+        else:
+            if isinstance(t1, c_ast.TypeDecl):
+                return self.compare(t1.type, t2)
+            if isinstance(t2, c_ast.TypeDecl):
+                return self.compare(t1, t2.type)
+            if (isinstance(t1, c_ast.ArrayDecl) or isinstance(t1, c_ast.PtrDecl)) and (isinstance(t2, c_ast.ArrayDecl) or isinstance(t2, c_ast.PtrDecl)):
+                return self.compare(t1.type, t2.type)
+            if type(t1) == type(t2):
+                return self.compare(t1.type, t2.type)
+            else:
+                return False
         
 
     def _get_type(self, v):
         if isinstance(v, c_ast.ID):
+            print(self.CST.id)
             K = [self.CST.lookupFullScope(v.name)[i] for i in [1, 5]]
             p1_type = K[0]
             v.type = p1_type
@@ -256,7 +278,13 @@ class CParser(PLYParser):
         elif isinstance(v,c_ast.ArrayRef):
             p1_type = v.type
         elif isinstance(v, c_ast.Decl):
-            p1_type = v.type.type
+            print("[_get_type]")
+            p1_type = v.type
+            print("[_get_type]Before"+str(p1_type))
+            if isinstance(p1_type, c_ast.TypeDecl):
+                p1_type = p1_type.type
+
+            print("[_get_type]After"+str(p1_type))
         elif isinstance(v, c_ast.FuncCall):
             K = self.CST.lookupFullScope(v.name.name)[5]
             printDebug("THE POINTER FOR K : "+str(K))
@@ -729,6 +757,7 @@ class CParser(PLYParser):
         printDebug("[function_start]"+str(p[2]))
         printDebug("[function_start]"+str(p[2].type))
         printDebug("[function_start]"+str(p[2].type.declname))
+        printDebug("[function_start]"+str(p[2].args))
         prevdecl = self.CST.removeEntry(p[2].type.declname)
         p[0] = self._build_function_definition(
             spec=spec,
@@ -736,12 +765,17 @@ class CParser(PLYParser):
             param_decls=None,
             body=None)
         func_def = self.CST.popEntry()
-        #  printDebug("Function Type {}".format(func_def[1]))
-        #  printDebug("Function Type {}".format(func_def[1].type))
-        #  printDebug("Function Type {}".format(func_def[1].type.type))
-        #  printDebug("Function Type {}".format(func_def[1].type.type.type))
+        printDebug("Function Type {}".format(func_def[1]))
+        printDebug("Function Type {}".format(func_def[1].args))
+        printDebug("YAHOOOOOOO")
+        printDebug(func_def[1])
+        #  for i in func_def[1].args:
+        #      print(i.type)
+        printDebug("Function Type {}".format(func_def[1].type))
+        printDebug("Function Type {}".format(func_def[1].type.type))
+        printDebug("Function Type {}".format(func_def[1].type.type.type))
         printDebug("Checking whether the function was declared or not")
-        printDebug(prevdecl)
+        print(prevdecl)
         if prevdecl:
             self.CST.addToFT(func_def[0], func_def[1], "start_def", None, prevdecl[4])
         else:
@@ -1721,13 +1755,17 @@ class CParser(PLYParser):
             function = self.CST.getLastElemFT()
             func_decl = function[1]
             func_type = func_decl.type.type
-            if self._get_type(p[2]).names[-1] == func_type.names[-1]:
-                p[0] = c_ast.Return(p[2], self._coord(p.lineno(1)))
-            else:
+            print("HHHHHHHHHHHHHHHHHH")
+            print(func_type)
+            print(func_decl)
+            print(p[2])
+            #  if self._get_type(p[2]).names[-1] == func_type.names[-1]:
+            p[0] = c_ast.Return(p[2], self._coord(p.lineno(1)))
+            #  else:
                 #Check if cast is possible
-                p[0] = c_ast.Return(c_ast.Cast(func_type, p[2], func_type), self._coord(p.lineno(1)))
-        else:
-            p[0] = c_ast.Return(None, self._coord(p.lineno(1)))
+                #  p[0] = c_ast.Return(c_ast.Cast(func_type, p[2], func_type), self._coord(p.lineno(1)))
+        #  else:
+            #  p[0] = c_ast.Return(None, self._coord(p.lineno(1)))
 
     def p_expression_statement(self, p):
         """ expression_statement : expression_opt SEMI """
@@ -1969,8 +2007,8 @@ class CParser(PLYParser):
         printDebug("##################################### In Function call")
         if isinstance(p[1], c_ast.ID):
             func_decl = self.CST.lookupFT(p[1].name)
-            printDebug("func_decl " + str(func_decl))
-            printDebug("func_use  " + str(p[3]))
+            print("func_decl " + str(func_decl))
+            print("func_use  " + str(p[3]))
             dec_list = func_decl[1].args.params
             use_list = p[3].type
             new_list = []
@@ -1983,24 +2021,40 @@ class CParser(PLYParser):
             if len(dec_list) == len(use_list):
                 for d,u in zip(dec_list, use_list):
 
-                    printDebug("Element of dec_list")
-                    printDebug(d)
-                    printDebug("Element of use_list")
-                    printDebug(u)
-                    t = self._get_type(u).type
-                    printDebug("Function List Decl Type: "+str(self._get_type(d).type[-1]))
-                    printDebug("Argument List Decl Type: "+str(t[-1]))
-                    if self._get_type(d).type[-1] != t[-1]:
-                        printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                    print("Element of dec_list")
+                    print(d.type)
+                    print("Element of use_list")
+                    print(u.type)
+                    t1_ = self._get_type(u)
+                    t2_ = self._get_type(d)
+                    if not self.compare(t1_, t2_):
+                        #  printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                        print("They DOnt match "+str(t1_) + " " + str(t2_))
+                        assert False
                         # Check for type casting, if not allowed set error_free = False
                         # error_free = False
                         # self._parse_error("type of u is " + str(t),p[1].coord)
                         explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
                         explist.type.append(self._get_type(d))
-
                     else:
                         explist.exprs.append(u)                    
                         explist.type.append(self._get_type(u))
+
+                    #  t = self._get_type(u).type
+                    #  print(t)
+                    #  print("Function List Decl Type: "+str(self._get_type(d).type[-1]))
+                    #  print("Argument List Decl Type: "+str(t))
+                    #  if self._get_type(d).type[-1] != t[-1]:
+                    #      printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                    #      # Check for type casting, if not allowed set error_free = False
+                    #      # error_free = False
+                    #      # self._parse_error("type of u is " + str(t),p[1].coord)
+                    #      explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
+                    #      explist.type.append(self._get_type(d))
+                    #
+                    #  else:
+                    #      explist.exprs.append(u)
+                    #      explist.type.append(self._get_type(u))
                 if (error_free):
                     p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None, function_type,  p[1].coord)
 

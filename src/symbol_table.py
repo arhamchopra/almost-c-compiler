@@ -10,12 +10,14 @@ def printDebug(s):
         print(s)
 
 def getSize(type):
-    printDebug("[getSize]IN GET SIZE")
-    printDebug("[getSize]"+str(type))
+    print("[getSize]IN GET SIZE")
+    print("[getSize]"+str(type))
     if isinstance(type, c_ast.TypeDecl):
         return getSize(type.type)
     if isinstance(type, c_ast.IdentifierType):
         return getSize(type.names[-1])
+    if type == "void":
+        return 0
     if type == "char":
         return 1
     if type == "int":
@@ -91,8 +93,9 @@ class SymbolTable(object):
 
     def addEntry(self, lexeme, type, child=None):
         try:
-            print("[addEntry]Adding the entry to ST " + str((lexeme, type.type.name)))
+            print("[addEntry]Adding the entry to ST " + str((lexeme, type.type)))
         except:
+            print("[addEntry]Adding the entry to ST " + str((lexeme, type)))
             pass
         if isinstance(type, c_ast.FuncDecl):
             if child:
@@ -117,6 +120,11 @@ class SymbolTable(object):
                 adderror("Reusing a used name")
                 return
         SymbolTable.FT.append((lexeme, type, status, child, p_list))
+
+    def lookupElemFT(self, name, fscope):
+        if fscope[3]:
+            print(fscope[3])
+
 
     def popEntry(self):
         printDebug("Popping entry from SymbolTable: {}".format(self.id))
@@ -187,10 +195,6 @@ class SymbolTable(object):
 
         printDebug("[getStructTentry]Did not find Elem " +str(elem_name))
         return None
-
-
-
-
 
     def getLastElemFT(self):
         return SymbolTable.FT[-1]

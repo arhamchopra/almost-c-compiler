@@ -1,0 +1,126 @@
+Line:0	begin	     	 swap	     
+Line:1	deref	#temp1	    a	     
+Line:4	    =	    t	#temp1	     
+Line:7	deref	#temp2	    a	     
+Line:10	deref	#temp3	    b	     
+Line:13	MOVPOINT	#temp2	#temp3	     
+Line:16	deref	#temp4	    b	     
+Line:19	MOVPOINT	#temp4	    t	     
+Line:22	begin	     	partition	     
+Line:23	    *	#temp1	 high	    4
+Line:24	    +	#temp2	#temp1	  arr
+Line:25	deref	#temp3	#temp2	     
+Line:28	    =	pivot	#temp3	     
+Line:31	    -	#temp4	  low	    1
+Line:34	    =	    i	#temp4	     
+Line:37	    =	    j	    0	     
+Line:40	    =	    j	  low	     
+Line:43	    -	#temp5	 high	    1
+Line:46	 if<=	    j	#temp5	   49
+Line:47	    =	#temp6	    0	     
+Line:48	 goto	     	     	   50
+Line:49	    =	#temp6	    1	     
+Line:50	   if	#temp6	     	   58
+Line:51	 goto	     	     	   94
+Line:52	    =	#temp8	    j	     
+Line:53	    +	#temp7	    j	    1
+Line:56	    =	    j	#temp7	     
+Line:57	 goto	     	     	   43
+Line:58	    *	#temp1	    j	    4
+Line:59	    +	#temp2	#temp1	  arr
+Line:60	deref	#temp3	#temp2	     
+Line:63	 if<=	#temp3	pivot	   66
+Line:64	    =	#temp4	    0	     
+Line:65	 goto	     	     	   67
+Line:66	    =	#temp4	    1	     
+Line:67	   if	#temp4	     	   69
+Line:68	 goto	     	     	   52
+Line:69	    =	#temp2	    i	     
+Line:70	    +	#temp1	    i	    1
+Line:73	    =	    i	#temp1	     
+Line:74	    *	#temp3	    i	    4
+Line:75	    +	#temp4	#temp3	  arr
+Line:76	deref	#temp5	#temp4	     
+Line:79	    =	#temp6	#temp4	     
+Line:81	    *	#temp7	    j	    4
+Line:82	    +	#temp8	#temp7	  arr
+Line:83	deref	#temp9	#temp8	     
+Line:86	    =	#temp10	#temp8	     
+Line:88	 push	     	#temp6	     
+Line:89	 push	     	#temp10	     
+Line:90	 call	#temp11	 swap	    2
+Line:93	 goto	     	     	   52
+Line:94	    +	#temp9	    i	    1
+Line:97	    *	#temp10	<c_ast.BinaryOp object at 0x7feb19cc4c90>	    4
+Line:98	    +	#temp11	#temp10	  arr
+Line:99	deref	#temp12	#temp11	     
+Line:102	    =	#temp13	#temp11	     
+Line:104	    *	#temp14	 high	    4
+Line:105	    +	#temp15	#temp14	  arr
+Line:106	deref	#temp16	#temp15	     
+Line:109	    =	#temp17	#temp15	     
+Line:111	 push	     	#temp13	     
+Line:112	 push	     	#temp17	     
+Line:113	 call	#temp18	 swap	    2
+Line:116	    +	#temp19	    i	    1
+Line:119	begin	     	quickSort	     
+Line:120	  if<	  low	 high	  123
+Line:121	    =	#temp1	    0	     
+Line:122	 goto	     	     	  124
+Line:123	    =	#temp1	    1	     
+Line:124	   if	#temp1	     	  126
+Line:125	 goto	     	     	  153
+Line:126	 push	     	  arr	     
+Line:127	 push	     	  low	     
+Line:128	 push	     	 high	     
+Line:129	 call	#temp1	partition	    3
+Line:132	    =	   pi	#temp1	     
+Line:135	    -	#temp2	   pi	    1
+Line:138	 push	     	  arr	     
+Line:139	 push	     	  low	     
+Line:140	 push	     	#temp2	     
+Line:141	 call	#temp3	quickSort	    3
+Line:144	    +	#temp4	   pi	    1
+Line:147	 push	     	  arr	     
+Line:148	 push	     	#temp4	     
+Line:149	 push	     	 high	     
+Line:150	 call	#temp5	quickSort	    3
+Line:153	begin	     	printArray	     
+Line:154	    =	    i	    0	     
+Line:157	  if<	    i	 size	  160
+Line:158	    =	#temp1	    0	     
+Line:159	 goto	     	     	  161
+Line:160	    =	#temp1	    1	     
+Line:161	   if	#temp1	     	  169
+Line:162	 goto	     	     	  170
+Line:163	    =	#temp3	    i	     
+Line:164	    +	#temp2	    i	    1
+Line:167	    =	    i	#temp2	     
+Line:168	 goto	     	     	  157
+Line:169	 goto	     	     	  163
+Line:170	begin	     	 main	     
+Line:171	    *	#temp1	    0	    4
+Line:172	    +	#temp2	#temp1	  arr
+Line:173	deref	#temp3	#temp2	     
+Line:176	MOVADR	#temp2	    4	     
+Line:179	    *	#temp4	    1	    4
+Line:180	    +	#temp5	#temp4	  arr
+Line:181	deref	#temp6	#temp5	     
+Line:184	MOVADR	#temp5	    3	     
+Line:187	    *	#temp7	    2	    4
+Line:188	    +	#temp8	#temp7	  arr
+Line:189	deref	#temp9	#temp8	     
+Line:192	MOVADR	#temp8	    2	     
+Line:195	    *	#temp10	    3	    4
+Line:196	    +	#temp11	#temp10	  arr
+Line:197	deref	#temp12	#temp11	     
+Line:200	MOVADR	#temp11	    1	     
+Line:203	    =	    n	    4	     
+Line:206	    -	#temp13	    n	    1
+Line:209	 push	     	  arr	     
+Line:210	 push	     	    0	     
+Line:211	 push	     	#temp13	     
+Line:212	 call	#temp14	quickSort	    3
+Line:215	 push	     	  arr	     
+Line:216	 push	     	    n	     
+Line:217	 call	#temp15	printArray	    2

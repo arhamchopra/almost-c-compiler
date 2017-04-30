@@ -1,11 +1,13 @@
+int add( int a){
+    return a;
+}
 int main(){
     int a;
     for(a=0;a<10;a++){
         int b = 12;
-        b = b-1;
-        break;
-        continue;
+        if (a<7){
+            b = 3;
+        }
     }
-    a = -a;
-    a= 10;
+    add(a);
 }

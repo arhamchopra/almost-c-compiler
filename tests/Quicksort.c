@@ -16,20 +16,20 @@ void swap(int* a, int* b)
    of pivot */
 int partition (int arr[4], int low, int high)
 {
-    int pivot = arr[1];    // pivot
+    int pivot = arr[high];    // pivot
     int i = (low - 1);  // Index of smaller element
- 
-    for (int j = low; j <= high- 1; j++)
+    int j = 0;
+    for (j = low; j <= high- 1; j++)
     {
         // If current element is smaller than or
         // equal to pivot
-        if (arr[1] <= pivot)
+        if (arr[j] <= pivot)
         {
             i++;    // increment index of smaller element
-            /* swap(&arr[1], &arr[1]); */
+            swap(&arr[i], &arr[j]);
         }
     }
-    /* swap(&arr[1], &arr[1]); */
+    swap(&arr[i + 1], &arr[high]);
     return (i + 1);
 }
  
@@ -43,23 +43,23 @@ void quickSort(int arr[4], int low, int high)
     {
         /* pi is partitioning index, arr[p] is now
            at right place */
-        /* int pi = partition(arr, low, high); */
+        int pi = partition(arr, low, high);
  
         // Separately sort elements before
         // partition and after partition
-        /* quickSort(arr, low, pi - 1); */
-        /* quickSort(arr, pi + 1, high); */
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
     }
 }
  
 /* Function to print an array */
-/* void printArray(int arr[], int size) */
-/* { */
-/*     int i; */
-/*     for (i=0; i < size; i++) */
-/*         printf("%d ", arr[i]); */
-/*     printf("\n"); */
-/* } */
+void printArray(int arr[3], int size)
+{
+    int i;
+    for (i=0; i < size; i++){}
+        /* printf("%d ", arr[i]); */
+    /* printf("\n"); */
+}
  
 // Driver program to test above functions
 int main()
@@ -70,8 +70,8 @@ int main()
     arr[2] = 2; 
     arr[3] = 1; 
     int n = 4;
-    /* quickSort(arr, 0, n-1); */
+    quickSort(arr, 0, n-1);
     /* printf("Sorted array: \n"); */
-    /* printArray(arr, n); */
+    printArray(arr, n);
     return 0;
 }

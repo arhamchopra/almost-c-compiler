@@ -674,9 +674,9 @@ class ID(Node):
             CST = getCST()
             entry = CST.lookupFullScope(name)
             if(entry[-1]=="ST"):
-                type = entry[1];
+                self.type = entry[1];
             else:
-                type= None
+                self.type= None
         self.s = name
         self.stpointer = None
         self.refer = getReference(name)
@@ -688,12 +688,13 @@ class ID(Node):
     attr_names = ('name', )
 
 class IdentifierType(Node):
-    __slots__ = ('s', 'names', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'names', 'type', 'coord', 'isptr', '__weakref__')
     def __init__(self, names, coord=None):
         self.names = names
         self.coord = coord
         self.type = names
         self.s = names
+        self.isptr = False
 
     def children(self):
         nodelist = []
@@ -779,12 +780,13 @@ class ParamList(Node):
     attr_names = ()
 
 class PtrDecl(Node):
-    __slots__ = ('s', 'stpointer', 'quals', 'type', 'coord', '__weakref__')
+    __slots__ = ('s', 'stpointer', 'quals', 'type', 'names', 'coord', '__weakref__')
     def __init__(self, quals, type, coord=None):
         self.quals = quals
         self.type = type
         self.coord = coord
         self.stpointer = None
+        self.names = "ptr"
         self.s = "ptr"
 
     def children(self):
@@ -1028,8 +1030,8 @@ class TAC():
 
 
 def emit(key, op, var_tuple):
-    printDebug("[emit]In Emit")
-    printDebug("[emit]"+str((key, op, var_tuple)))
+    print("[emit]In Emit")
+    print("[emit]"+str((key, op, var_tuple)))
     CST = getCST()
     #  if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
     #      printDebug("HAGGA 1")
@@ -1047,6 +1049,7 @@ def emit(key, op, var_tuple):
         # [TODO]
         if re.match(r"\-|\+|\*|\/|\||\&|\^", op) or op == "<<" or op == ">>":
             printDebug("[emit]In BinaryOp"+op)
+            
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
             code_list.append((op, temp, var_tuple[1], var_tuple[2]))
@@ -1110,13 +1113,19 @@ def emit(key, op, var_tuple):
         if op == "&":
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
-            code_list.append(('&', temp, var_tuple[1], None))
+            if var_tuple[1].isArrayRef:
+                code_list.append(('=', temp, var_tuple[1].array_pointer, None))
+            else:
+                code_list.append(('&', temp, var_tuple[1], None))
             temp.addToTruelist(getNextInstr())
             code_list.append(('goto', None, None, None))
                 
         elif op == "*":
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
+            temp.hasPointer = True
+            temp.points = list(var_tuple[1].refer)
+            
             code_list.append(("deref", temp, var_tuple[1], None))
             
             temp.addToTruelist(getNextInstr())
@@ -1346,6 +1355,8 @@ def PrintCode():
                     v.append(code_list[line][i].type)
                 elif isinstance(code_list[line][i], ID):
                     v.append(code_list[line][i].name)
+                elif isinstance(code_list[line][i], Constant):
+                    v.append(code_list[line][i].value)
                 else:
                     v.append(code_list[line][i])
             #  printDebug(v)
