@@ -17,3 +17,4 @@
 at the end of main:
     li $v0, 10
     syscall
+

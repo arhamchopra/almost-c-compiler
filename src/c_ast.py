@@ -1019,6 +1019,9 @@ class TAC():
         TAC_object.data = self.data
 
     def __str__(self):
+        printDebug("[Class TAC] Printing Self")
+        printDebug(self.refer)
+        printDebug(self.data)
         if type(self.refer) == tuple:
             entry = getSTEntry(self.refer)
             return str(entry[0])
@@ -1324,6 +1327,7 @@ def emit(key, op, var_tuple):
     elif key == "FuncCall":
         printDebug("[emit]FuncCall")
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+        size = 0
         for var in var_tuple[2]:
             printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
@@ -1376,7 +1380,7 @@ def PrintCode():
                 if code_list[line][i] == None:
                     v.append(" ")
                 elif isinstance(code_list[line][i], IdentifierType):
-                    v.append(code_list[line][i].type)
+                    v.append(code_list[line][i].type[-1])
                 elif isinstance(code_list[line][i], ID):
                     v.append(code_list[line][i].name)
                 elif isinstance(code_list[line][i], Constant):
@@ -1418,3 +1422,5 @@ def backpatch(c_list, index):
         else:
             printDebug("[backpatch]We are in serious trouble")
 
+def getCode():
+    return code_list

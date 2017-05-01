@@ -105,6 +105,8 @@ class SymbolTable(object):
         else:
             if lexeme[0] == "#" and isinstance(type, c_ast.ArrayDecl):
                 size = 8
+            elif lexeme == "#EBP_DATA":
+                size = 8
             else:
                 size = getSize(type)
         offset = self.table['cur_offset']
@@ -115,11 +117,23 @@ class SymbolTable(object):
         return pointer
 
     def addToFT(self, lexeme, type, status, child=None, p_list=None):
+        print("HELHELHELHELELH")
         for entry in SymbolTable.FT:
             if lexeme == entry[0]:
                 adderror("Reusing a used name")
                 return
-        SymbolTable.FT.append((lexeme, type, status, child, p_list))
+        size = 0
+        print("HELHELHELHELELH")
+        print(type)
+        try:
+            for param in type.args.params:
+                print(param.type)
+                size = size + getSize(param.type)
+            print("[addToFT]size is "+str(size))
+        except:
+            print("[addToFT]Got No params")
+
+        SymbolTable.FT.append((lexeme, type, status, child, p_list, size))
 
     def lookupElemFT(self, name, fscope):
         if fscope[3]:

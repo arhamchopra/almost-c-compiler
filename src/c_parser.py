@@ -21,6 +21,7 @@ from ast_transforms import fix_switch_cases
 from parse_tree import *
 from symbol_table import CST, GST, getNewST, popST
 from type_check import *
+import c_assembly
 #  from code_gen import PrintCode, getNextInstr, emit
 
 user_debug = False 
@@ -201,30 +202,35 @@ class CParser(PLYParser):
 
         # Checking where then name belongs to FT or ST or none
         printDebug("[add_identifier]In add Identifier")
-        if self.CST.lookupFT(name):
-            printDebug("[add_identifier]We found the name to be in Function Table")
-        elif self.CST.lookupCurrentScope(name):
-            printDebug("[add_identifier]We found the name to be in Symbol Table")
+        if name=="#EBP_DATA":
+            a = 1
         else:
-            printDebug("[add_identifier]We found the Nothing matching it")
+            if self.CST.lookupFT(name):
+                printDebug("[add_identifier]We found the name to be in Function Table")
+            elif self.CST.lookupCurrentScope(name):
+                printDebug("[add_identifier]We found the name to be in Symbol Table")
+            else:
+                printDebug("[add_identifier]We found the Nothing matching it")
 
         printDebug("[add_identifier]The entry is :" + str(entry))
 
         # If name already exists in the current ST then it should not be added into the ST again.
         # We are assuming that in the global scope there will be no variable with the same name as a function declaration
-        if self.CST.lookupCurrentScope(name):
-            self._parse_error(
-                "Reusing previously declared name : %r "
-                "in this scope" % name, coord)
+        if name!="#EBP_DATA":
+            if self.CST.lookupCurrentScope(name):
+                self._parse_error(
+                    "Reusing previously declared name : %r "
+                    "in this scope" % name, coord)
 
         e = self.CST.addEntry(name, type)
         #  entry.stpointer = e
         # [TODO] look for refer and stpointer should keep only one
-        if isinstance(entry.type, c_ast.TypeDecl):
-            entry.type.stpointer = e
-            entry.type.refer = e
-        else:
-            entry.type.stpointer = e
+        if name != "#EBP_DATA":
+            if isinstance(entry.type, c_ast.TypeDecl):
+                entry.type.stpointer = e
+                entry.type.refer = e
+            else:
+                entry.type.stpointer = e
 
         return e
 
@@ -752,7 +758,6 @@ class CParser(PLYParser):
     def p_function_start(self, p):
         """ function_start : declaration_specifiers declarator
         """
-        printDebug("I am in function_start... This is great")
         spec = p[1]
         printDebug("[function_start]"+str(p[2]))
         printDebug("[function_start]"+str(p[2].type))
@@ -764,10 +769,12 @@ class CParser(PLYParser):
             decl=p[2],
             param_decls=None,
             body=None)
+        print("HEHEHLELHLEHLEHLEHLELHELE")
         func_def = self.CST.popEntry()
-        printDebug("Function Type {}".format(func_def[1]))
-        printDebug("Function Type {}".format(func_def[1].args))
-        printDebug("YAHOOOOOOO")
+        self._add_identifier("#EBP_DATA", c_ast.IdentifierType(['int']), (0,0), None)
+        self.CST.Print()
+        print("Function Type {}".format(func_def[1]))
+        print("Function Type {}".format(func_def[1].args))
         printDebug(func_def[1])
         #  for i in func_def[1].args:
         #      print(i.type)
@@ -2246,6 +2253,7 @@ class CParser(PLYParser):
             self.CST.PrintFT()
             self.CST.PrintStructT()
             c_ast.PrintCode()
+            c_assembly.writeCode()
         else:
             for msg in getErrorMsg():
                 print(msg)
