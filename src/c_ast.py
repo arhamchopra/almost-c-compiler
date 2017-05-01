@@ -801,7 +801,7 @@ class Return(Node):
     def __init__(self, expr, coord=None):
         self.expr = expr
         self.coord = coord
-        self.refer = TAC((0,0,0), makeNewData())
+        self.refer = emit('Return', 'Return', (None, expr.refer, None))
 
     def children(self):
         nodelist = []
@@ -1018,7 +1018,6 @@ class TAC():
     def transferData(self, TAC_object):
         TAC_object.data = self.data
 
-
     def __str__(self):
         if type(self.refer) == tuple:
             entry = getSTEntry(self.refer)
@@ -1154,13 +1153,35 @@ def emit(key, op, var_tuple):
             code_list.append(('goto', None, None, None))
 
         elif op == "!":
-            temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
 
             #  Not storing the assignments of logical operators
             #  code_list.append(("!", temp, var_tuple[1], None))
-        
-            temp.data["truelist"] = var_tuple[1].data["falselist"]
-            temp.data["falselist"] = var_tuple[1].data["truelist"]
+            print("IN OP !") 
+            print(var_tuple[1].data)
+            f = var_tuple[1].data["falselist"]
+            t = var_tuple[1].data["truelist"]
+            if len(f) != 0 and len(t) != 0:
+                temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
+                print(temp.data)
+                temp.data["truelist"] = f 
+                temp.data["falselist"] = t 
+            else:
+                temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+
+                code_list.append(('if'+'==', var_tuple[1], 0, getNextInstr()+3))
+                code_list.append(('=', temp, 0, None))
+                code_list.append(('goto', None, None, getNextInstr()+2))
+                code_list.append(('=', temp, 1, None))
+
+                temp.addToTruelist(getNextInstr())
+                code_list.append(('if', temp, None, None))
+
+                temp.addToFalselist(getNextInstr())
+                code_list.append(('goto', None, None, None))
+
+            # Assignment of logical operators is not handled
+
+            print(temp.data)
 
         elif op == "++":
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
@@ -1325,6 +1346,9 @@ def emit(key, op, var_tuple):
     elif key == "JMP":
         code_list.append(("goto", None, None, var_tuple))
         temp = None
+    elif key == "Return":
+        code_list.append(("return", var_tuple[1], None, None))
+        temp = TAC((0,0,0), makeNewData())
 
     return temp
 

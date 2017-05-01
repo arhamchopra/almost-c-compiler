@@ -1,0 +1,19 @@
+.data
+    
+.text
+
+"labelname":
+    code 
+    code 
+    code
+    code
+
+
+"label2":
+    code
+    code
+
+
+at the end of main:
+    li $v0, 10
+    syscall

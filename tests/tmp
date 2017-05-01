@@ -1,0 +1,90 @@
+Line:0	begin	     	bsearch	     
+Line:1	    -	#temp1	    n	    1
+Line:4	    =	    i	    0	     
+Line:7	    =	    j	#temp1	     
+Line:10	 if<=	    i	    j	   13
+Line:11	    =	#temp2	    0	     
+Line:12	 goto	     	     	   14
+Line:13	    =	#temp2	    1	     
+Line:14	   if	#temp2	     	   16
+Line:15	 goto	     	     	   63
+Line:16	    +	#temp1	    i	    j
+Line:19	    /	#temp2	#temp1	    2
+Line:22	    =	    k	#temp2	     
+Line:25	    *	#temp3	    k	    4
+Line:26	    +	#temp4	#temp3	    a
+Line:27	deref	#temp5	#temp4	     
+Line:30	 if==	#temp5	    x	   33
+Line:31	    =	#temp6	    0	     
+Line:32	 goto	     	     	   34
+Line:33	    =	#temp6	    1	     
+Line:34	   if	#temp6	     	   36
+Line:35	 goto	     	     	   38
+Line:36	return	    k	     	     
+Line:37	 goto	     	     	   10
+Line:38	    *	#temp7	    k	    4
+Line:39	    +	#temp8	#temp7	    a
+Line:40	deref	#temp9	#temp8	     
+Line:43	  if<	#temp9	    x	   46
+Line:44	    =	#temp10	    0	     
+Line:45	 goto	     	     	   47
+Line:46	    =	#temp10	    1	     
+Line:47	   if	#temp10	     	   49
+Line:48	 goto	     	     	   56
+Line:49	    +	#temp1	    k	    1
+Line:52	    =	    i	#temp1	     
+Line:55	 goto	     	     	   10
+Line:56	    -	#temp1	    k	    1
+Line:59	    =	    j	#temp1	     
+Line:62	 goto	     	     	   10
+Line:63	    -	#temp3	    0	    1
+Line:64	return	#temp3	     	     
+Line:65	begin	     	bsearch_r	     
+Line:66	  if<	    j	    i	   69
+Line:67	    =	#temp1	    0	     
+Line:68	 goto	     	     	   70
+Line:69	    =	#temp1	    1	     
+Line:70	   if	#temp1	     	   72
+Line:71	 goto	     	     	   74
+Line:72	    -	#temp1	    0	    1
+Line:73	return	#temp1	     	     
+Line:74	    +	#temp2	    i	    j
+Line:77	    /	#temp3	#temp2	    2
+Line:80	    =	    k	#temp3	     
+Line:83	    *	#temp4	    k	    4
+Line:84	    +	#temp5	#temp4	    a
+Line:85	deref	#temp6	#temp5	     
+Line:88	 if==	#temp6	    x	   91
+Line:89	    =	#temp7	    0	     
+Line:90	 goto	     	     	   92
+Line:91	    =	#temp7	    1	     
+Line:92	   if	#temp7	     	   94
+Line:93	 goto	     	     	   96
+Line:94	return	    k	     	     
+Line:95	 goto	     	     	  130
+Line:96	    *	#temp8	    k	    4
+Line:97	    +	#temp9	#temp8	    a
+Line:98	deref	#temp10	#temp9	     
+Line:101	  if<	#temp10	    x	  104
+Line:102	    =	#temp11	    0	     
+Line:103	 goto	     	     	  105
+Line:104	    =	#temp11	    1	     
+Line:105	   if	#temp11	     	  107
+Line:106	 goto	     	     	  119
+Line:107	    +	#temp1	    k	    1
+Line:110	 push	     	    a	     
+Line:111	 push	     	    x	     
+Line:112	 push	     	#temp1	     
+Line:113	 push	     	    j	     
+Line:114	 call	#temp2	bsearch_r	    4
+Line:117	return	#temp2	     	     
+Line:118	 goto	     	     	  130
+Line:119	    -	#temp1	    k	    1
+Line:122	 push	     	    a	     
+Line:123	 push	     	    x	     
+Line:124	 push	     	    i	     
+Line:125	 push	     	#temp1	     
+Line:126	 call	#temp2	bsearch_r	    4
+Line:129	return	#temp2	     	     
+Line:130	begin	     	 main	     
+Line:131	return	    0	     	     

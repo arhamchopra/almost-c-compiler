@@ -1681,9 +1681,10 @@ class CParser(PLYParser):
         p[0] = c_ast.If(p[3], p[6], p[10], self._coord(p.lineno(1)))
         c_ast.backpatch(p[3].refer.data["truelist"], p[5]['quad'])
         c_ast.backpatch(p[3].refer.data["falselist"], p[9]['quad'])
-        p[0].refer.data["breaklist"] = p[10].refer.data["breaklist"] + p[6].refer.data["breaklist"]
+        p[0].refer.data["breaklist"] = p[10].refer.data["breaklist"] + p[6].refer.data["breaklist"] 
         p[0].refer.data["contlist"] = p[10].refer.data["contlist"] + p[6].refer.data["contlist"]
-        p[0].refer.data["nextlist"] = p[6].refer.data["nextlist"] + p[10].refer.data["nextlist"]
+        p[0].refer.data["nextlist"] = p[6].refer.data["nextlist"] + p[10].refer.data["nextlist"] + p[7]['nextlist']
+
 
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
@@ -1755,7 +1756,6 @@ class CParser(PLYParser):
             function = self.CST.getLastElemFT()
             func_decl = function[1]
             func_type = func_decl.type.type
-            print("HHHHHHHHHHHHHHHHHH")
             print(func_type)
             print(func_decl)
             print(p[2])
