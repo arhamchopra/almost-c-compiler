@@ -385,13 +385,20 @@ class CompoundLiteral(Node):
     attr_names = ()
 
 class Constant(Node):
-    __slots__ = ('s', 'type', 'value', 'refer', 'coord', '__weakref__')
+    __slots__ = ('s', 'type', 'value', 'refer', 'size', 'coord', '__weakref__')
     def __init__(self, type, value, coord=None):
         self.type = type
         self.value = value
         self.coord = coord
         self.s = value
         self.refer = TAC(value, makeNewData())
+        if type == "int":
+            self.size = 4
+        elif type == "char":
+            self.size = 1
+        elif type == "float":
+            self.size=8
+
 
     def children(self):
         nodelist = []
@@ -595,10 +602,11 @@ class For(Node):
     attr_names = ()
 
 class FuncCall(Node):
-    __slots__ = ('s', 'name', 'args','type','stpointer', 'refer', 'coord', '__weakref__')
+    __slots__ = ('s', 'name', 'args','type','stpointer', 'refer', 'args_size', 'coord', '__weakref__')
     def __init__(self, name, args, type='void', coord=None):
         self.name = name
         self.args = args
+        self.args_size = 0 
         self.coord = coord
         self.type = type
         self.stpointer = None
@@ -614,9 +622,10 @@ class FuncCall(Node):
     attr_names = ()
 
 class FuncDecl(Node):
-    __slots__ = ('stpointer', 's', 'args', 'type', 'coord', '__weakref__')
+    __slots__ = ('stpointer', 's', 'args', 'type', 'coord', 'args_size', '__weakref__')
     def __init__(self, args, type, coord=None):
         self.args = args
+        self.args_size = 0
         self.type = type
         self.coord = coord
         self.stpointer = None
@@ -679,7 +688,10 @@ class ID(Node):
                 self.type= None
         self.s = name
         self.stpointer = None
+        print("[ID]IN ID")
+        print(name)
         self.refer = getReference(name)
+        print(self.refer)
 
     def children(self):
         nodelist = []
@@ -1324,15 +1336,24 @@ def emit(key, op, var_tuple):
         code_list.append(('deref', temp, temp1, None))
 
 
+#  Size not handled ...
     elif key == "FuncCall":
         printDebug("[emit]FuncCall")
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-        size = 0
+        size = var_tuple[1].type.args_size
+
+        printDebug("[emit]Pushing the tuple "+str(var_tuple[1]))
+        
+        print("[FuncCall,Emit]")
+        ret_size = getSize(var_tuple[1].type.type.type)
+        code_list.append(('pushret', None, ret_size, None))
+
         for var in var_tuple[2]:
             printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
         #[TODO] Check if the length of function list should be passed or not
-        code_list.append(('call',temp1, var_tuple[1],len(var_tuple[2])))
+        code_list.append(('call',temp1, var_tuple[1], (len(var_tuple[2]), size, ret_size)))
+        code_list.append(('pop', None, None, size))
         
         #[TODO] Add code for activation records here
         temp = temp1

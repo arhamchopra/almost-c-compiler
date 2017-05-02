@@ -202,9 +202,7 @@ class CParser(PLYParser):
 
         # Checking where then name belongs to FT or ST or none
         printDebug("[add_identifier]In add Identifier")
-        if name=="#EBP_DATA":
-            a = 1
-        else:
+        if name[:-1] != "#S":
             if self.CST.lookupFT(name):
                 printDebug("[add_identifier]We found the name to be in Function Table")
             elif self.CST.lookupCurrentScope(name):
@@ -216,7 +214,7 @@ class CParser(PLYParser):
 
         # If name already exists in the current ST then it should not be added into the ST again.
         # We are assuming that in the global scope there will be no variable with the same name as a function declaration
-        if name!="#EBP_DATA":
+        if name[:-1] != "#S":
             if self.CST.lookupCurrentScope(name):
                 self._parse_error(
                     "Reusing previously declared name : %r "
@@ -225,7 +223,7 @@ class CParser(PLYParser):
         e = self.CST.addEntry(name, type)
         #  entry.stpointer = e
         # [TODO] look for refer and stpointer should keep only one
-        if name != "#EBP_DATA":
+        if name[:-1] != "#S":
             if isinstance(entry.type, c_ast.TypeDecl):
                 entry.type.stpointer = e
                 entry.type.refer = e
@@ -769,9 +767,11 @@ class CParser(PLYParser):
             decl=p[2],
             param_decls=None,
             body=None)
-        print("HEHEHLELHLEHLEHLEHLELHELE")
         func_def = self.CST.popEntry()
-        self._add_identifier("#EBP_DATA", c_ast.IdentifierType(['int']), (0,0), None)
+
+        for i in range(7,-1,-1):
+            self._add_identifier("#S"+str(i), c_ast.IdentifierType(['int']), (0,0), None)
+
         self.CST.Print()
         print("Function Type {}".format(func_def[1]))
         print("Function Type {}".format(func_def[1].args))

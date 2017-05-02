@@ -85,8 +85,12 @@ class SymbolTable(object):
             self.table = { 'PP': None, 'cur_offset': 0, 'cur_scope': [], 'nesting': 0 }
             SymbolTable.GST=self
             printDebug("Creating Root SymbolTable:{}".format(self.id))
-        else:
+        elif PP.id == 0:
             self.table = { 'PP': PP, 'cur_offset': 0, 'cur_scope': [], 'nesting': PP.getNesting()+1 }
+            PP.addEntry(self.name, "SymbTab", self)
+            printDebug("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
+        else:
+            self.table = { 'PP': PP, 'cur_offset': PP.table['cur_offset'], 'cur_scope': [], 'nesting': PP.getNesting()+1 }
             PP.addEntry(self.name, "SymbTab", self)
             printDebug("Creating a new SymbolTable:{} name:{}".format(self.id, self.name))
         return self
@@ -96,7 +100,7 @@ class SymbolTable(object):
             print("[addEntry]Adding the entry to ST " + str((lexeme, type.type)))
         except:
             print("[addEntry]Adding the entry to ST " + str((lexeme, type)))
-            pass
+        
         if isinstance(type, c_ast.FuncDecl):
             if child:
                 size = child.table['cur_offset']
@@ -105,7 +109,7 @@ class SymbolTable(object):
         else:
             if lexeme[0] == "#" and isinstance(type, c_ast.ArrayDecl):
                 size = 8
-            elif lexeme == "#EBP_DATA":
+            elif lexeme[:-1] == "#S":
                 size = 8
             else:
                 size = getSize(type)
@@ -117,19 +121,18 @@ class SymbolTable(object):
         return pointer
 
     def addToFT(self, lexeme, type, status, child=None, p_list=None):
-        print("HELHELHELHELELH")
         for entry in SymbolTable.FT:
             if lexeme == entry[0]:
                 adderror("Reusing a used name")
                 return
         size = 0
-        print("HELHELHELHELELH")
         print(type)
         try:
             for param in type.args.params:
                 print(param.type)
                 size = size + getSize(param.type)
             print("[addToFT]size is "+str(size))
+            type.args_size = size
         except:
             print("[addToFT]Got No params")
 
@@ -327,7 +330,7 @@ def popST():
     PST = CST.getPP()
     assert PST is not None
     off = CST.getCurOffset()
-    PST.setOffset(off+PST.getCurOffset()) 
+    PST.setOffset(off) 
     CST = PST
     return CST
 
@@ -340,3 +343,4 @@ def getGST():
 def getSTEntry(refer):
     ST = refer[2]
     return ST.table["cur_scope"][refer[1]]
+
