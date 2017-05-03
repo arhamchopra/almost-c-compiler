@@ -5,10 +5,22 @@ from STATS import *
 from symbol_table import *
 
 code_list = c_ast.getCode()
-
+labels = {}
 param_size = 0
-#  def fix_
-#
+
+def fix_labels(code_list):
+    for line in range(len(code_list)):
+
+        if ( code_list[line][0][:2] =='if' or code_list[line][0]=='goto' ) and code_list[line][-1]:
+            labels[str(code_list[line][-1])] = 1 
+
+
+def has_label(ind):
+    if str(ind) in labels:
+        return 1
+    else:
+        return 0
+
 
 #  Constants Handle the size
 
@@ -29,6 +41,8 @@ def getAddr(obj):
         return (obj, "const", 4)
 
 def writeCode():
+    fix_labels(code_list)
+
     file = open('assembly.asm', 'w')
     file.write(".data"+"\n")
     file.write(".text"+"\n")
@@ -76,7 +90,12 @@ def writeCode():
     file.write("\tli $v0, 10"+"\n")
     file.write("\tsyscall"+"\n")
 
-    for line in code_list:
+    for ind, line in enumerate(code_list):
+        
+        if has_label(ind):
+            file.write("L"+str(ind)+":"+"\n")
+
+
         op = line[0]
         #  print(line)
         if op == "begin":
@@ -228,7 +247,7 @@ def writeCode():
             if r2_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r2_addr[0] + reg_size - r2_addr[2])+"($s7)"+"\n")
             else:
-                file.write("\tadd $t1, $zero, "+r2_addr[0]+"\n")
+                file.write("\tadd $t1, $zero, "+str(r2_addr[0])+"\n")
 
             file.write("\tadd $t0, $t0, $t1"+"\n")
             print("[OP+]")
