@@ -7,6 +7,10 @@ from symbol_table import *
 code_list = c_ast.getCode()
 labels = {}
 param_size = 0
+func_param_size = 0
+func_ret_size = 0
+func_size = 0
+func_name = ""
 
 def fix_labels(code_list):
     for line in range(len(code_list)):
@@ -103,8 +107,10 @@ def writeCode():
         op = line[0]
         #  print(line)
 
+        #  Skipping unwanted if else and goto
         if ( op[:2] =='if' or op=='goto' ) and not line[-1]:
             pass
+
         elif op == "begin":
             #  print(line)
             addr = getSTEntry(line[2].refer)
@@ -141,7 +147,7 @@ def writeCode():
 
         elif op == "pushret":
             if line[2]>0:
-                file.write("\tsub $sp, $sp, "+str(line[2])+"\n")
+                file.write("\tsub $sp, $sp, "+str(func_ret_size)+"\n")
 
         elif op == "push":
             addr = getAddr(line[2])
@@ -153,6 +159,31 @@ def writeCode():
                 file.write("\tsub $sp, $sp, "+str(addr[2])+"\n")
                 file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
                 file.write("\tsw $t0, 0($sp)"+"\n")
+
+        elif op == "calling":
+            id = line[1]
+            name = id.name
+            CST = getCST()
+            entry = CST.lookupFT(name)
+            if entry:
+                func_param_size = entry[-1]
+                type = entry[1]
+                func_ret_size = getSize(type.type.type)
+                print("[Calling]Got Params")
+                print("func_param_size:"+str(func_param_size)+" func_ret_size:"+str(func_ret_size))
+            else:
+                assert False
+
+            GST = getGST()
+            entry = GST.lookupCurrentScope(name)
+            if entry:
+                func_size = entry[3]
+                func_name = entry[0]
+                print("[Calling]Got Params")
+                print("func_size:"+str(func_size)+" func_name:"+str(func_name))
+            else:
+                assert False
+
 
         elif op == "call":
             #  file.write("\tsub $sp, $sp, "+str(reg_size)+"\n")
@@ -169,27 +200,27 @@ def writeCode():
             #
             #      #  file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
             #
-            local_param_size = int(line[3][1])
+            #  local_param_size = int(line[3][1])
             #
             #  print("[Call] In Call")
             #  print(line[2])
             #  print(line[2].refer)
-            entry = getSTEntry(line[2].refer.refer)
+            #  entry = getSTEntry(line[2].refer.refer)
  #
-            size = entry[3]
-            size = size - local_param_size - reg_size
+            #  size = entry[3]
+            func_size = func_size - func_param_size - reg_size
 
-            name = entry[0]
+            #  name = entry[0]
  #
             #  file.write("\tsub $sp, $sp, "+str(size)+"\n")
             file.write("\tjal "+name+"\n")
             #  Handle for return value
             
-            file.write("\tadd $sp, $sp, "+str(local_param_size)+"\n")
+            file.write("\tadd $sp, $sp, "+str(func_param_size)+"\n")
 
-            if int(line[3][2]) > 0:
+            if int(func_ret_size) > 0:
                 file.write("\tlw $t1, 0($sp)"+"\n")
-                file.write("\tadd $sp, $sp, "+str(line[3][2])+"\n")
+                file.write("\tadd $sp, $sp, "+str(func_ret_size)+"\n")
 
                 #  Handle the return address of all others
                 addr = getAddr(line[1])

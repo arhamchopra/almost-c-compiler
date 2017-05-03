@@ -11,7 +11,7 @@ int fibb(int n) {
 }
 
 int main(){
-    int a=2;
+    int a=20;
     /* scanf("%d",&a); */
     return fibb(a);
     /* printf("%d",fibb(a)); */

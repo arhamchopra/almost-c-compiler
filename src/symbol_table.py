@@ -116,7 +116,7 @@ class SymbolTable(object):
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
-        printDebug("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
+        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
         self.table['cur_scope'].append((lexeme, type, offset, size, child, pointer))
         return pointer
 

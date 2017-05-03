@@ -118,6 +118,8 @@ class Node(object):
 
         child_list = []
         for (child_name, child) in self.children():
+            print("Child Name")
+            print(child_name)
             n = child.show(
                 buf,
                 offset=offset + 2,
@@ -133,8 +135,9 @@ class Node(object):
         if self.__class__.__name__ != "Decl" and self.__class__.__name__ != "IdentifierType":
             if hasattr(self, 's'):
 
-                if hasattr(self, 'stpointer'):
+                if hasattr(self, 'stpointer') and not isinstance(self, FuncCall):
                     a = self.stpointer
+                    print(a)
                     if a is None:
                         stp = a
                     else:
@@ -612,6 +615,8 @@ class FuncCall(Node):
         self.stpointer = None
         self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
         self.s ="FuncCall" 
+        print("IMFUNCCALL")
+        print(self.stpointer)
 
     def children(self):
         nodelist = []
@@ -1340,20 +1345,24 @@ def emit(key, op, var_tuple):
     elif key == "FuncCall":
         printDebug("[emit]FuncCall")
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-        size = var_tuple[1].type.args_size
+        
+        code_list.append(('calling', var_tuple[1], None, None))
+       
+        print(var_tuple[1].name)
+        #  size = var_tuple[1].type.args_size
 
         printDebug("[emit]Pushing the tuple "+str(var_tuple[1]))
         
         print("[FuncCall,Emit]")
-        ret_size = getSize(var_tuple[1].type.type.type)
-        code_list.append(('pushret', None, ret_size, None))
+        #  ret_size = getSize(var_tuple[1].type.type.type)
+        code_list.append(('pushret', None, None, None))
 
         for var in var_tuple[2]:
             printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
         #[TODO] Check if the length of function list should be passed or not
-        code_list.append(('call',temp1, var_tuple[1], (len(var_tuple[2]), size, ret_size)))
-        code_list.append(('pop', None, None, size))
+        code_list.append(('call',temp1, var_tuple[1], None))
+        code_list.append(('pop', None, None, None))
         
         #[TODO] Add code for activation records here
         temp = temp1
