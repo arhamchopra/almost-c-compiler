@@ -237,12 +237,61 @@ def writeCode():
             file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
 
-    
+        elif op == "if<":
+            #  print(line)
+            #  Assuming only constants in operands
+
+            l_addr = getAddr(line[1])
+            r_addr = getAddr(line[2])
+            #  l_refer = getSTEntry(line[1].refer)
+            #  l_offset = -1*refer[2]
+            if l_addr[1] == "addr":
+                file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+            else:
+                file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
+            if r_addr[1] == "addr":
+                file.write("\tlw $t0, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
+            else:
+                file.write("\tadd $t0, $zero, "+r_addr[0]+"\n")
+            branchTo = "L"+str(line[-1])
+            file.write("\tblt $t0, $t1, " + branchTo+"\n")
+            print("[if<]")
+            print(line[-1])
+            print(branchTo)
+
+
+        elif op == "if":
+            #  print(line)
+            #  Assuming only constants in operands
+
+            l_addr = getAddr(line[1])
+            #  l_refer = getSTEntry(line[1].refer)
+            #  l_offset = -1*refer[2]
+            if l_addr[1] == "addr":
+                file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+            else:
+                file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
+            branchTo = "L"+str(line[-1])
+            file.write("\tbne $t0, $t1, $zero " + branchTo+"\n")
+            print("[if]")
+            print(line[-1])
+            print(branchTo)
+
+        elif op == "goto":
+            #  print(line)
+            #  Assuming only constants in operands
+
+            branchTo = "L"+str(line[-1])
+            file.write("\tblt $t0, $t1, " + branchTo+"\n")
+            # print("[OP+]")
+            # print(l_offset)
+            # print(param_size)
     #  file.write("\tli $v0, 1"+"\n")
     #  file.write("\tlw $t1, 0($sp)"+"\n")
     #  file.write("\tadd $a0, $zero, $t1"+"\n")
     #  file.write("\tsyscall"+"\n")
     #
+
 
 
 #  For push
