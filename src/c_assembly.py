@@ -87,6 +87,10 @@ def writeCode():
         #  ret_offset = getAddr(line[1])[0]
         #  file.write("\tsw $t1, "+str(ret_offset-param_size)+"($s7)"+"\n")
 
+    file.write("\tli $v0, 1"+"\n")
+    file.write("\tadd $a0, $zero, $t1"+"\n")
+    file.write("\tsyscall"+"\n")
+
     file.write("\tli $v0, 10"+"\n")
     file.write("\tsyscall"+"\n")
 
@@ -302,18 +306,18 @@ def writeCode():
             else:
                 file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
             branchTo = "L"+str(line[-1])
-            if op == "if<"
-            file.write("\tblt $t0, $t1, " + branchTo+"\n")
-            elif op == "if>"
-            file.write("\tbgt $t0, $t1, " + branchTo+"\n")
-            elif op == "if<="
-            file.write("\tble $t0, $t1, " + branchTo+"\n")
-            elif op == "if>="
-            file.write("\tbge $t0, $t1, " + branchTo+"\n")
-            elif op == "if=="
-            file.write("\tbeq $t0, $t1, " + branchTo+"\n")
-            elif op == "if!="
-            file.write("\tbne $t0, $t1, " + branchTo+"\n")
+            if op == "if<":
+                file.write("\tblt $t0, $t1, " + branchTo+"\n")
+            elif op == "if>":
+                file.write("\tbgt $t0, $t1, " + branchTo+"\n")
+            elif op == "if<=":
+                file.write("\tble $t0, $t1, " + branchTo+"\n")
+            elif op == "if>=":
+                file.write("\tbge $t0, $t1, " + branchTo+"\n")
+            elif op == "if==":
+                file.write("\tbeq $t0, $t1, " + branchTo+"\n")
+            elif op == "if!=":
+                file.write("\tbne $t0, $t1, " + branchTo+"\n")
             # print("[if<]")
             # print(line[-1])
             # print(branchTo)

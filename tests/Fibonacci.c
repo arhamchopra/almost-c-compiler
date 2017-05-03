@@ -1,7 +1,8 @@
-/* #include <stdio.h> */
+#include <stdio.h>
 int fibb(int n) {
     int fnow = 0, fnext = 1, tempf;
-    while(--n>0){
+    while(n-1>0){
+            n=n-1;
             tempf = fnow + fnext;
             fnow = fnext;
             fnext = tempf;
@@ -10,9 +11,9 @@ int fibb(int n) {
 }
 
 int main(){
-    int a;
+    int a=2;
     /* scanf("%d",&a); */
+    return fibb(a);
     /* printf("%d",fibb(a)); */
-
 
 }
