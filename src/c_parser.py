@@ -1356,6 +1356,7 @@ class CParser(PLYParser):
         # and incorrectly interpreted as TYPEID.  We need to add the
         # parameters to the scope the moment the lexer sees LBRACE.
         #
+        print("[direct_declarator_6]In HERE")
         if self._get_yacc_lookahead_token().type == "LBRACE":
             if func.args is not None:
                 for param in func.args.params:
@@ -2019,7 +2020,9 @@ class CParser(PLYParser):
         #Check function type with type of argument_expression_list
         # entry = lookup_GST(p[1])
 
-        if p[1].name == "PrintInt":
+        print("[postfix_expression_3] IN HERE")
+        if p[1].name == "PrintInt" or p[1].name == "ScanInt" or p[1].name == "PrintSpace" or p[1].name == "PrintNewline":
+            print("[postfix_expression_3] GOT PRINT INT")
             p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, None ,  p[1].coord)
 
         else:

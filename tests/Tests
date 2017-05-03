@@ -1,21 +1,13 @@
 Quicksort 
     3AC
-Ackermann 
-    Done
 BinarySearch
     3AC
-Fibonacci(Iterative)
-    Done
-Mutual Recursion
-    Done
-Short Circuit Evaluation
-    Done
-Function with >7 params
-    Done
 Large Expression Reg Allocation
+    TO BE DONE
 
 BubbleSort
     To BE DONE
+
 Jump Over Jumps Optimization
 
 Newton Raphson
@@ -23,14 +15,20 @@ Newton Raphson
 
 File I/O
     
-
-Unary VS Binary Minus
-    DONE
-
 Operators Type Check
     TO BE DONE
-Matrix Multiplication
+
 Binary Tree Traversal
 Graph as adjacency List
 Table for sin(x) cos(x)
 Struct Class data type as return and function params
+
+Done:
+Fibonacci(Iterative)
+Ackermann 
+Mutual Recursion
+Matrix Multiplication
+Function with >7 params
+
+Short Circuit Evaluation
+Unary VS Binary Minus

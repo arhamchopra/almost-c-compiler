@@ -19,6 +19,9 @@ int f2(int n){
 }
 
 int main(){
-    return f1(4);
+    int a;
+    ScanInt(&a);
+    PrintInt(f1(a));
+    return 0;
 
 }

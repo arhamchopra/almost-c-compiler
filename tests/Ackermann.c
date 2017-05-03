@@ -10,5 +10,8 @@ int ackermann(int m, int n)
 int main()
 {
         int m, n;
-        return ackermann(3,4);
+        ScanInt(&m);
+        ScanInt(&n);
+        PrintInt(ackermann(m,n));
+        return 0;
 }

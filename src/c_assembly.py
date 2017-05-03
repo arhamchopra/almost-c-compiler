@@ -40,16 +40,18 @@ def getAddr(obj):
             return (offset, "addr", size)
         else:
             #  Handle Here Important replace 8 by size in .size
-            return (refer, "const",  4)
+            return (int(refer), "const",  4)
     elif isinstance(obj, c_ast.Constant):
-        return (obj.refer, "const", 4)
-    return (obj, "const", 4)
+        return (int(obj.refer), "const", 4)
+    return (int(obj), "const", 4)
 
 def writeCode():
     fix_labels(code_list)
 
     file = open('assembly.asm', 'w')
     file.write(".data"+"\n")
+    file.write('\tnewline: .asciiz "\\n"'+'\n')
+    file.write('\tspace: .asciiz " "'+'\n')
     file.write(".text"+"\n")
 
     file.write("main:"+"\n")
@@ -92,9 +94,9 @@ def writeCode():
         #  ret_offset = getAddr(line[1])[0]
         #  file.write("\tsw $t1, "+str(ret_offset-param_size)+"($s7)"+"\n")
 
-    file.write("\tli $v0, 1"+"\n")
-    file.write("\tadd $a0, $zero, $t1"+"\n")
-    file.write("\tsyscall"+"\n")
+    #  file.write("\tli $v0, 1"+"\n")
+    #  file.write("\tadd $a0, $zero, $t1"+"\n")
+    #  file.write("\tsyscall"+"\n")
 
     file.write("\tli $v0, 10"+"\n")
     file.write("\tsyscall"+"\n")
@@ -161,10 +163,38 @@ def writeCode():
                 file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
                 file.write("\tsw $t0, 0($sp)"+"\n")
 
-        elif op == "PrintInt":
+        elif op == "ScanInt":
+            print("[WriteCode]ScanInt")
             
             addr = getAddr(line[1])
 
+            file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
+
+            file.write("\tli $v0, 5"+"\n")
+            file.write("\tsyscall"+"\n")
+            file.write("\tsw $v0, ($t0)"+"\n")
+
+        elif op == "PrintSpace":
+            print("[WriteCode]PrintSpace")
+
+            file.write("\tli $v0, 4"+"\n")
+            file.write("\tla $a0, space"+"\n")
+            file.write("\tsyscall"+"\n")
+
+        elif op == "PrintNewline":
+            print("[WriteCode]PrintNewline")
+
+            file.write("\tli $v0, 4"+"\n")
+            file.write("\tla $a0, newline"+"\n")
+            file.write("\tsyscall"+"\n")
+
+        elif op == "PrintInt":
+            print("[WriteCode]PrintInt")
+            
+            addr = getAddr(line[1])
+
+            print("[PrintInt]IN PRINTINT")
+            print(addr)
             file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
 
             file.write("\tli $v0, 1"+"\n")
@@ -284,7 +314,7 @@ def writeCode():
             l_offset = l_addr[0]
 
             r1_addr = getAddr(line[2])
-            r2_addr = getAddr(line[3])
+
             if r1_addr[1] == "addr":
                 file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
             else:
