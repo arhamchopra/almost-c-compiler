@@ -45,6 +45,7 @@ def getAddr(obj):
         return (obj, "const", 4)
 
 def writeCode():
+    param_size = 0
     fix_labels(code_list)
 
     file = open('assembly.asm', 'w')
@@ -267,6 +268,7 @@ def writeCode():
 
         # binary operators
         elif op == "+" or op == "-" or op == "*" or op == "/" or op == "%":
+            optype = "int"
             #  print(line)
             #  Assuming only constants in operands
 
@@ -277,70 +279,142 @@ def writeCode():
 
             r1_addr = getAddr(line[2])
             r2_addr = getAddr(line[3])
+            # 
+            if optype == "int":
+                if r1_addr[1] == "addr":
+                    file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd $t0, $zero, "+r1_addr[0]+"\n")
 
-            if r1_addr[1] == "addr":
-                file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
-            else:
-                file.write("\tadd $t0, $zero, "+r1_addr[0]+"\n")
+                if r2_addr[1] == "addr":
+                    file.write("\tlw $t1, "+str(param_size - r2_addr[0] + reg_size - r2_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd $t1, $zero, "+str(r2_addr[0])+"\n")
 
-            if r2_addr[1] == "addr":
-                file.write("\tlw $t1, "+str(param_size - r2_addr[0] + reg_size - r2_addr[2])+"($s7)"+"\n")
-            else:
-                file.write("\tadd $t1, $zero, "+str(r2_addr[0])+"\n")
+                if op == "+":
+                   file.write("\tadd $t0, $t0, $t1"+"\n")
+                elif op == "-":
+                   file.write("\tsub $t0, $t0, $t1"+"\n")
+                elif op == "*":
+                   file.write("\tmul $t0, $t0, $t1"+"\n")               
+                elif op == "/":
+                   file.write("\tdiv $t0, $t0, $t1"+"\n")
+                elif op == "%":
+                   file.write("\tdiv $t2, $t0, $t1"+"\n")
+                   file.write("\tmul $t2, $t2, $t1"+"\n")
+                   file.write("\tsub $t0, $t0, $t2"+"\n")     
+                file.write("\ts.s $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
-            if op == "+":
-               file.write("\tadd $t0, $t0, $t1"+"\n")
-            elif op == "-":
-               file.write("\tsub $t0, $t0, $t1"+"\n")
-            elif op == "*":
-               file.write("\tmul $t0, $t0, $t1"+"\n")               
-            elif op == "/":
-               file.write("\tdiv $t0, $t0, $t1"+"\n")
-            elif op == "%":
-               file.write("\tdiv $t2, $t0, $t1"+"\n")
-               file.write("\tmul $t2, $t2, $t1"+"\n")
-               file.write("\tsub $t0, $t0, $t2"+"\n")     
+            elif optype == float:
+                if r1_addr[1] == "addr":
+                    file.write("\tl.s $f0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd.s $f0, $zero, "+r1_addr[0]+"\n")
+
+                if r2_addr[1] == "addr":
+                    file.write("\tl.s $f1, "+str(param_size - r2_addr[0] + reg_size - r2_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd.s $f1, $zero, "+str(r2_addr[0])+"\n")
+
+                if op == "+":
+                   file.write("\tadd.s $t0, $f0, $f1"+"\n")
+                elif op == "-":
+                   file.write("\tsub.s $t0, $f0, $f1"+"\n")
+                elif op == "*":
+                   file.write("\tmul.s $t0, $f0, $f1"+"\n")               
+                elif op == "/":
+                   file.write("\tdiv.s $t0, $f0, $f1"+"\n")
+                elif op == "%":
+                   file.write("\tdiv.s $t2, $f0, $f1"+"\n")
+                   file.write("\tmul.s $t2, $f2, $f1"+"\n")
+                   file.write("\tsub.s $t0, $f0, $f2"+"\n")
+                file.write("\ts.s $f0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+
 
             print("[OP+]")
             print(l_offset)
             print(param_size)
-            file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
         # relational operators
         elif op == "if<" or op == 'if<=' or op == 'if>' or op == 'if>=' or op == 'if==' or op == 'if!=':
-            #  print(line)
-            #  Assuming only constants in operands
-            l_addr = getAddr(line[1])
-            r_addr = getAddr(line[2])
-            l_offset = l_addr[0]
+            optype = "int"
+            if optype == "int":
+                #  print(line)
+                #  Assuming only constants in operands
+                l_addr = getAddr(line[1])
+                r_addr = getAddr(line[2])
+                l_offset = l_addr[0]
 
-            #  l_refer = getSTEntry(line[1].refer)
-            #  l_offset = -1*refer[2]
-            if l_addr[1] == "addr":
-                file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
-            else:
-                file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
-            if r_addr[1] == "addr":
-                file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
-            else:
-                file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
-            branchTo = "L"+str(line[-1])
+                #  l_refer = getSTEntry(line[1].refer)
+                #  l_offset = -1*refer[2]
+                if l_addr[1] == "addr":
+                    file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
+                if r_addr[1] == "addr":
+                    file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
+                branchTo = "L"+str(line[-1])
 
-            if op == "if<":
-                file.write("\tblt $t0, $t1, " + branchTo+"\n")
-            elif op == "if>":
-                file.write("\tbgt $t0, $t1, " + branchTo+"\n")
-            elif op == "if<=":
-                file.write("\tble $t0, $t1, " + branchTo+"\n")
-            elif op == "if>=":
-                file.write("\tbge $t0, $t1, " + branchTo+"\n")
-            elif op == "if==":
-                file.write("\tbeq $t0, $t1, " + branchTo+"\n")
-            elif op == "if!=":
-                file.write("\tbne $t0, $t1, " + branchTo+"\n")
-            # print("[if<]")
-            # print(line[-1])
-            # print(branchTo)
+                if op == "if<":
+                    file.write("\tblt $t0, $t1, " + branchTo+"\n")
+                elif op == "if>":
+                    file.write("\tbgt $t0, $t1, " + branchTo+"\n")
+                elif op == "if<=":
+                    file.write("\tble $t0, $t1, " + branchTo+"\n")
+                elif op == "if>=":
+                    file.write("\tbge $t0, $t1, " + branchTo+"\n")
+                elif op == "if==":
+                    file.write("\tbeq $t0, $t1, " + branchTo+"\n")
+                elif op == "if!=":
+                    file.write("\tbne $t0, $t1, " + branchTo+"\n")
+                # print("[if<]")
+                # print(line[-1])
+                # print(branchTo)
+
+
+            elif optype == "float":
+                #  print(line)
+                #  Assuming only constants in operands
+                l_addr = getAddr(line[1])
+                r_addr = getAddr(line[2])
+                l_offset = l_addr[0]
+
+                #  l_refer = getSTEntry(line[1].refer)
+                #  l_offset = -1*refer[2]
+                if l_addr[1] == "addr":
+                    file.write("\tl.s $f0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd.s $f0, $zero, "+l_addr[0]+"\n")
+                if r_addr[1] == "addr":
+                    file.write("\tl.s $f1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
+                else:
+                    file.write("\tadd.s $f1, $zero, "+r_addr[0]+"\n")
+                branchTo = "L"+str(line[-1])
+
+                if op == "if<":
+                    file.write("\tc.lt.s $f0, $f1")
+                    file.write("bc1f " + branchTo+"\n")
+                elif op == "if>":
+                    file.write("\tc.le.s $f0, $f1")
+                    file.write("\tbcf0 " + branchTo+"\n")
+                elif op == "if<=":
+                    file.write("\tc.le.s $f0, $f1")
+                    file.write("bc1f " + branchTo+"\n")
+                elif op == "if>=":
+                    file.write("\tc.lt.s $f0, $f1")
+                    file.write("bc0f " + branchTo+"\n")
+                elif op == "if==":
+                    file.write("\tc.eq.s $f0, $f1")
+                    file.write("bc1f " + branchTo+"\n")
+                elif op == "if!=":
+                    file.write("\tc.eq.s $f0, $f1")
+                    file.write("bc0f " + branchTo+"\n")
+                # print("[if<]")
+                # print(line[-1])
+                # print(branchTo)
+
 
         # Unary operators
         elif op == "~":
@@ -355,19 +429,29 @@ def writeCode():
             file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
         elif op == "deref":
+            optype = "int"
             l_addr = getAddr(line[1])
             l_offset = l_addr[0]
             r_addr = getAddr(line[2])
             file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
-            file.write("\tlw $t0, ($t1)"+"\n")
-            file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+            if optype == "int":
+                file.write("\tlw $t0, ($t1)"+"\n")
+                file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+
+            elif optype == "float":
+                file.write("\tl.s $f0, ($f1)"+"\n")
+                file.write("\ts.s $f0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
         elif op == "&":
+            optype = "int"
             l_addr = getAddr(line[1])
             l_offset = l_addr[0]
             r_addr = getAddr(line[2])
-            file.write("\tadd $t0, $s7, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"\n")
-            file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+            if optype == "int":
+                file.write("\tadd $t0, $s7, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"\n")
+                file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+
+            # elif optype == "float":
 
 
         elif op == "if":
