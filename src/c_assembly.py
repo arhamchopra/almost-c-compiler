@@ -234,7 +234,7 @@ def writeCode():
 
             file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
-        elif op == "+" :
+        elif op == "+" or op == "-" or op == "*":
             #  print(line)
             #  Assuming only constants in operands
 
@@ -256,7 +256,20 @@ def writeCode():
             else:
                 file.write("\tadd $t1, $zero, "+str(r2_addr[0])+"\n")
 
-            file.write("\tadd $t0, $t0, $t1"+"\n")
+            if op == "+":
+               file.write("\tadd $t0, $t0, $t1"+"\n")
+            elif op == "-":
+               file.write("\tsub $t0, $t0, $t1"+"\n")
+            elif op == "*":
+               file.write("\tmul $t0, $t0, $t1"+"\n")               
+            elif op == "/":
+               file.write("\tdiv $t0, $t0, $t1"+"\n")
+            elif op == "%":
+               file.write("\tdiv $t0, $t0, $t1"+"\n")
+               
+
+
+            
             print("[OP+]")
             print(l_offset)
             print(param_size)
@@ -306,6 +319,7 @@ def writeCode():
             else:
                 file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
             branchTo = "L"+str(line[-1])
+
             if op == "if<":
                 file.write("\tblt $t0, $t1, " + branchTo+"\n")
             elif op == "if>":
