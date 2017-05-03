@@ -98,7 +98,10 @@ def writeCode():
 
         op = line[0]
         #  print(line)
-        if op == "begin":
+
+        if ( op[:2] =='if' or op=='goto' ) and not line[-1]:
+            pass
+        elif op == "begin":
             #  print(line)
             addr = getSTEntry(line[2].refer)
             name = addr[0]
@@ -259,7 +262,6 @@ def writeCode():
         elif op == "if<":
             #  print(line)
             #  Assuming only constants in operands
-
             l_addr = getAddr(line[1])
             r_addr = getAddr(line[2])
             #  l_refer = getSTEntry(line[1].refer)
@@ -268,6 +270,7 @@ def writeCode():
                 file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
             else:
                 file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
+            print("{IFIFIFIFIFIIFF}")
             if r_addr[1] == "addr":
                 file.write("\tlw $t0, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
             else:
@@ -291,7 +294,7 @@ def writeCode():
             else:
                 file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
             branchTo = "L"+str(line[-1])
-            file.write("\tbne $t0, $t1, $zero " + branchTo+"\n")
+            file.write("\tbne $t0, $zero " + branchTo+"\n")
             print("[if]")
             print(line[-1])
             print(branchTo)
@@ -302,9 +305,9 @@ def writeCode():
 
             branchTo = "L"+str(line[-1])
             file.write("\tblt $t0, $t1, " + branchTo+"\n")
-            # print("[OP+]")
-            # print(l_offset)
-            # print(param_size)
+            print("[goto]")
+            print(line)
+            print(branchTo)
     #  file.write("\tli $v0, 1"+"\n")
     #  file.write("\tlw $t1, 0($sp)"+"\n")
     #  file.write("\tadd $a0, $zero, $t1"+"\n")
