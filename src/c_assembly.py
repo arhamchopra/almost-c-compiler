@@ -262,6 +262,7 @@ def writeCode():
                file.write("\tdiv $t0, $t0, $t1"+"\n")
             elif op == "%":
                file.write("\tdiv $t0, $t0, $t1"+"\n")
+               
 
 
             
