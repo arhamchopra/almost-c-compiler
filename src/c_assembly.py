@@ -41,8 +41,9 @@ def getAddr(obj):
         else:
             #  Handle Here Important replace 8 by size in .size
             return (refer, "const",  4)
-    else:
-        return (obj, "const", 4)
+    elif isinstance(obj, c_ast.Constant):
+        return (obj.refer, "const", 4)
+    return (obj, "const", 4)
 
 def writeCode():
     fix_labels(code_list)
@@ -160,6 +161,16 @@ def writeCode():
                 file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
                 file.write("\tsw $t0, 0($sp)"+"\n")
 
+        elif op == "PrintInt":
+            
+            addr = getAddr(line[1])
+
+            file.write("\tlw $t0, "+str(param_size - addr[0] + reg_size - addr[2])+"($s7)"+"\n")
+
+            file.write("\tli $v0, 1"+"\n")
+            file.write("\tadd $a0, $zero, $t0"+"\n")
+            file.write("\tsyscall"+"\n")
+
         elif op == "calling":
             id = line[1]
             name = id.name
@@ -250,6 +261,22 @@ def writeCode():
 
             file.write("\tjr $ra"+"\n")
 
+        elif op == "MOVADR":
+            l_addr = getAddr(line[1])
+            l_offset = l_addr[0]
+
+            r_addr = getAddr(line[2])
+
+            file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+
+            if r_addr[1] == "addr":
+                file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
+            else:
+                file.write("\tadd $t1, $zero, "+str(r_addr[0])+"\n")
+
+            file.write("\tsw $t1, ($t0)"+"\n")
+
+
         elif op == "=" :
             l_addr = getAddr(line[1])
             #  l_refer = getSTEntry(line[1].refer)
@@ -261,6 +288,8 @@ def writeCode():
             if r1_addr[1] == "addr":
                 file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
             else:
+                print("[WriteCode]IN =")
+                print(r1_addr[0])
                 file.write("\tadd $t0, $zero, "+str(r1_addr[0])+"\n")
 
             file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
@@ -281,7 +310,10 @@ def writeCode():
             if r1_addr[1] == "addr":
                 file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
             else:
-                file.write("\tadd $t0, $zero, "+r1_addr[0]+"\n")
+                print("[WriteCode]")
+                print(r1_addr[0])
+                print(line)
+                file.write("\tadd $t0, $zero, "+str(r1_addr[0])+"\n")
 
             if r2_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r2_addr[0] + reg_size - r2_addr[2])+"($s7)"+"\n")
@@ -323,7 +355,7 @@ def writeCode():
             if r_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
             else:
-                file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
+                file.write("\tadd $t1, $zero, "+str(r_addr[0])+"\n")
             branchTo = "L"+str(line[-1])
 
             if op == "if<":
@@ -366,9 +398,14 @@ def writeCode():
             l_addr = getAddr(line[1])
             l_offset = l_addr[0]
             r_addr = getAddr(line[2])
-            file.write("\tadd $t0, $s7, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"\n")
-            file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
-
+            if line[1].isArrayRef:
+                t_elem = line[1].array_pointer
+                t_addr = getAddr(t_elem)
+                file.write("\tlw $t0, "+str(param_size - t_addr[0] + reg_size - t_addr[2]))
+                file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
+            else: 
+                file.write("\tadd $t0, $s7, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"\n")
+                file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
         elif op == "if":
             #  print(line)
@@ -380,7 +417,7 @@ def writeCode():
             if l_addr[1] == "addr":
                 file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
             else:
-                file.write("\tadd $t0, $zero, "+l_addr[0]+"\n")
+                file.write("\tadd $t0, $zero, "+str(l_addr[0])+"\n")
             branchTo = "L"+str(line[-1])
             file.write("\tbne $t0, $zero " + branchTo+"\n")
             # print("[if]")

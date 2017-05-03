@@ -613,10 +613,13 @@ class FuncCall(Node):
         self.coord = coord
         self.type = type
         self.stpointer = None
-        self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
-        self.s ="FuncCall" 
-        print("IMFUNCCALL")
-        print(self.stpointer)
+        if name == "PrintInt":
+            self.refer = emit("PrintInt","f()",(type, name, args.exprs))
+        else:
+            self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
+            self.s ="FuncCall" 
+            print("IMFUNCCALL")
+            print(self.stpointer)
 
     def children(self):
         nodelist = []
@@ -1282,10 +1285,15 @@ def emit(key, op, var_tuple):
             temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
             code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
-            if var_tuple[1].hasPointer:
-                code_list.append(("MOV", var_tuple[1], temp1, None))
+
+            if var_tuple[1].isArrayRef:
+                code_list.append(("MOVADR", var_tuple[1].array_pointer, temp1, None))
             else:
-                code_list.append((op_equal, var_tuple[1], temp1, None))
+                if var_tuple[1].hasPointer:
+                    code_list.append(('MOVPOINT', var_tuple[1], temp1, None))
+                else:
+                    code_list.append(("=", var_tuple[1], temp1, None))
+            
             temp = temp1 
             
             temp.addToTruelist(getNextInstr())
@@ -1302,7 +1310,12 @@ def emit(key, op, var_tuple):
         code_list.append(("*", temp1, var_tuple[2], size))
         
         temp2 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
-        code_list.append(("+", temp2, temp1, var_tuple[1]))
+        if not var_tuple[1].isArrayRef:
+            temp4 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            code_list.append(("&", temp4, var_tuple[1], None))
+            code_list.append(("-", temp2, temp4, temp1))
+        else:
+            code_list.append(("-", temp2, var_tuple[1], temp1))
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("deref", temp3, temp2, None))
@@ -1340,6 +1353,8 @@ def emit(key, op, var_tuple):
         code_list.append(("+", temp1, var_tuple[1], var_tuple[2]))
         code_list.append(('deref', temp, temp1, None))
 
+    elif key == "PrintInt":
+        code_list.append(("PrintInt", var_tuple[2][0].refer, None, None))
 
 #  Size not handled ...
     elif key == "FuncCall":
