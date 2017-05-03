@@ -253,7 +253,7 @@ class ArrayRef(Node):
         self.subscript = subscript
         self.coord = coord
         self.type = type
-        self.refer = emit("ArrayRef", "[]", (type, name.refer, subscript))
+        self.refer = emit("ArrayRef", "[]", (type, name.refer, subscript.refer))
 
     def children(self):
         nodelist = []
@@ -613,10 +613,27 @@ class FuncCall(Node):
         self.coord = coord
         self.type = type
         self.stpointer = None
-        self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
-        self.s ="FuncCall" 
-        print("IMFUNCCALL")
-        print(self.stpointer)
+        if name.name == "PrintInt":
+            print("[FuncCall,AST]IN PRINTINT")
+            self.refer = emit("PrintInt","f()",(type, name, args.exprs))
+
+        elif name.name == "ScanInt":
+            print("[FuncCall,AST]IN SCANINT")
+            self.refer = emit("ScanInt","f()",(type, name, args.exprs))
+
+        elif name.name == "PrintSpace":
+            print("[FuncCall,AST]IN PrintSpace")
+            self.refer = emit("PrintSpace","f()",(type, name))
+
+        elif name.name == "PrintNewline":
+            print("[FuncCall,AST]IN PrintNewline")
+            self.refer = emit("PrintNewline","f()",(type, name))
+
+        else:
+            self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
+            self.s ="FuncCall" 
+            print("IMFUNCCALL")
+            print(self.stpointer)
 
     def children(self):
         nodelist = []
@@ -682,21 +699,22 @@ class ID(Node):
         print("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
-        if type:
-            self.type = type 
-        else:
-            CST = getCST()
-            entry = CST.lookupFullScope(name)
-            if(entry[-1]=="ST"):
-                self.type = entry[1];
+        if name != "PrintInt" and name != "ScanInt" and name != "PrintSpace" and name != "PrintNewline":
+            if type:
+                self.type = type 
             else:
-                self.type= None
-        self.s = name
-        self.stpointer = None
-        print("[ID]IN ID")
-        print(name)
-        self.refer = getReference(name)
-        print(self.refer)
+                CST = getCST()
+                entry = CST.lookupFullScope(name)
+                if(entry[-1]=="ST"):
+                    self.type = entry[1];
+                else:
+                    self.type= None
+            self.s = name
+            self.stpointer = None
+            print("[ID]IN ID")
+            print(name)
+            self.refer = getReference(name)
+            print(self.refer)
 
     def children(self):
         nodelist = []
@@ -1282,10 +1300,15 @@ def emit(key, op, var_tuple):
             temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
 
             code_list.append((op_exp, temp1, var_tuple[1], var_tuple[2]))
-            if var_tuple[1].hasPointer:
-                code_list.append(("MOV", var_tuple[1], temp1, None))
+
+            if var_tuple[1].isArrayRef:
+                code_list.append(("MOVADR", var_tuple[1].array_pointer, temp1, None))
             else:
-                code_list.append((op_equal, var_tuple[1], temp1, None))
+                if var_tuple[1].hasPointer:
+                    code_list.append(('MOVPOINT', var_tuple[1], temp1, None))
+                else:
+                    code_list.append(("=", var_tuple[1], temp1, None))
+            
             temp = temp1 
             
             temp.addToTruelist(getNextInstr())
@@ -1302,7 +1325,12 @@ def emit(key, op, var_tuple):
         code_list.append(("*", temp1, var_tuple[2], size))
         
         temp2 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
-        code_list.append(("+", temp2, temp1, var_tuple[1]))
+        if not var_tuple[1].isArrayRef:
+            temp4 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+            code_list.append(("&", temp4, var_tuple[1], None))
+            code_list.append(("+", temp2, temp4, temp1))
+        else:
+            code_list.append(("+", temp2, var_tuple[1].array_pointer, temp1))
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         code_list.append(("deref", temp3, temp2, None))
@@ -1339,11 +1367,27 @@ def emit(key, op, var_tuple):
 
         code_list.append(("+", temp1, var_tuple[1], var_tuple[2]))
         code_list.append(('deref', temp, temp1, None))
+    
+    elif key == "PrintNewline":
+        code_list.append(("PrintNewline", None, None, None))
+        temp = TAC((0,0,0), makeNewData())
 
+    elif key == "PrintSpace":
+        code_list.append(("PrintSpace", None, None, None))
+        temp = TAC((0,0,0), makeNewData())
+
+    elif key == "PrintInt":
+        code_list.append(("PrintInt", var_tuple[2][0].refer, None, None))
+        temp = TAC((0,0,0), makeNewData())
+
+    elif key == "ScanInt":
+        code_list.append(("ScanInt", var_tuple[2][0].refer, None, None))
+        temp = TAC((0,0,0), makeNewData())
 
 #  Size not handled ...
     elif key == "FuncCall":
-        printDebug("[emit]FuncCall")
+        print("[emit]FuncCall")
+        print(var_tuple[1].name)
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         
         code_list.append(('calling', var_tuple[1], None, None))

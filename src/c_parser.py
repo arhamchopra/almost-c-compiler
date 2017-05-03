@@ -1356,6 +1356,7 @@ class CParser(PLYParser):
         # and incorrectly interpreted as TYPEID.  We need to add the
         # parameters to the scope the moment the lexer sees LBRACE.
         #
+        print("[direct_declarator_6]In HERE")
         if self._get_yacc_lookahead_token().type == "LBRACE":
             if func.args is not None:
                 for param in func.args.params:
@@ -2019,75 +2020,81 @@ class CParser(PLYParser):
         #Check function type with type of argument_expression_list
         # entry = lookup_GST(p[1])
 
-        
-        function_decl = self.CST.lookupFT(p[1].name)[1]
+        print("[postfix_expression_3] IN HERE")
+        if p[1].name == "PrintInt" or p[1].name == "ScanInt" or p[1].name == "PrintSpace" or p[1].name == "PrintNewline":
+            print("[postfix_expression_3] GOT PRINT INT")
+            p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, None ,  p[1].coord)
 
-        function_type = function_decl.type.type
-        print("Function Type is {}".format(function_type))
-        print("##################################### In Function call")
-        if isinstance(p[1], c_ast.ID):
-            func_decl = self.CST.lookupFT(p[1].name)
-            print("func_decl " + str(func_decl))
-            print("func_use  " + str(p[3]))
-            dec_list = func_decl[1].args.params
-            use_list = p[3].type
-            new_list = []
-
-            print("Function Decl_List " + str(dec_list))
-            print("Function Use_List " + str(use_list))
-            explist = c_ast.ExprList([],[], p[3].coord)
-
-            error_free = True
-            if len(dec_list) == len(use_list):
-                for d,u in zip(dec_list, use_list):
-
-                    print("Element of dec_list")
-                    print(d.type)
-                    print("Element of use_list")
-                    print(u.type)
-                    t1_ = self._get_type(u)
-                    t2_ = self._get_type(d)
-                    if not self.compare(t1_, t2_):
-                        #  printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
-                        print("They DOnt match "+str(t1_) + " " + str(t2_))
-                        assert False
-                        # Check for type casting, if not allowed set error_free = False
-                        error_free = False
-                        # self._parse_error("type of u is " + str(t),p[1].coord)
-                        explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
-                        explist.type.append(self._get_type(d))
-                    else:
-                        explist.exprs.append(u)                    
-                        explist.type.append(self._get_type(u))
-
-                    #  t = self._get_type(u).type
-                    #  print(t)
-                    #  print("Function List Decl Type: "+str(self._get_type(d).type[-1]))
-                    #  print("Argument List Decl Type: "+str(t))
-                    #  if self._get_type(d).type[-1] != t[-1]:
-                    #      printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
-                    #      # Check for type casting, if not allowed set error_free = False
-                    #      # error_free = False
-                    #      # self._parse_error("type of u is " + str(t),p[1].coord)
-                    #      explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
-                    #      explist.type.append(self._get_type(d))
-                    #
-                    #  else:
-                    #      explist.exprs.append(u)
-                    #      explist.type.append(self._get_type(u))
-                if (error_free):
-                    print("IMERRORFREE")
-                    print(function_type.type)
-                    p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None, function_type,  p[1].coord)
-
-                #     printDebug("InValid Function Call")
-            else:
-                self._parse_error("[Error]: Expected " + str(len(dec_list)) + " number of arguments in function call but found " + str(len(use_list)), p[1].coord )
-                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
         else:
-            self._parse_error("Invalid function call",p[1].coord)
+            
+            function_decl = self.CST.lookupFT(p[1].name)[1]
 
-            p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
+            function_type = function_decl.type.type
+            print("Function Type is {}".format(function_type))
+            print("##################################### In Function call")
+            if isinstance(p[1], c_ast.ID):
+                func_decl = self.CST.lookupFT(p[1].name)
+                print("func_decl " + str(func_decl))
+                print("func_use  " + str(p[3]))
+                dec_list = func_decl[1].args.params
+                use_list = p[3].type
+                new_list = []
+
+                print("Function Decl_List " + str(dec_list))
+                print("Function Use_List " + str(use_list))
+                explist = c_ast.ExprList([],[], p[3].coord)
+
+                error_free = True
+                if len(dec_list) == len(use_list):
+                    for d,u in zip(dec_list, use_list):
+
+                        print("Element of dec_list")
+                        print(d.type)
+                        print("Element of use_list")
+                        print(u.type)
+                        t1_ = self._get_type(u)
+                        t2_ = self._get_type(d)
+                        if not self.compare(t1_, t2_):
+                            #  printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                            print("They DOnt match "+str(t1_) + " " + str(t2_))
+                            assert False
+                            # Check for type casting, if not allowed set error_free = False
+                            error_free = False
+                            # self._parse_error("type of u is " + str(t),p[1].coord)
+                            explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
+                            explist.type.append(self._get_type(d))
+                        else:
+                            explist.exprs.append(u)                    
+                            explist.type.append(self._get_type(u))
+
+                        #  t = self._get_type(u).type
+                        #  print(t)
+                        #  print("Function List Decl Type: "+str(self._get_type(d).type[-1]))
+                        #  print("Argument List Decl Type: "+str(t))
+                        #  if self._get_type(d).type[-1] != t[-1]:
+                        #      printDebug("[Error]: Type mismatch Expected " + str(d.type.type.type) +" but found " + str(t), p[1].coord)
+                        #      # Check for type casting, if not allowed set error_free = False
+                        #      # error_free = False
+                        #      # self._parse_error("type of u is " + str(t),p[1].coord)
+                        #      explist.exprs.append(c_ast.Cast(self._get_type(d), u, d))
+                        #      explist.type.append(self._get_type(d))
+                        #
+                        #  else:
+                        #      explist.exprs.append(u)
+                        #      explist.type.append(self._get_type(u))
+                    if (error_free):
+                        print("IMERRORFREE")
+                        print(function_type.type)
+                        p[0] = c_ast.FuncCall(p[1], explist if len(p) == 5 else None, function_type,  p[1].coord)
+
+                    #     printDebug("InValid Function Call")
+                else:
+                    self._parse_error("[Error]: Expected " + str(len(dec_list)) + " number of arguments in function call but found " + str(len(use_list)), p[1].coord )
+                    p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
+            else:
+                self._parse_error("Invalid function call",p[1].coord)
+
+                p[0] = c_ast.FuncCall(p[1], p[3] if len(p) == 5 else None, c_ast.IdentifierType(['int']),  p[1].coord)
 
 #[TODO]
     def p_postfix_expression_4(self, p):

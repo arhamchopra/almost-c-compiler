@@ -43,7 +43,7 @@ def getSize(type):
     if type == "SymbTab":
         return 0
     if isinstance(type, c_ast.PtrDecl):
-        return 8
+        return 4
     if isinstance(type, c_ast.ArrayDecl):        
         printDebug(type.dim)
         print("[getSize]")
