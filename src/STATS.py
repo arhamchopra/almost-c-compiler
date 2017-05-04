@@ -1,2 +1,2 @@
 
-reg_size = 8
+reg_size = 4

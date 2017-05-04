@@ -1,33 +1,29 @@
-/* #include <stdio.h> */
+int main()
+{
+  int array[10], n =10;
+  int c, d, swap;
  
-void bubble_sort (int *a, int n) {
-    int i, t, s = 1;
-    while (s) {
-            s = 0;
-            for (i = 1; i < n; i++) {
-                        if (a[i] < a[i - 1]) {
-                                        t = a[i];
-                                        a[i] = a[i - 1];
-                                        a[i - 1] = t;
-                                        s = 1;
-                                    }
-                    }
-        }
+  for (c = 0; c < n; c++)
+    ScanInt(&array[c]);
+ 
+  for (c = 0 ; c < ( n - 1 ); c++)
+  {
+    for (d = 0 ; d < n - c - 1; d++)
+    {
+      int k1 = array[d];
+      int k2 = array[d+1];
+      if (array[d] > array[d+1]) /* For decreasing order use < */
+      {
+        swap       = array[d];
+        array[d]   = array[d+1];
+        array[d+1] = swap;
+      }
+    }
+  }
+  
+  for ( c = 0 ; c < n ; c++ ){
+     PrintInt(array[c]);
+     PrintSpace();
+ }
+  return 0;
 }
- 
-int main () {
-    /* int a[] = {4, 65, 2, -31, 0, 99, 2, 83, 782, 1}; */
-    int a[10];
-    /* int n = sizeof a / sizeof a[0]; */
-    int i;
-    int n;
-    for (i = 0; i < n; i++)
-    {}
-        /* printf("%d%s", a[i], i == n - 1 ? "\n" : " "); */
-    bubble_sort(a, n);
-    for (i = 0; i < n; i++)
-    {}
-        /* printf("%d%s", a[i], i == n - 1 ? "\n" : " "); */
-    return 0;
-}
- 

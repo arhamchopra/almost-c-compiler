@@ -30,10 +30,22 @@ code_list = []
 
 
 user_debug = False 
+
+global_data = {}
     
 def printDebug(s):
     if user_debug:
         print(s)
+
+def getArrayName(type):
+    if isinstance(type.type, ArrayDecl):
+        return getArrayName(type.type)
+    else:
+        print(type.type)
+        print("IN GETARRAYNAME")
+        if isinstance(type.type, TypeDecl):
+            print(type.type.declname)
+            return type.type.declname
 
 def getType(v):
     print(v)
@@ -433,7 +445,7 @@ class Decl(Node):
         self.coord = coord
         self.s = "NAME" 
         self.stpointer = None
-        self.refer = TAC((0,0,0), makeNewData())
+        self.refer = TAC((0,0,0), makeNewData()) 
 
     def children(self):
         nodelist = []
@@ -1066,6 +1078,7 @@ class TAC():
         
 
 
+
 def emit(key, op, var_tuple):
     print("[emit]In Emit")
     print("[emit]"+str((key, op, var_tuple)))
@@ -1427,8 +1440,37 @@ def emit(key, op, var_tuple):
     elif key == "Return":
         code_list.append(("return", var_tuple[1], None, None))
         temp = TAC((0,0,0), makeNewData())
+    #  elif key == "Decl":
+    #      CST = getCST()
+    #      GST = getGST()
+    #      if CST.id == GST.id:
+    #          print("[Emit,Decl]")
+    #          if var_tuple[0].init:
+    #              print("[Emit,Decl]")
+    #              print(var_tuple[0].init)
+    #              if isinstance(var_tuple[0].type, TypeDecl):
+    #                  print(var_tuple[0].type.declname)
+    #                  global_data[str(var_tuple[0].type.declname)] = var_tuple[0].init
+    #              elif isinstance(var_tuple[0].type, ArrayDecl):
+    #                  name = getArrayName(var_tuple[0].type)
+    #                  print(name)
+    #                  global_data[str(name)] = var_tuple[0].init
+    #          else:
+    #              if isinstance(var_tuple[0].type, TypeDecl):
+    #                  print(var_tuple[0].type.declname)
+    #                  global_data[str(var_tuple[0].type.declname)] = None
+    #              elif isinstance(var_tuple[0].type, ArrayDecl):
+    #                  name = getArrayName(var_tuple[0].type)
+    #                  print(name)
+    #                  global_data[str(name)] = None
+ 
+            #  print(var_tuple[0].type.type)
+        #  temp = TAC((0,0,0), makeNewData())
 
     return temp
+
+def getGlobalData():
+    return global_data
 
 def makeNewData():
     data = {

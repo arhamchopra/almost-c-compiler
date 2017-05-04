@@ -19,11 +19,11 @@ def getSize(type):
     if type == "void":
         return 0
     if type == "char":
-        return 1
+        return 4
     if type == "int":
         return 4
     if type == "float":
-        return 8
+        return 4
     if type == "double":
         return 8
     if type == "short":
@@ -113,11 +113,16 @@ class SymbolTable(object):
                 size = 8
             else:
                 size = getSize(type)
+
+        is_global = False
+        if self.id == GST.id:
+            is_global = True
+
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
-        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer), self.id))
-        self.table['cur_scope'].append((lexeme, type, offset, size, child, pointer))
+        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer, is_global), self.id))
+        self.table['cur_scope'].append((lexeme, type, offset, size, child, pointer, is_global))
         return pointer
 
     def addToFT(self, lexeme, type, status, child=None, p_list=None):

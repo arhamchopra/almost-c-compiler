@@ -1,4 +1,4 @@
-#include <stdio.h>
+/* #include <stdio.h> */
  
 int ackermann(int m, int n)
 {
@@ -9,9 +9,9 @@ int ackermann(int m, int n)
  
 int main()
 {
-        int m, n;
-        ScanInt(&m);
-        ScanInt(&n);
-        PrintInt(ackermann(m,n));
+        int am, an;
+        ScanInt(&am);
+        ScanInt(&an);
+        PrintInt(ackermann(am,an));
         return 0;
 }

@@ -2,12 +2,12 @@
  
 int main()
 {
-  int size = 5;
+  int size = 2;
   int c, d, k;
   int sum = 0;
-  int first[5][5];
-  int second[5][5];
-  int multiply[5][5];
+  int first[2][2];
+  int second[2][2];
+  int multiply[2][2];
  
   for (c = 0; c < size; c++){
     for (d = 0; d < size; d++){

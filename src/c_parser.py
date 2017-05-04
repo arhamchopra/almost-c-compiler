@@ -624,7 +624,8 @@ class CParser(PLYParser):
 
             if fixed_decl.init:
                 printDebug("[_build_declarations]REFER : "+str(ptr))
-                c_ast.emit('Assignment', '=', (fixed_decl.type, c_ast.TAC(ptr, c_ast.makeNewData()), fixed_decl.init.refer))
+                if self.CST.id != self.GST.id:
+                    c_ast.emit('Assignment', '=', (fixed_decl.type, c_ast.TAC(ptr, c_ast.makeNewData()), fixed_decl.init.refer))
 
         return declarations
 
