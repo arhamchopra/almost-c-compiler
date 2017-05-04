@@ -1089,18 +1089,10 @@ def emit(key, op, var_tuple):
             printDebug("[emit]In BinaryOp"+op)
             
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-            print("[BinaryOp]In Binary Op")
 
             print(var_tuple[0])
 
-            if isinstance(op, IdentifierType):
-                if op.type[-1] == "float":
-                    code_list.append(("f"+op, temp, var_tuple[1], var_tuple[2]))
-                else:
-                    code_list.append((op, temp, var_tuple[1], var_tuple[2]))
-            else:         
-                print("[BinaryOperator]Not a Identifier Type")
-                code_list.append((op, temp, var_tuple[1], var_tuple[2]))
+            code_list.append((op, temp, var_tuple[1], var_tuple[2]))
 
             temp.addToTruelist(getNextInstr())
             code_list.append(('if', temp, None, None))
@@ -1298,13 +1290,7 @@ def emit(key, op, var_tuple):
                 if var_tuple[1].hasPointer:
                     code_list.append(('MOVPOINT', var_tuple[1], temp, None))
                 else:
-                    if isinstance(var_tuple[0], IdentiferType):
-                        if var_tuple[0].type[-1] == "float":
-                            code_list.append(("f=", var_tuple[1], temp, None))
-                        else:
-                            code_list.append(("=", var_tuple[1], temp, None))
-                    else:
-                        code_list.append(("=", var_tuple[1], temp, None))
+                    code_list.append(("=", var_tuple[1], temp, None))
 
             temp.addToTruelist(getNextInstr())
             code_list.append(('if', temp, None, None))

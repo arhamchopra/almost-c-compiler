@@ -2276,7 +2276,7 @@ class CParser(PLYParser):
             self.CST.PrintFT()
             self.CST.PrintStructT()
             c_ast.PrintCode()
-            c_assembly.writeCode()
+            #  c_assembly.writeCode()
         else:
             for msg in getErrorMsg():
                 print(msg)
