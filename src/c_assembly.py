@@ -1,4 +1,5 @@
-#  This file will generate the asm code that will run
+#  This file will generate the asm code that will run on Spim using the command 
+#  spim -file assembly.asm in the main folder
 
 import c_ast
 from STATS import *
@@ -83,75 +84,40 @@ def writeCode():
     file.write('\tnewline: .asciiz "\\n"'+'\n')
     file.write('\tspacebar: .asciiz " "'+'\n')
     file.write(".text"+"\n")
-
     file.write("main:"+"\n")
-
     file.write("\tsub $sp, $sp, "+str(4)+"\n")
-    #
-    #  file.write("\tsub $sp, $sp, "+str(reg_size)+"\n")
-    #  file.write("\tsw $s7, 0($sp)"+"\n")
-    #  file.write("\tadd $s7, $zero, $sp"+"\n")
-    #
-    #  for i in range(6,-1,-1):
-    #      offset = -1*(7-i)*reg_size
-    #
-    #      if i == 6:
-    #          file.write("\tsw $ra, "+str(offset)+"($s7)"+"\n")
-    #      else:
-    #          file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
-
     local_param_size = 0 
     
-    #  entry = getSTEntry(line[2].refer)
     CST = getCST()
     entry = CST.lookupFullScope("main")
-
     size = entry[3]
     size = size - local_param_size - reg_size
-    
-    #  file.write("\tsub $sp, $sp, "+str(size)+"\n")
-
     file.write("\tjal "+"_main"+"\n")
     #  Handle for return value
     
     file.write("\tadd $sp, $sp, "+str(local_param_size)+"\n")
 
-    #  if int(line[3][2]) > 0:
+    #  for handling the exit call of main
     file.write("\tlw $t1, 0($sp)"+"\n")
     file.write("\tadd $sp, $sp, "+str(4)+"\n")
-
-        #  Handle the return address of all others
-        #  ret_offset = getAddr(line[1])[0]
-        #  file.write("\tsw $t1, "+str(ret_offset-param_size)+"($s7)"+"\n")
-
-    #  file.write("\tli $v0, 1"+"\n")
-    #  file.write("\tadd $a0, $zero, $t1"+"\n")
-    #  file.write("\tsyscall"+"\n")
-
     file.write("\tli $v0, 10"+"\n")
     file.write("\tsyscall"+"\n")
 
     for ind, line in enumerate(code_list):
-        
         if has_label(ind):
             file.write("L"+str(ind)+":"+"\n")
-
-
         op = line[0]
-        #  print(line)
 
         #  Skipping unwanted if else and goto
         if ( op[:2] =='if' or op=='goto' ) and not line[-1]:
             pass
 
         elif op == "begin":
-            #  print(line)
             addr = getSTEntry(line[2].refer)
             name = addr[0]
             param_size = addr[1].args_size
             print("[Begin]Print Param Size")
             print(param_size)
-            #  print(name)
             if name == "main":
                 file.write("_main:"+"\n")
             else:
@@ -163,17 +129,12 @@ def writeCode():
 
             for i in range(6,-1,-1):
                 offset = -1*(7-i)*reg_size
-                
                 if i == 6:
                     file.write("\tsw $ra, "+str(offset)+"($s7)"+"\n")
                 else:
                     file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
-
-                #  file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
-
             size = addr[3]
             size = size - param_size - reg_size
-            
             name = entry[0]
            
             file.write("\tsub $sp, $sp, "+str(size)+"\n")
@@ -258,33 +219,6 @@ def writeCode():
                 assert False
 
         elif op == "call":
-            #  file.write("\tsub $sp, $sp, "+str(reg_size)+"\n")
-            #  file.write("\tsw $s7, 0($sp)"+"\n")
-            #  file.write("\tadd $s7, $zero, $sp"+"\n")
-            #
-            #  for i in range(6,-1,-1):
-            #      offset = -1*(7-i)*reg_size
-            #
-            #      if i == 6:
-            #          file.write("\tsw $ra, "+str(offset)+"($s7)"+"\n")
-            #      else:
-            #          file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
-            #
-            #      #  file.write("\tsw $s"+str(i)+", "+str(offset)+"($s7)"+"\n")
-            #
-            #  local_param_size = int(line[3][1])
-            #
-            #  print("[Call] In Call")
-            #  print(line[2])
-            #  print(line[2].refer)
-            #  entry = getSTEntry(line[2].refer.refer)
- #
-            #  size = entry[3]
-            #  func_size = func_size - func_param_size - reg_size
-
-            #  name = entry[0]
- #
-            #  file.write("\tsub $sp, $sp, "+str(size)+"\n")
             file.write("\tjal "+name+"\n")
             #  Handle for return value
             
@@ -347,8 +281,6 @@ def writeCode():
 
         elif op == "=" :
             l_addr = getAddr(line[1])
-            #  l_refer = getSTEntry(line[1].refer)
-            #  l_offset = -1*refer[2]
             l_offset = l_addr[0]
 
             r1_addr = getAddr(line[2])
@@ -370,14 +302,9 @@ def writeCode():
 
         # binary operators
         elif op == "+" or op == "-" or op == "*" or op == "/" or op == "%":
-            #  print(line)
-            #  Assuming only constants in operands
 
             l_addr = getAddr(line[1])
-            #  l_refer = getSTEntry(line[1].refer)
-            #  l_offset = -1*refer[2]
             l_offset = l_addr[0]
-
             r1_addr = getAddr(line[2])
             r2_addr = getAddr(line[3])
 
@@ -425,14 +352,10 @@ def writeCode():
 
         # relational operators
         elif op == "if<" or op == 'if<=' or op == 'if>' or op == 'if>=' or op == 'if==' or op == 'if!=':
-            #  print(line)
-            #  Assuming only constants in operands
             l_addr = getAddr(line[1])
             r_addr = getAddr(line[2])
             l_offset = l_addr[0]
 
-            #  l_refer = getSTEntry(line[1].refer)
-            #  l_offset = -1*refer[2]
             if l_addr[3]:
                 file.write("\tlw $t0, "+str(l_addr[3])+"\n")
             else:
@@ -447,6 +370,7 @@ def writeCode():
                     file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
                 else:
                     file.write("\tadd $t1, $zero, "+str(r_addr[0])+"\n")
+            # L attached to all the labels
             branchTo = "L"+str(line[-1])
 
             if op == "if<":
@@ -461,9 +385,6 @@ def writeCode():
                 file.write("\tbeq $t0, $t1, " + branchTo+"\n")
             elif op == "if!=":
                 file.write("\tbne $t0, $t1, " + branchTo+"\n")
-            # print("[if<]")
-            # print(line[-1])
-            # print(branchTo)
 
         # Unary operators
         elif op == "~":
@@ -537,12 +458,8 @@ def writeCode():
 
 
         elif op == "if":
-            #  print(line)
-            #  Assuming only constants in operands
 
             l_addr = getAddr(line[1])
-            #  l_refer = getSTEntry(line[1].refer)
-            #  l_offset = -1*refer[2]
             if l_addr[3]:
                 file.write("\tlw $t0, "+str(l_addr[4])+"\n")
             else:
@@ -552,31 +469,11 @@ def writeCode():
                     file.write("\tadd $t0, $zero, "+str(l_addr[0])+"\n")
             branchTo = "L"+str(line[-1])
             file.write("\tbne $t0, $zero " + branchTo+"\n")
-            # print("[if]")
-            # print(line[-1])
-            # print(branchTo)
 
         elif op == "goto":
-            #  print(line)
-            #  Assuming only constants in operands
 
             branchTo = "L"+str(line[-1])
             file.write("\tb " + branchTo+"\n")
             print("[goto]")
             print(line)
             print(branchTo)
-    #  file.write("\tli $v0, 1"+"\n")
-    #  file.write("\tlw $t1, 0($sp)"+"\n")
-    #  file.write("\tadd $a0, $zero, $t1"+"\n")
-    #  file.write("\tsyscall"+"\n")
-    #
-
-
-
-#  For push
-
-            #  file.write("\tadd $t1, $zero, "+str(line[2])+"\n")
-            #  file.write("\tadd $t2, $zero, "+str(line[3])+"\n")
-            #  file.write("\tadd $sp, $sp, -4"+"\n")
-            #  file.write("\tsw $t3, 0($sp)"+"\n")
-
