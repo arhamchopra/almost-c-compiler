@@ -1049,6 +1049,9 @@ class TAC():
         self.hasPointer = False
         self.isArrayRef = False
         self.array_pointer = None
+        self.is_global = False
+        self.global_offset = 0
+        self.global_name = ""
 
     def addToFalselist(self, id):
         self.data["falselist"].append(id)
@@ -1294,6 +1297,8 @@ def emit(key, op, var_tuple):
         if op == "=":
             if var_tuple[1].isArrayRef:
                 code_list.append(("MOVADR", var_tuple[1].array_pointer, temp, None))
+            elif var_tuple[1].is_global:
+                code_list.append(("MOVOFFSET", var_tuple[1].global_offset, temp, None))
             else:
                 if var_tuple[1].hasPointer:
                     code_list.append(('MOVPOINT', var_tuple[1], temp, None))
@@ -1339,21 +1344,41 @@ def emit(key, op, var_tuple):
         
         temp2 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
         if not var_tuple[1].isArrayRef:
-            temp4 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-            code_list.append(("&", temp4, var_tuple[1], None))
-            code_list.append(("+", temp2, temp4, temp1))
+            if var_tuple[1].is_global:
+                print("[ArrayRef]In IsGlobal")
+                print(var_tuple[1].name)
+                temp2 = temp1
+                temp2.global_name = var_tuple[1].name
+                temp2.is_global = True
+                
+            else:
+                temp4 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+                code_list.append(("&", temp4, var_tuple[1], None))
+                code_list.append(("+", temp2, temp4, temp1))
         else:
-            code_list.append(("+", temp2, var_tuple[1].array_pointer, temp1))
+            if var_tuple[1].is_global:
+                #  temp5 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
+                code_list.append(("+", temp2, var_tuple[1].global_offset, temp1))
+                temp2.global_name = var_tuple[1].name
+                temp2.is_global = True
+            else:
+                code_list.append(("+", temp2, var_tuple[1].array_pointer, temp1))
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-        code_list.append(("deref", temp3, temp2, None))
+        if var_tuple[1].is_global:
+            code_list.append(("array_access", temp3, temp2, None))
+        else:
+            code_list.append(("deref", temp3, temp2, None))
         temp = temp3
         #  temp.points = list(var_tuple[1].refer)
 
         #  temp.points[0] = temp.points[0] + int(var_tuple[2].value)*size
         #  temp.points = tuple(temp.points)
-        temp.isArrayRef = True
-        temp.array_pointer = temp2
+        if var_tuple[1].is_global:
+            temp.global_offset = temp2
+        else:
+            temp.isArrayRef = True
+            temp.array_pointer = temp2
 
         temp.addToTruelist(getNextInstr())
         code_list.append(('if', temp, None, None))
