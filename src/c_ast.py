@@ -36,14 +36,14 @@ def getArrayName(type):
     if isinstance(type.type, ArrayDecl):
         return getArrayName(type.type)
     else:
-        print(type.type)
-        print("IN GETARRAYNAME")
+        printDebug(type.type)
+        printDebug("IN GETARRAYNAME")
         if isinstance(type.type, TypeDecl):
-            print(type.type.declname)
+            printDebug(type.type.declname)
             return type.type.declname
 
 def getType(v):
-    print(v)
+    printDebug(v)
     p1_type = None 
     if isinstance(v, Constant):
         return v.type
@@ -70,7 +70,7 @@ def getType(v):
     if p1_type:
         return getType(p1_type)
     else:
-        print("[getType]Got an unknown type")
+        printDebug("[getType]Got an unknown type")
         assert False
 
 class Node(object):
@@ -125,8 +125,8 @@ class Node(object):
 
         child_list = []
         for (child_name, child) in self.children():
-            print("Child Name")
-            print(child_name)
+            printDebug("Child Name")
+            printDebug(child_name)
             n = child.show(
                 buf,
                 offset=offset + 2,
@@ -144,7 +144,7 @@ class Node(object):
 
                 if hasattr(self, 'stpointer') and not isinstance(self, FuncCall):
                     a = self.stpointer
-                    print(a)
+                    printDebug(a)
                     if a is None:
                         stp = a
                     else:
@@ -234,9 +234,9 @@ class ArrayDecl(Node):
 
     # def __init__(self, type, dim, size, dim_quals, coord=None):
     def __init__(self, type, dim,  dim_quals, coord=None):
-        print("[ArrayDecl]")
-        print(type)
-        print(dim)
+        printDebug("[ArrayDecl]")
+        printDebug(type)
+        printDebug(dim)
         self.type = type
         self.dim = dim
         self.dim_quals = dim_quals
@@ -621,26 +621,26 @@ class FuncCall(Node):
         self.type = type
         self.stpointer = None
         if name.name == "PrintInt":
-            print("[FuncCall,AST]IN PRINTINT")
+            printDebug("[FuncCall,AST]IN PRINTINT")
             self.refer = emit("PrintInt","f()",(type, name, args.exprs))
 
         elif name.name == "ScanInt":
-            print("[FuncCall,AST]IN SCANINT")
+            printDebug("[FuncCall,AST]IN SCANINT")
             self.refer = emit("ScanInt","f()",(type, name, args.exprs))
 
         elif name.name == "PrintSpace":
-            print("[FuncCall,AST]IN PrintSpace")
+            printDebug("[FuncCall,AST]IN PrintSpace")
             self.refer = emit("PrintSpace","f()",(type, name))
 
         elif name.name == "PrintNewline":
-            print("[FuncCall,AST]IN PrintNewline")
+            printDebug("[FuncCall,AST]IN PrintNewline")
             self.refer = emit("PrintNewline","f()",(type, name))
 
         else:
             self.refer = emit("FuncCall", "f()", (type, name, args.exprs))
             self.s ="FuncCall" 
-            print("IMFUNCCALL")
-            print(self.stpointer)
+            printDebug("IMFUNCCALL")
+            printDebug(self.stpointer)
 
     def children(self):
         nodelist = []
@@ -703,7 +703,7 @@ class ID(Node):
     __slots__ = ('s', 'stpointer', 'name', 'refer', 'type', 'coord', '__weakref__')
     def __init__(self, name, type=None, coord=None):
         printDebug("ID HERE:"+ str(name))
-        print("ID HERE:"+ str(name))
+        printDebug("ID HERE:"+ str(name))
         self.name = name
         self.coord = coord
         if name != "PrintInt" and name != "ScanInt" and name != "PrintSpace" and name != "PrintNewline":
@@ -721,10 +721,10 @@ class ID(Node):
                     pass
             self.s = name
             self.stpointer = None
-            print("[ID]IN ID")
-            print(name)
+            printDebug("[ID]IN ID")
+            printDebug(name)
             self.refer = getReference(name)
-            print(self.refer)
+            printDebug(self.refer)
 
     def children(self):
         nodelist = []
@@ -880,7 +880,7 @@ class StructRef(Node):
         self.coord = coord
         CST = getCST()
         entry = CST.lookupFullScope(name.name)
-        print("[StructRef]"+str(entry[1].type.name))
+        printDebug("[StructRef]"+str(entry[1].type.name))
         entry = CST.getStructTentry(entry[1].type.name, field.name)
         if entry:
             self.field_type = IdentifierType([entry[1]])
@@ -1078,8 +1078,8 @@ class TAC():
 
 
 def emit(key, op, var_tuple):
-    print("[emit]In Emit")
-    print("[emit]"+str((key, op, var_tuple)))
+    printDebug("[emit]In Emit")
+    printDebug("[emit]"+str((key, op, var_tuple)))
     CST = getCST()
    
     #  printDebug(CST.printDebug())
@@ -1195,13 +1195,13 @@ def emit(key, op, var_tuple):
 
             #  Not storing the assignments of logical operators
             #  code_list.append(("!", temp, var_tuple[1], None))
-            print("IN OP !") 
-            print(var_tuple[1].data)
+            printDebug("IN OP !") 
+            printDebug(var_tuple[1].data)
             f = var_tuple[1].data["falselist"]
             t = var_tuple[1].data["truelist"]
             if len(f) != 0 and len(t) != 0:
                 temp = TAC(CST.provideTemp(var_tuple[0]), var_tuple[1].data)
-                print(temp.data)
+                printDebug(temp.data)
                 temp.data["truelist"] = f 
                 temp.data["falselist"] = t 
             else:
@@ -1220,7 +1220,7 @@ def emit(key, op, var_tuple):
 
             # Assignment of logical operators is not handled
 
-            print(temp.data)
+            printDebug(temp.data)
 
         elif op == "++":
             temp = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
@@ -1333,8 +1333,8 @@ def emit(key, op, var_tuple):
             CST = getCST()
             entry = getSTEntry(var_tuple[1].refer)
             if entry and entry[-1]:
-                print("[ArrayRef]In IsGlobal")
-                print(entry[0])
+                printDebug("[ArrayRef]In IsGlobal")
+                printDebug(entry[0])
                 temp2 = temp1
                 temp2.global_name = entry[0] 
                 temp2.is_global = True
@@ -1351,10 +1351,10 @@ def emit(key, op, var_tuple):
                 temp2.is_global = True
             else:
                 code_list.append(("+", temp2, var_tuple[1].array_pointer, temp1))
-        print("[ArrayRef] IN ARRAYREF")
-        print(var_tuple[1])
-        print(temp2.is_global)
-        print(temp2.global_name)
+        printDebug("[ArrayRef] IN ARRAYREF")
+        printDebug(var_tuple[1])
+        printDebug(temp2.is_global)
+        printDebug(temp2.global_name)
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         if temp2.is_global:
@@ -1413,18 +1413,18 @@ def emit(key, op, var_tuple):
 
 #  Size not needed ...
     elif key == "FuncCall":
-        print("[emit]FuncCall")
-        print(var_tuple[1].name)
+        printDebug("[emit]FuncCall")
+        printDebug(var_tuple[1].name)
         temp1 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
         
         code_list.append(('calling', var_tuple[1], None, None))
        
-        print(var_tuple[1].name)
+        printDebug(var_tuple[1].name)
         #  size = var_tuple[1].type.args_size
 
         printDebug("[emit]Pushing the tuple "+str(var_tuple[1]))
         
-        print("[FuncCall,Emit]")
+        printDebug("[FuncCall,Emit]")
         #  ret_size = getSize(var_tuple[1].type.type.type)
         code_list.append(('pushret', None, None, None))
 
@@ -1492,7 +1492,7 @@ def PrintCode():
                 else:
                     v.append(code_list[line][i])
             #  printDebug(v)
-            #  print(v)
+            #  printDebug(v)
             print(s.format(v[0],v[1],v[2],v[3]))
 
 
@@ -1537,8 +1537,8 @@ def handling_jump_over_jump(code):
         if ( op[:2] =='if' or op=='goto' ) and line[-1]:
             paths = []
             handle_path(i, code)
-            print("[handling]")
-            print(paths)
+            printDebug("[handling]")
+            printDebug(paths)
             for i in paths:
                 temp = list(code[i])
                 temp[-1] = backpatchno
@@ -1548,7 +1548,7 @@ def handle_path(ind, code):
     global paths
     global backpatchno 
     nextind = code[ind][-1]
-    print("Got NextInd "+str(ind))
+    printDebug("Got NextInd "+str(ind))
     if code[nextind][0] == "goto" and code[nextind][-1]:
         paths.append(ind)
         handle_path(nextind, code)

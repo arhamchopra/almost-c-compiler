@@ -30,13 +30,13 @@ def has_label(ind):
 def handle_data(data):
     GST = getGST()
     data = GST.table['cur_scope']
-    print(data)
+    printDebug(data)
     for key in range(len(data)):
         if data[key][-1]:
-            print(key)
-            print(data[key])
+            printDebug(key)
+            printDebug(data[key])
             entry = data[key]
-            print(entry)
+            printDebug(entry)
             if isinstance(entry[1], c_ast.FuncDecl):
                 pass
             elif isinstance(entry[1], c_ast.ArrayDecl):
@@ -61,8 +61,8 @@ def getAddr(obj):
         refer = obj.refer
         if type(refer) == tuple:
             refer = getSTEntry(refer)
-            print("[getAddr]")
-            print(refer)
+            printDebug("[getAddr]")
+            printDebug(refer)
             offset = refer[2] 
             size = refer[3]
             is_global = refer[6]
@@ -116,8 +116,8 @@ def writeCode():
             addr = getSTEntry(line[2].refer)
             name = addr[0]
             param_size = addr[1].args_size
-            print("[Begin]Print Param Size")
-            print(param_size)
+            printDebug("[Begin]Print Param Size")
+            printDebug(param_size)
             if name == "main":
                 file.write("_main:"+"\n")
             else:
@@ -160,7 +160,7 @@ def writeCode():
                     file.write("\tsw $t0, 0($sp)"+"\n")
 
         elif op == "ScanInt":
-            print("[WriteCode]ScanInt")
+            printDebug("[WriteCode]ScanInt")
             
             addr = getAddr(line[1])
 
@@ -174,26 +174,26 @@ def writeCode():
             file.write("\tsw $v0, ($t0)"+"\n")
 
         elif op == "PrintSpace":
-            print("[WriteCode]PrintSpace")
+            printDebug("[WriteCode]PrintSpace")
 
             file.write("\tli $v0, 4"+"\n")
             file.write("\tla $a0, spacebar"+"\n")
             file.write("\tsyscall"+"\n")
 
         elif op == "PrintNewline":
-            print("[WriteCode]PrintNewline")
+            printDebug("[WriteCode]PrintNewline")
 
             file.write("\tli $v0, 4"+"\n")
             file.write("\tla $a0, newline"+"\n")
             file.write("\tsyscall"+"\n")
 
         elif op == "PrintInt":
-            print("[WriteCode]PrintInt")
+            printDebug("[WriteCode]PrintInt")
             
             addr = getAddr(line[1])
 
-            print("[PrintInt]IN PRINTINT")
-            print(addr)
+            printDebug("[PrintInt]IN PRINTINT")
+            printDebug(addr)
             if addr[3]:
                 file.write("\tlw $t0, "+str(addr[4])+"\n")
             else:
@@ -213,8 +213,8 @@ def writeCode():
                 type = entry[1]
                 func_ret_size = getSize(type.type.type)
                 func_name = entry[0]
-                print("[Calling]Got Params")
-                print("func_param_size:"+str(func_param_size)+" func_ret_size:"+str(func_ret_size))
+                printDebug("[Calling]Got Params")
+                printDebug("func_param_size:"+str(func_param_size)+" func_ret_size:"+str(func_ret_size))
             else:
                 assert False
 
@@ -291,8 +291,8 @@ def writeCode():
                 if r1_addr[1] == "addr":
                     file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
                 else:
-                    print("[WriteCode]IN =")
-                    print(r1_addr[0])
+                    printDebug("[WriteCode]IN =")
+                    printDebug(r1_addr[0])
                     file.write("\tadd $t0, $zero, "+str(r1_addr[0])+"\n")
 
             if l_addr[3]:
@@ -315,9 +315,9 @@ def writeCode():
                 if r1_addr[1] == "addr":
                     file.write("\tlw $t0, "+str(param_size - r1_addr[0] + reg_size - r1_addr[2])+"($s7)"+"\n")
                 else:
-                    print("[WriteCode]")
-                    print(r1_addr[0])
-                    print(line)
+                    printDebug("[WriteCode]")
+                    printDebug(r1_addr[0])
+                    printDebug(line)
                     file.write("\tadd $t0, $zero, "+str(r1_addr[0])+"\n")
 
             if r2_addr[3]:
@@ -342,9 +342,9 @@ def writeCode():
                file.write("\tmul $t2, $t2, $t1"+"\n")
                file.write("\tsub $t0, $t0, $t2"+"\n")     
 
-            print("[OP+]")
-            print(l_offset)
-            print(param_size)
+            printDebug("[OP+]")
+            printDebug(l_offset)
+            printDebug(param_size)
             if l_addr[3]:
                 file.write("\tsw $t0, "+str(l_addr[4])+"\n")
             else:
@@ -402,8 +402,8 @@ def writeCode():
             r_addr = getAddr(line[2])
             l_addr = getAddr(line[1])
             r_name = line[2].global_name 
-            print("{array_access}")
-            print(r_name)
+            printDebug("{array_access}")
+            printDebug(r_name)
 
             if r_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
@@ -417,8 +417,8 @@ def writeCode():
             l_name = line[1].global_name
             r_addr = getAddr(line[2])
             l_addr = getAddr(line[1])
-            print("[MOVOFFSET]")
-            print(l_name)
+            printDebug("[MOVOFFSET]")
+            printDebug(l_name)
             
             if r_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
@@ -474,6 +474,6 @@ def writeCode():
 
             branchTo = "L"+str(line[-1])
             file.write("\tb " + branchTo+"\n")
-            print("[goto]")
-            print(line)
-            print(branchTo)
+            printDebug("[goto]")
+            printDebug(line)
+            printDebug(branchTo)

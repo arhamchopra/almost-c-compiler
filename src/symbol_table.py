@@ -10,8 +10,8 @@ def printDebug(s):
         print(s)
 
 def getSize(type):
-    print("[getSize]IN GET SIZE")
-    print("[getSize]"+str(type))
+    printDebug("[getSize]IN GET SIZE")
+    printDebug("[getSize]"+str(type))
     if isinstance(type, c_ast.TypeDecl):
         return getSize(type.type)
     if isinstance(type, c_ast.IdentifierType):
@@ -46,16 +46,16 @@ def getSize(type):
         return 4
     if isinstance(type, c_ast.ArrayDecl):        
         printDebug(type.dim)
-        print("[getSize]")
-        print(type)
-        print(type.dim)
+        printDebug("[getSize]")
+        printDebug(type)
+        printDebug(type.dim)
         return int(type.dim.value)*getSize(type.type)
     if isinstance(type, c_ast.FuncDecl):
         return 0
     if isinstance(type, c_ast.Struct):
         st = SymbolTable()
         entry = st.lookupStructT(type.name)
-        print(entry)
+        printDebug(entry)
         if entry:
             return entry[1]
         else:
@@ -97,9 +97,9 @@ class SymbolTable(object):
 
     def addEntry(self, lexeme, type, child=None):
         try:
-            print("[addEntry]Adding the entry to ST " + str((lexeme, type.type)))
+            printDebug("[addEntry]Adding the entry to ST " + str((lexeme, type.type)))
         except:
-            print("[addEntry]Adding the entry to ST " + str((lexeme, type)))
+            printDebug("[addEntry]Adding the entry to ST " + str((lexeme, type)))
         
         if isinstance(type, c_ast.FuncDecl):
             if child:
@@ -121,7 +121,7 @@ class SymbolTable(object):
         offset = self.table['cur_offset']
         self.table['cur_offset'] += size
         pointer = (offset, len(self.table['cur_scope']), self)
-        print("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer, is_global), self.id))
+        printDebug("Adding entry : {} to SymbolTable: {}".format((lexeme, type, size, offset, child, pointer, is_global), self.id))
         self.table['cur_scope'].append((lexeme, type, offset, size, child, pointer, is_global))
         return pointer
 
@@ -131,21 +131,21 @@ class SymbolTable(object):
                 adderror("Reusing a used name")
                 return
         size = 0
-        print(type)
+        printDebug(type)
         try:
             for param in type.args.params:
-                print(param.type)
+                printDebug(param.type)
                 size = size + getSize(param.type)
-            print("[addToFT]size is "+str(size))
+            printDebug("[addToFT]size is "+str(size))
             type.args_size = size
         except:
-            print("[addToFT]Got No params")
+            printDebug("[addToFT]Got No params")
 
         SymbolTable.FT.append((lexeme, type, status, child, p_list, size))
 
     def lookupElemFT(self, name, fscope):
         if fscope[3]:
-            print(fscope[3])
+            printDebug(fscope[3])
 
 
     def popEntry(self):
@@ -295,7 +295,7 @@ class SymbolTable(object):
                 return None
 
     def Print(self):
-        print("Printing SymbolTable:"+ str(self.id))
+        printDebug("Printing SymbolTable:"+ str(self.id))
         for entry in self.table['cur_scope']:
             if entry[4]:
                 print(entry)
