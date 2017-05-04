@@ -1520,6 +1520,7 @@ def makeNewData():
 
 
 def PrintCode():
+    code_list = getCode()
     print("We are now printing the 3AC Code .........") 
     for line in range(len(code_list)):
         #  printDebug("[PrintCode]"+str(code_list[line]))
@@ -1573,6 +1574,9 @@ def backpatch(c_list, index):
             code_list[i] = tuple(l) 
         else:
             printDebug("[backpatch]We are in serious trouble")
+       
 
 def getCode():
+    handling_jump_over_jump(code_list)
     return code_list
+

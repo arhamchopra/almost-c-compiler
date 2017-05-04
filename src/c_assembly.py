@@ -20,7 +20,6 @@ def fix_labels(code_list):
         if ( code_list[line][0][:2] =='if' or code_list[line][0]=='goto' ) and code_list[line][-1]:
             labels[str(code_list[line][-1])] = 1 
 
-
 def has_label(ind):
     if str(ind) in labels:
         return 1
@@ -51,6 +50,7 @@ def handle_data(data):
                     file.write("\t"+str(entry[0])+": .word 0 \n")
                 if entry[1].type[-1] == "float":
                     file.write("\t"+str(entry[0])+": .float 0.0 \n")
+
 
 
 #  Constants Handle the size
