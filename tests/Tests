@@ -1,10 +1,5 @@
 Quicksort 
     3AC
-BinarySearch
-    3AC
-
-BubbleSort
-    To BE DONE
 
 Jump Over Jumps Optimization
 
@@ -28,6 +23,8 @@ Done:
     Mutual Recursion
     Matrix Multiplication
     Function with >7 params
+    BinarySearch
+    BubbleSort
 
     Short Circuit Evaluation
     Unary VS Binary Minus

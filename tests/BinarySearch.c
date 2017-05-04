@@ -1,23 +1,25 @@
 #include <stdio.h>
+
+int a[10];
  
-int bsearch (int *a, int n, int x) {
-    int i = 0, j = n - 1;
-    while (i <= j) {
-        int k = (i + j) / 2;
-        if (a[k] == x) {
-            return k;
-        }
-        else if (a[k] < x) {
-            i = k + 1;
-        }
-        else {
-            j = k - 1;
-        }
-    }
-    return -1;
-}
- 
-int bsearch_r (int *a, int x, int i, int j) {
+/* int bsearch (int n, int x) { */
+/*     int i = 0, j = n - 1; */
+/*     while (i <= j) { */
+/*         int k = (i + j) / 2; */
+/*         if (a[k] == x) { */
+/*             return k; */
+/*         } */
+/*         else if (a[k] < x) { */
+/*             i = k + 1; */
+/*         } */
+/*         else { */
+/*             j = k - 1; */
+/*         } */
+/*     } */
+/*     return -1; */
+/* } */
+/*   */
+int bsearch_r (int x,int i, int j) {
     if (j < i) {
         return -1;
     }
@@ -26,21 +28,24 @@ int bsearch_r (int *a, int x, int i, int j) {
         return k;
     }
     else if (a[k] < x) {
-        return bsearch_r(a, x, k + 1, j);
+        return bsearch_r(x, k + 1, j);
     }
     else {
-        return bsearch_r(a, x, i, k - 1);
+        return bsearch_r(x, i, k - 1);
     }
 }
  
 int main () {
-    /* int a[] = {-31, 0, 1, 2, 2, 4, 65, 83, 99, 782}; */
-    /* int n = sizeof a / sizeof a[0]; */
-    /* int x = 2; */
-    /* int i = bsearch(a, n, x); */
-    /* printf("%d is at index %d\n", x, i); */
-    /* x = 5; */
-    /* i = bsearch_r(a, x, 0, n - 1); */
-    /* printf("%d is at index %d\n", x, i); */
+    int i;
+    int b[10];
+    for(i=0;i<10;i++){
+        ScanInt(&b[i]);
+    }
+    for(i=0;i<10;i++){
+        a[i] = b[i];
+    }
+    int c = bsearch_r(5, 0, 10);
+    PrintInt(c);
+
     return 0;
 }

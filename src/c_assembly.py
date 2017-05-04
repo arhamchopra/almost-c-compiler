@@ -478,28 +478,35 @@ def writeCode():
             file.write("\tsw $t0, "+str(param_size - l_offset + reg_size - l_addr[2])+"($s7)"+"\n")
 
         elif op == "array_access":
-            r_name = line[2].global_name
             r_addr = getAddr(line[2])
             l_addr = getAddr(line[1])
-            file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
-            file.write("\tlw $t0, "+str(r_name)+"($t1)")
-            file.write("\tsw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+            r_name = line[2].global_name 
+            print("{array_access}")
+            print(r_name)
 
-        elif op == "MOVOFFSET":
-            l_name = line[1].name
-            r_addr = getAddr(line[2])
-            l_addr = getAddr(line[1])
-            
             if r_addr[1] == "addr":
                 file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
             else:
                 file.write("\tadd $t1, $zero, "+r_addr[0]+"\n")
+            
+            file.write("\tlw $t0, "+str(r_name)+"($t1)"+"\n")
+            file.write("\tsw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
+
+        elif op == "MOVOFFSET":
+            l_name = line[1].global_name
+            r_addr = getAddr(line[2])
+            l_addr = getAddr(line[1])
+            print("[MOVOFFSET]")
+            print(l_name)
+            
+            if r_addr[1] == "addr":
+                file.write("\tlw $t1, "+str(param_size - r_addr[0] + reg_size - r_addr[2])+"($s7)"+"\n")
+            else:
+                file.write("\tadd $t1, $zero, "+str(r_addr[0])+"\n")
 
             file.write("\tlw $t0, "+str(param_size - l_addr[0] + reg_size - l_addr[2])+"($s7)"+"\n")
 
-            file.write("\tsw $t1, "+str(r_name)+"($t0)")
-
-
+            file.write("\tsw $t1, "+str(l_name)+"($t0)"+"\n")
 
         elif op == "deref":
             l_addr = getAddr(line[1])

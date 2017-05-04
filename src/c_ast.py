@@ -715,12 +715,15 @@ class ID(Node):
             if type:
                 self.type = type 
             else:
-                CST = getCST()
-                entry = CST.lookupFullScope(name)
-                if(entry[-1]=="ST"):
-                    self.type = entry[1];
-                else:
-                    self.type= None
+                try:
+                    CST = getCST()
+                    entry = CST.lookupFullScope(name)
+                    if(entry[-1]=="ST"):
+                        self.type = entry[1];
+                    else:
+                        self.type= None
+                except:
+                    pass
             self.s = name
             self.stpointer = None
             print("[ID]IN ID")
@@ -1344,11 +1347,14 @@ def emit(key, op, var_tuple):
         
         temp2 = TAC(CST.provideTemp(c_ast.IdentifierType(['int'])), makeNewData())
         if not var_tuple[1].isArrayRef:
-            if var_tuple[1].is_global:
+            #  name = var_tuple[1].name
+            CST = getCST()
+            entry = getSTEntry(var_tuple[1].refer)
+            if entry and entry[-1]:
                 print("[ArrayRef]In IsGlobal")
-                print(var_tuple[1].name)
+                print(entry[0])
                 temp2 = temp1
-                temp2.global_name = var_tuple[1].name
+                temp2.global_name = entry[0] 
                 temp2.is_global = True
                 
             else:
@@ -1363,9 +1369,13 @@ def emit(key, op, var_tuple):
                 temp2.is_global = True
             else:
                 code_list.append(("+", temp2, var_tuple[1].array_pointer, temp1))
+        print("[ArrayRef] IN ARRAYREF")
+        print(var_tuple[1])
+        print(temp2.is_global)
+        print(temp2.global_name)
 
         temp3 = TAC(CST.provideTemp(var_tuple[0]), makeNewData())
-        if var_tuple[1].is_global:
+        if temp2.is_global:
             code_list.append(("array_access", temp3, temp2, None))
         else:
             code_list.append(("deref", temp3, temp2, None))
@@ -1374,8 +1384,9 @@ def emit(key, op, var_tuple):
 
         #  temp.points[0] = temp.points[0] + int(var_tuple[2].value)*size
         #  temp.points = tuple(temp.points)
-        if var_tuple[1].is_global:
+        if temp2.is_global:
             temp.global_offset = temp2
+            temp.is_global = True
         else:
             temp.isArrayRef = True
             temp.array_pointer = temp2
