@@ -1529,33 +1529,40 @@ paths = []
 backpatchno = 0
 
 def handling_jump_over_jump(code):
+    global paths
+    global backpatchno 
     for i in range(len(code)):
         line = code[i]
         op = line[0]
         if ( op[:2] =='if' or op=='goto' ) and line[-1]:
             paths = []
             handle_path(i, code)
+            print("[handling]")
+            print(paths)
             for i in paths:
-                code[i][-1] = backpatchno
-
+                temp = list(code[i])
+                temp[-1] = backpatchno
+                code[i] = tuple(temp)
 
 def handle_path(ind, code):
+    global paths
+    global backpatchno 
     nextind = code[ind][-1]
-    if code[nextind][0][:2] == "goto" and code[nextind][-1]:
+    print("Got NextInd "+str(ind))
+    if code[nextind][0] == "goto" and code[nextind][-1]:
         paths.append(ind)
         handle_path(nextind, code)
-    elif (code[nextind][0][:2] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]:
-        while((code[nextind][0][:2] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]):
+    elif (code[nextind][0] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]:
+        while((code[nextind][0] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]):
             nextind = nextind+1
         
-        if code[nextind][0][:2] == "goto" and code[nextind][-1]:
+        if code[nextind][0] == "goto" and code[nextind][-1]:
             paths.append(ind)
             handle_path(nextind, code)
         else:
             backpatchno = nextind
             return
     else:
-
         backpatchno = nextind
         return
 

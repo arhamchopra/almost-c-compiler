@@ -1,19 +1,13 @@
-Quicksort 
-    3AC
-
-Jump Over Jumps Optimization
-
 Newton Raphson
-    TO BE DONE
+Binary Tree Traversal
+Graph as adjacency List
+Struct Class data type as return and function params
+File I/O
 
     
 Operators Type Check
     TO BE DONE
 
-Binary Tree Traversal
-Graph as adjacency List
-Struct Class data type as return and function params
-File I/O
 
 Table for sin(x) cos(x)
 
@@ -24,6 +18,7 @@ Done:
     Matrix Multiplication
     Function with >7 params
     BinarySearch
+    Quicksort 
     BubbleSort
 
     Short Circuit Evaluation
@@ -31,3 +26,4 @@ Done:
 
 If not doing code reg Optimization:
     Large Expression Reg Allocation
+Jump Over Jumps Optimization
