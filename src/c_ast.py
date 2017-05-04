@@ -19,20 +19,15 @@
 import sys
 from parse_tree import *
 from symbol_table import *
-#  from code_gen import *
 import re
 
-# TODO In this file 
+# In if statement we are checking whether the tmp has value non zero
+# if so then we take goto else if tmp is 0 we take else
 
 code_list = []
-
-# In if statement we are checking whether the tmp has value non zero if so then we take goto else if tmp is 0 we take else
-
-
 user_debug = False 
-
 global_data = {}
-    
+
 def printDebug(s):
     if user_debug:
         print(s)
@@ -1081,27 +1076,14 @@ class TAC():
         else:
             return str(self.refer)
 
-        
-
-
 
 def emit(key, op, var_tuple):
     print("[emit]In Emit")
     print("[emit]"+str((key, op, var_tuple)))
     CST = getCST()
-    #  if len(var_tuple) == 3 and not isinstance(var_tuple[2], tuple):
-    #      printDebug("HAGGA 1")
-    #      temp = CST.provideTemp(var_tuple[0])
-    #
-    #  if not isinstance(var_tuple[1], tuple):
-    #      printDebug("HAGGA HAGGA HAGGA HAGGAPA")
-    #      temp = CST.provideTemp(var_tuple[0])
-        
+   
     #  printDebug(CST.printDebug())
     if key == "BinaryOp":
-        #  assert len(var_tuple) == 3
-        # Have to separate the operator based on the true list and false list
-        # -,+,*,/,^,&,|,~,<<,>>,
         # [TODO]
         if re.match(r"\-|\+|\*|\/|\||\&|\^", op) or op == "<<" or op == ">>":
             printDebug("[emit]In BinaryOp"+op)
@@ -1380,10 +1362,6 @@ def emit(key, op, var_tuple):
         else:
             code_list.append(("deref", temp3, temp2, None))
         temp = temp3
-        #  temp.points = list(var_tuple[1].refer)
-
-        #  temp.points[0] = temp.points[0] + int(var_tuple[2].value)*size
-        #  temp.points = tuple(temp.points)
         if temp2.is_global:
             temp.global_offset = temp2
             temp.is_global = True
@@ -1433,7 +1411,7 @@ def emit(key, op, var_tuple):
         code_list.append(("ScanInt", var_tuple[2][0].refer, None, None))
         temp = TAC((0,0,0), makeNewData())
 
-#  Size not handled ...
+#  Size not needed ...
     elif key == "FuncCall":
         print("[emit]FuncCall")
         print(var_tuple[1].name)
@@ -1453,11 +1431,9 @@ def emit(key, op, var_tuple):
         for var in var_tuple[2]:
             printDebug("[emit]Pushing the tuple "+str(var))
             code_list.append(('push', None, var.refer, None))
-        #[TODO] Check if the length of function list should be passed or not
         code_list.append(('call',temp1, var_tuple[1], None))
         code_list.append(('pop', None, None, None))
         
-        #[TODO] Add code for activation records here
         temp = temp1
         
         temp.addToTruelist(getNextInstr())
@@ -1476,32 +1452,7 @@ def emit(key, op, var_tuple):
     elif key == "Return":
         code_list.append(("return", var_tuple[1], None, None))
         temp = TAC((0,0,0), makeNewData())
-    #  elif key == "Decl":
-    #      CST = getCST()
-    #      GST = getGST()
-    #      if CST.id == GST.id:
-    #          print("[Emit,Decl]")
-    #          if var_tuple[0].init:
-    #              print("[Emit,Decl]")
-    #              print(var_tuple[0].init)
-    #              if isinstance(var_tuple[0].type, TypeDecl):
-    #                  print(var_tuple[0].type.declname)
-    #                  global_data[str(var_tuple[0].type.declname)] = var_tuple[0].init
-    #              elif isinstance(var_tuple[0].type, ArrayDecl):
-    #                  name = getArrayName(var_tuple[0].type)
-    #                  print(name)
-    #                  global_data[str(name)] = var_tuple[0].init
-    #          else:
-    #              if isinstance(var_tuple[0].type, TypeDecl):
-    #                  print(var_tuple[0].type.declname)
-    #                  global_data[str(var_tuple[0].type.declname)] = None
-    #              elif isinstance(var_tuple[0].type, ArrayDecl):
-    #                  name = getArrayName(var_tuple[0].type)
-    #                  print(name)
-    #                  global_data[str(name)] = None
- 
-            #  print(var_tuple[0].type.type)
-        #  temp = TAC((0,0,0), makeNewData())
+
 
     return temp
 
@@ -1561,7 +1512,6 @@ def getReference(name):
 def getNextInstr():
     return len(code_list)
 
-#         if re.match(r"\-|\+|\*|\/|<=|>=|==|!=|\|\||\&\&|\||\&|\^|<|>|!", op) or op == "<<" or op == ">>":
 
 def backpatch(c_list, index):
     printDebug("[backpatch]In backpatch")
