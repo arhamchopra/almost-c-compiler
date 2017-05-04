@@ -1524,7 +1524,40 @@ def backpatch(c_list, index):
             code_list[i] = tuple(l) 
         else:
             printDebug("[backpatch]We are in serious trouble")
-       
+ 
+paths = []
+backpatchno = 0
+
+def handling_jump_over_jump(code):
+    for i in range(len(code)):
+        line = code[i]
+        op = line[0]
+        if ( op[:2] =='if' or op=='goto' ) and line[-1]:
+            paths = []
+            handle_path(i, code)
+            for i in paths:
+                code[i][-1] = backpatchno
+
+
+def handle_path(ind, code):
+    nextind = code[ind][-1]
+    if code[nextind][0][:2] == "goto" and code[nextind][-1]:
+        paths.append(ind)
+        handle_path(nextind, code)
+    elif (code[nextind][0][:2] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]:
+        while((code[nextind][0][:2] == "goto" or code[nextind][0][:2] == "if") and not code[nextind][-1]):
+            nextind = nextind+1
+        
+        if code[nextind][0][:2] == "goto" and code[nextind][-1]:
+            paths.append(ind)
+            handle_path(nextind, code)
+        else:
+            backpatchno = nextind
+            return
+    else:
+
+        backpatchno = nextind
+        return
 
 def getCode():
     handling_jump_over_jump(code_list)
